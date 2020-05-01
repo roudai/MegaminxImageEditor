@@ -1,120 +1,157 @@
-  const origin = 120;
-  const canvas = document.getElementById('canvas');
-  const ctx = canvas.getContext('2d');
+const origin = 120;
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
 
-  /* �R���e�L�X�g�̐ݒ� */
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = '#000';
+/* コンテキストの設定 */
+ctx.lineWidth = 2;
+ctx.strokeStyle = '#000';
 
-  /* �`�� */
+upface_center(  '#d3d3d3') // ブロック1
+
+upface_corner(0,"#d3d3d3") // ブロック2
+upface_edge  (0,"#d3d3d3") // ブロック3
+upface_corner(1,"#d3d3d3") // ブロック4
+upface_edge  (1,"#d3d3d3") // ブロック5
+upface_corner(2,"#d3d3d3") // ブロック6
+upface_edge  (2,"#d3d3d3") // ブロック7
+upface_corner(3,"#d3d3d3") // ブロック8
+upface_edge  (3,"#d3d3d3") // ブロック9
+upface_corner(4,"#d3d3d3") // ブロック10
+upface_edge  (4,"#d3d3d3") // ブロック11
+
+side_corner1(0,"#d3d3d3") // ブロック12
+side_edge   (0,"#d3d3d3") // ブロック13
+side_corner2(1,"#d3d3d3") // ブロック14
+side_corner1(1,"#d3d3d3") // ブロック15
+side_edge   (1,"#d3d3d3") // ブロック16
+side_corner2(2,"#d3d3d3") // ブロック17
+side_corner1(2,"#d3d3d3") // ブロック18
+side_edge   (2,"#d3d3d3") // ブロック19
+side_corner2(3,"#d3d3d3") // ブロック20
+side_corner1(3,"#d3d3d3") // ブロック21
+side_edge   (3,"#d3d3d3") // ブロック20
+side_corner2(4,"#d3d3d3") // ブロック23
+side_corner1(4,"#d3d3d3") // ブロック24
+side_edge   (4,"#d3d3d3") // ブロック25
+side_corner2(0,"#d3d3d3") // ブロック26
+
+function upface_center(color){
   ctx.beginPath();
-  
-  ctx.moveTo(megaminx("x",100,0), megaminx("y",100,0));
-  ctx.lineTo(megaminx("x",100,1), megaminx("y",100,1));
-  ctx.lineTo(megaminx("x",100,2), megaminx("y",100,2));
-  ctx.lineTo(megaminx("x",100,3), megaminx("y",100,3));
-  ctx.lineTo(megaminx("x",100,4), megaminx("y",100,4));
+  ctx.moveTo(megaminx_corner("x",35,0), megaminx_corner("y",35,0));
+  ctx.lineTo(megaminx_corner("x",35,1), megaminx_corner("y",35,1));
+  ctx.lineTo(megaminx_corner("x",35,2), megaminx_corner("y",35,2));
+  ctx.lineTo(megaminx_corner("x",35,3), megaminx_corner("y",35,3));
+  ctx.lineTo(megaminx_corner("x",35,4), megaminx_corner("y",35,4));
+  ctx.fillStyle = color;
+  ctx.fill();
   ctx.closePath();
-
-  ctx.moveTo(megaminx("x",80,0), megaminx("y",80,0));
-  ctx.lineTo(megaminx("x",80,1), megaminx("y",80,1));
-  ctx.lineTo(megaminx("x",80,2), megaminx("y",80,2));
-  ctx.lineTo(megaminx("x",80,3), megaminx("y",80,3));
-  ctx.lineTo(megaminx("x",80,4), megaminx("y",80,4));
-  ctx.closePath();
-
-  ctx.moveTo(megaminx("x",35,0), megaminx("y",35,0));
-  ctx.lineTo(megaminx("x",35,1), megaminx("y",35,1));
-  ctx.lineTo(megaminx("x",35,2), megaminx("y",35,2));
-  ctx.lineTo(megaminx("x",35,3), megaminx("y",35,3));
-  ctx.lineTo(megaminx("x",35,4), megaminx("y",35,4));
-  ctx.closePath();
-  
-  ctx.moveTo(megaminx("x",100,0), megaminx("y",100,0));
-  ctx.lineTo(megaminx("x",80,0), megaminx("y",80,0));
-  ctx.moveTo(megaminx("x",100,1), megaminx("y",100,1));
-  ctx.lineTo(megaminx("x",80,1), megaminx("y",80,1));
-  ctx.moveTo(megaminx("x",100,2), megaminx("y",100,2));
-  ctx.lineTo(megaminx("x",80,2), megaminx("y",80,2));
-  ctx.moveTo(megaminx("x",100,3), megaminx("y",100,3));
-  ctx.lineTo(megaminx("x",80,3), megaminx("y",80,3));
-  ctx.moveTo(megaminx("x",100,4), megaminx("y",100,4));
-  ctx.lineTo(megaminx("x",80,4), megaminx("y",80,4));
-  
-  ctx.moveTo(megaminx_edge("x","in",0,0), megaminx_edge("y","in",0,0));
-  ctx.lineTo(megaminx("x",35,0), megaminx("y",35,0));
-  ctx.moveTo(megaminx_edge("x","in",0,1), megaminx_edge("y","in",0,1));
-  ctx.lineTo(megaminx("x",35,1), megaminx("y",35,1));
-  ctx.moveTo(megaminx_edge("x","in",1,0), megaminx_edge("y","in",1,0));
-  ctx.lineTo(megaminx("x",35,1), megaminx("y",35,1));
-  ctx.moveTo(megaminx_edge("x","in",1,1), megaminx_edge("y","in",1,1));
-  ctx.lineTo(megaminx("x",35,2), megaminx("y",35,2));
-  ctx.moveTo(megaminx_edge("x","in",2,0), megaminx_edge("y","in",2,0));
-  ctx.lineTo(megaminx("x",35,2), megaminx("y",35,2));
-  ctx.moveTo(megaminx_edge("x","in",2,1), megaminx_edge("y","in",2,1));
-  ctx.lineTo(megaminx("x",35,3), megaminx("y",35,3));
-  ctx.moveTo(megaminx_edge("x","in",3,0), megaminx_edge("y","in",3,0));
-  ctx.lineTo(megaminx("x",35,3), megaminx("y",35,3));
-  ctx.moveTo(megaminx_edge("x","in",3,1), megaminx_edge("y","in",3,1));
-  ctx.lineTo(megaminx("x",35,4), megaminx("y",35,4));
-  ctx.moveTo(megaminx_edge("x","in",4,0), megaminx_edge("y","in",4,0));
-  ctx.lineTo(megaminx("x",35,4), megaminx("y",35,4));
-  ctx.moveTo(megaminx_edge("x","in",4,1), megaminx_edge("y","in",4,1));
-  ctx.lineTo(megaminx("x",35,0), megaminx("y",35,0));
-  
-  ctx.moveTo(megaminx_edge("x","in" ,0,0), megaminx_edge("y","in" ,0,0));
-  ctx.lineTo(megaminx_edge("x","out",0,0), megaminx_edge("y","out",0,0));
-  ctx.moveTo(megaminx_edge("x","in" ,0,1), megaminx_edge("y","in" ,0,1));
-  ctx.lineTo(megaminx_edge("x","out",0,1), megaminx_edge("y","out",0,1));
-  ctx.moveTo(megaminx_edge("x","in" ,1,0), megaminx_edge("y","in" ,1,0));
-  ctx.lineTo(megaminx_edge("x","out",1,0), megaminx_edge("y","out",1,0));
-  ctx.moveTo(megaminx_edge("x","in" ,1,1), megaminx_edge("y","in" ,1,1));
-  ctx.lineTo(megaminx_edge("x","out",1,1), megaminx_edge("y","out",1,1));
-  ctx.moveTo(megaminx_edge("x","in" ,2,0), megaminx_edge("y","in" ,2,0));
-  ctx.lineTo(megaminx_edge("x","out",2,0), megaminx_edge("y","out",2,0));
-  ctx.moveTo(megaminx_edge("x","in" ,2,1), megaminx_edge("y","in" ,2,1));
-  ctx.lineTo(megaminx_edge("x","out",2,1), megaminx_edge("y","out",2,1));
-  ctx.moveTo(megaminx_edge("x","in" ,3,0), megaminx_edge("y","in" ,3,0));
-  ctx.lineTo(megaminx_edge("x","out",3,0), megaminx_edge("y","out",3,0));
-  ctx.moveTo(megaminx_edge("x","in" ,3,1), megaminx_edge("y","in" ,3,1));
-  ctx.lineTo(megaminx_edge("x","out",3,1), megaminx_edge("y","out",3,1));
-  ctx.moveTo(megaminx_edge("x","in" ,4,0), megaminx_edge("y","in" ,4,0));
-  ctx.lineTo(megaminx_edge("x","out",4,0), megaminx_edge("y","out",4,0));
-  ctx.moveTo(megaminx_edge("x","in" ,4,1), megaminx_edge("y","in" ,4,1));
-  ctx.lineTo(megaminx_edge("x","out",4,1), megaminx_edge("y","out",4,1));
-  
   ctx.stroke();
-  
-  function megaminx(axis,r,k){
-    if(axis == "x"){
-      return origin + r * Math.cos((2 * Math.PI * k) / 5 + Math.PI / 2);
-    }else if(axis == "y"){
-      return origin - r * Math.sin((2 * Math.PI * k) / 5 + Math.PI / 2);
-    }
-  }
-  
-  function megaminx_edge(axis,side,k,l){
-    var angle;
-    var r;
-    var gap;
+}
 
-    if(side == "in"){
-      r = 65
-      gap = 0.043
-    }else if(side == "out"){
-      r = 84
-      gap = 0.081
-    }
-
-    if(l == 0){
-      angle = 0.4 * k + 0.2 - gap
-    }else if(l == 1){
-      angle = 0.4 * k + 0.2 + gap
-    }
-  
-    if(axis == "x"){
-      return 120 + r * Math.cos((angle * Math.PI) + Math.PI / 2);
-    }else if(axis == "y"){
-      return 120 - r * Math.sin((angle * Math.PI) + Math.PI / 2);
-    }
+function upface_corner(k,color){
+  var m;
+  if(k == 0){
+    m = 4
+  } else {
+    m = k - 1
   }
+
+  ctx.beginPath();
+  ctx.moveTo(megaminx_corner("x",35,k), megaminx_corner("y",35,k));
+  ctx.lineTo(megaminx_edge("x","in" ,m,1), megaminx_edge("y","in" ,m,1));
+  ctx.lineTo(megaminx_corner("x",80,k), megaminx_corner("y",80,k));
+  ctx.lineTo(megaminx_edge("x","in" ,k,0), megaminx_edge("y","in" ,k,0));
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.stroke();
+}
+
+function upface_edge(k,color){
+  ctx.beginPath();
+  ctx.moveTo(megaminx_corner("x",35,k), megaminx_corner("y",35,k))
+  ctx.lineTo(megaminx_edge("x","in" ,k,0), megaminx_edge("y","in" ,k,0));
+  ctx.lineTo(megaminx_edge("x","in" ,k,1), megaminx_edge("y","in" ,k,1));
+  ctx.lineTo(megaminx_corner("x",35,k+1), megaminx_corner("y",35,k+1));
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.stroke();
+}
+
+function side_corner1(k,color){
+  ctx.beginPath();
+  ctx.lineTo(megaminx_corner("x",80,k), megaminx_corner("y",80,k))
+  ctx.lineTo(megaminx_corner("x",100,k), megaminx_corner("y",100,k))
+  ctx.lineTo(megaminx_edge("x","out",k,0), megaminx_edge("y","out",k,0));
+  ctx.lineTo(megaminx_edge("x","in",k,0), megaminx_edge("y","in",k,0));
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.stroke();  
+}
+
+function side_corner2(k,color){
+  var m;
+  if(k == 0){
+    m = 4
+  } else {
+    m = k - 1
+  }
+
+  ctx.beginPath();
+  ctx.lineTo(megaminx_corner("x",80,k), megaminx_corner("y",80,k))
+  ctx.lineTo(megaminx_corner("x",100,k), megaminx_corner("y",100,k))
+  ctx.lineTo(megaminx_edge("x","out",m,1), megaminx_edge("y","out",m,1));
+  ctx.lineTo(megaminx_edge("x","in",m,1), megaminx_edge("y","in",m,1));
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.stroke();  
+}
+
+function side_edge(k,color){
+  ctx.beginPath();
+  ctx.lineTo(megaminx_edge("x","in",k,0), megaminx_edge("y","in",k,0));
+  ctx.lineTo(megaminx_edge("x","out",k,0), megaminx_edge("y","out",k,0));
+  ctx.lineTo(megaminx_edge("x","out",k,1), megaminx_edge("y","out",k,1));
+  ctx.lineTo(megaminx_edge("x","in",k,1), megaminx_edge("y","in",k,1));
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.stroke();  
+}
+
+function megaminx_corner(axis,r,k){
+  if(axis == "x"){
+    return origin + r * Math.cos((2 * Math.PI * k) / 5 + Math.PI / 2);
+  }else if(axis == "y"){
+    return origin - r * Math.sin((2 * Math.PI * k) / 5 + Math.PI / 2);
+  }
+}
+
+function megaminx_edge(axis,side,k,l){
+  var angle;
+  var r;
+  var gap;
+
+  if(side == "in"){
+    r = 65
+    gap = 0.043
+  }else if(side == "out"){
+    r = 84
+    gap = 0.081
+  }
+
+  if(l == 0){
+    angle = 0.4 * k + 0.2 - gap
+  }else if(l == 1){
+    angle = 0.4 * k + 0.2 + gap
+  }
+
+  if(axis == "x"){
+    return origin + r * Math.cos((angle * Math.PI) + Math.PI / 2);
+  }else if(axis == "y"){
+    return origin - r * Math.sin((angle * Math.PI) + Math.PI / 2);
+  }
+}
