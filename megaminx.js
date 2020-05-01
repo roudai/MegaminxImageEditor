@@ -1,4 +1,4 @@
-const origin = 120;
+const origin = document.getElementById('canvas').width / 2;
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
@@ -6,7 +6,7 @@ const ctx = canvas.getContext('2d');
 ctx.lineWidth = 2;
 ctx.strokeStyle = '#000';
 
-upface_center(  '#d3d3d3') // ブロック1
+pentagon(35,'#d3d3d3') // ブロック1
 
 upface_corner(0,"#d3d3d3") // ブロック2
 upface_edge  (0,"#d3d3d3") // ブロック3
@@ -35,16 +35,22 @@ side_corner1(4,"#d3d3d3") // ブロック24
 side_edge   (4,"#d3d3d3") // ブロック25
 side_corner2(0,"#d3d3d3") // ブロック26
 
-function upface_center(color){
+ctx.lineWidth = 4;
+pentagon(80)
+pentagon(100)
+
+function pentagon(size,color){
   ctx.beginPath();
-  ctx.moveTo(megaminx_corner("x",35,0), megaminx_corner("y",35,0));
-  ctx.lineTo(megaminx_corner("x",35,1), megaminx_corner("y",35,1));
-  ctx.lineTo(megaminx_corner("x",35,2), megaminx_corner("y",35,2));
-  ctx.lineTo(megaminx_corner("x",35,3), megaminx_corner("y",35,3));
-  ctx.lineTo(megaminx_corner("x",35,4), megaminx_corner("y",35,4));
-  ctx.fillStyle = color;
-  ctx.fill();
+  ctx.moveTo(megaminx_corner("x",size,0), megaminx_corner("y",size,0));
+  ctx.lineTo(megaminx_corner("x",size,1), megaminx_corner("y",size,1));
+  ctx.lineTo(megaminx_corner("x",size,2), megaminx_corner("y",size,2));
+  ctx.lineTo(megaminx_corner("x",size,3), megaminx_corner("y",size,3));
+  ctx.lineTo(megaminx_corner("x",size,4), megaminx_corner("y",size,4));
   ctx.closePath();
+  if(color != null){
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
   ctx.stroke();
 }
 
