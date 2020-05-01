@@ -7,41 +7,47 @@ const radius5 = origin * 84  / 105
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
+let bcolor = document.getElementById('canvas').getAttribute('bcolor');
+let ucolor = document.getElementById('canvas').getAttribute('ucolor');
+ucolor.split();
+let scolor = document.getElementById('canvas').getAttribute('scolor');
+scolor.split();
+
 /* コンテキストの設定 */
 ctx.lineWidth = 2;
 ctx.strokeStyle = '#000';
 
-ctx.fillStyle = '#3cb371';
+ctx.fillStyle = color_convert(bcolor[0]);
 ctx.fillRect(0, 0, origin*2, origin*2)
 
-pentagon(radius1,'#d3d3d3') // ブロック1
+pentagon(radius1,color_convert(ucolor[0])) // ブロック1
 
-upface_corner(0,"#d3d3d3") // ブロック2
-upface_edge  (0,"#d3d3d3") // ブロック3
-upface_corner(1,"#d3d3d3") // ブロック4
-upface_edge  (1,"#d3d3d3") // ブロック5
-upface_corner(2,"#d3d3d3") // ブロック6
-upface_edge  (2,"#d3d3d3") // ブロック7
-upface_corner(3,"#d3d3d3") // ブロック8
-upface_edge  (3,"#d3d3d3") // ブロック9
-upface_corner(4,"#d3d3d3") // ブロック10
-upface_edge  (4,"#d3d3d3") // ブロック11
+upface_corner(0,color_convert(ucolor[1])) // ブロック2
+upface_edge  (0,color_convert(ucolor[2])) // ブロック3
+upface_corner(1,color_convert(ucolor[3])) // ブロック4
+upface_edge  (1,color_convert(ucolor[4])) // ブロック5
+upface_corner(2,color_convert(ucolor[5])) // ブロック6
+upface_edge  (2,color_convert(ucolor[6])) // ブロック7
+upface_corner(3,color_convert(ucolor[7])) // ブロック8
+upface_edge  (3,color_convert(ucolor[8])) // ブロック9
+upface_corner(4,color_convert(ucolor[9])) // ブロック10
+upface_edge  (4,color_convert(ucolor[10])) // ブロック11
 
-side_corner1(0,"#d3d3d3") // ブロック12
-side_edge   (0,"#d3d3d3") // ブロック13
-side_corner2(1,"#d3d3d3") // ブロック14
-side_corner1(1,"#d3d3d3") // ブロック15
-side_edge   (1,"#d3d3d3") // ブロック16
-side_corner2(2,"#d3d3d3") // ブロック17
-side_corner1(2,"#d3d3d3") // ブロック18
-side_edge   (2,"#d3d3d3") // ブロック19
-side_corner2(3,"#d3d3d3") // ブロック20
-side_corner1(3,"#d3d3d3") // ブロック21
-side_edge   (3,"#d3d3d3") // ブロック20
-side_corner2(4,"#d3d3d3") // ブロック23
-side_corner1(4,"#d3d3d3") // ブロック24
-side_edge   (4,"#d3d3d3") // ブロック25
-side_corner2(0,"#d3d3d3") // ブロック26
+side_corner1(0,color_convert(scolor[0])) // ブロック12
+side_edge   (0,color_convert(scolor[1])) // ブロック13
+side_corner2(1,color_convert(scolor[2])) // ブロック14
+side_corner1(1,color_convert(scolor[3])) // ブロック15
+side_edge   (1,color_convert(scolor[4])) // ブロック16
+side_corner2(2,color_convert(scolor[5])) // ブロック17
+side_corner1(2,color_convert(scolor[6])) // ブロック18
+side_edge   (2,color_convert(scolor[7])) // ブロック19
+side_corner2(3,color_convert(scolor[8])) // ブロック20
+side_corner1(3,color_convert(scolor[9])) // ブロック21
+side_edge   (3,color_convert(scolor[10])) // ブロック20
+side_corner2(4,color_convert(scolor[11])) // ブロック23
+side_corner1(4,color_convert(scolor[12])) // ブロック24
+side_edge   (4,color_convert(scolor[13])) // ブロック25
+side_corner2(0,color_convert(scolor[14])) // ブロック26
 
 ctx.lineWidth = 4;
 pentagon(radius2)
@@ -168,4 +174,20 @@ function megaminx_edge(axis,side,k,l){
   }else if(axis == "y"){
     return origin - r * Math.sin((angle * Math.PI) + Math.PI / 2) + origin / 12;
   }
+}
+
+function color_convert(color){
+  if     (color == "d"){ return "darkgray"}
+  else if(color == "u"){ return "lightgray"}
+  else if(color == "p"){ return "pink"}
+  else if(color == "c"){ return "lemonchiffon"}
+  else if(color == "a"){ return "aqua"}
+  else if(color == "o"){ return "orange"}
+  else if(color == "l"){ return "lawngreen"}
+  else if(color == "b"){ return "dodgerblue"}
+  else if(color == "y"){ return "yellow"}
+  else if(color == "s"){ return "darkviolet"}
+  else if(color == "g"){ return "seagreen"}
+  else if(color == "r"){ return "red"}
+  else if(color == "w"){ return "white"}
 }
