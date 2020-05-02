@@ -17,6 +17,8 @@ scolor.split();
 imageView();
 
 function imageChange(){
+  sizecheck()
+
   const sizeValue =  document.getElementById('imageSize').value
   canvas.width = sizeValue
   canvas.height = sizeValue
@@ -249,4 +251,35 @@ function color_convert(color){
   else if(color == "g"){ return "seagreen"}
   else if(color == "r"){ return "red"}
   else if(color == "w"){ return "white"}
+}
+
+function downloadImage(){
+  const format = document.getElementById('fmt').value
+  let canvas = document.getElementById("canvas");
+  let link = document.createElement("a");
+
+  if(format=="png"){
+    link.href = canvas.toDataURL("image/png");
+    link.download = "megaminx.png";
+  }else if(format=="gif"){
+    link.href = canvas.toDataURL("image/gif");
+    link.download = "megaminx.gif";
+  }else if(format=="jpg"){
+    link.href = canvas.toDataURL("image/jpg");
+    link.download = "megaminx.jpg";
+  }
+
+  link.click();
+}
+
+function sizecheck(){
+  let imageSize = document.getElementById('imageSize').value
+  
+  if(imageSize==""){
+    document.getElementById('imageSize').value = 200
+  }else if(imageSize < 100){
+    document.getElementById('imageSize').value = 100
+  }else if(imageSize > 1000){
+    document.getElementById('imageSize').value = 1000
+  }
 }

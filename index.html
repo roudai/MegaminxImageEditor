@@ -15,20 +15,29 @@
       <li>Megaminx Image Editor</li>
     </ol>
     <div class="float-right">
-      <a href="https://github.com/roudai/Megaminx">GitHub</a>
+      <a href="https://github.com/roudai/MegaminxImageEditor">GitHub</a>
     </div>
     <br>
     <div class="text-center">
-      <canvas id="canvas" width="128" height="128" bcolor="w" ucolor="uuuuuuuuuuu" scolor="pppcccaaaooolll"></canvas>
+      <canvas id="canvas" width="200" height="200" bcolor="w" ucolor="uuuuuuuuuuu" scolor="pppcccaaaooolll"></canvas>
     </div>
+    <br>
     <div class="text-center">
-      <button type="submit" class="btn btn-primary" onclick="imageChange();">submit</button>
+      <button type="submit" class="btn btn-info" onclick="downloadImage();">download</button>
     </div>
+    
     <label for="size">Size of generated image</label>
-    <input id="imageSize" class="form-control" name="size" type="number" value="128" min="1" max="1024" step="1">
+    <input onchange="imageChange();" id="imageSize" class="form-control" name="size" type="number" value="200" min="1" max="1024" step="1">
   
+    <label for="fmt">Image Format</label>
+    <SELECT id="fmt" class = "form-control">
+      <OPTION value="png" selected>png</OPTION>
+      <OPTION value="gif">gif</OPTION>
+      <OPTION value="jpg">jpg</OPTION>
+    </SELECT>
+
     <label>Center Color</label>
-    <SELECT id="uface0" class="form-control">
+    <SELECT id="uface0" class="form-control" onchange="imageChange();">
       <OPTION value="d">dimgray</OPTION>
       <OPTION value="u" selected>lightgray</OPTION>
       <OPTION value="p">pink</OPTION>
@@ -48,7 +57,7 @@
     <div class="row">
       <div class="col-xs-12 col-md-2">
       <label>1</label>
-        <SELECT id="uface1" class="form-control">
+        <SELECT id="uface1" class="form-control" onchange="imageChange();">
           <OPTION value="d">dimgray</OPTION>
           <OPTION value="u" selected>lightgray</OPTION>
           <OPTION value="p">pink</OPTION>
@@ -66,7 +75,7 @@
       </div>
       <div class="col-xs-12 col-md-2">
       <label>2</label>
-        <SELECT id="uface2" class="form-control">
+        <SELECT id="uface2" class="form-control" onchange="imageChange();">
           <OPTION value="d">dimgray</OPTION>
           <OPTION value="u" selected>lightgray</OPTION>
           <OPTION value="p">pink</OPTION>
@@ -84,7 +93,7 @@
       </div>
       <div class="col-xs-12 col-md-2">
       <label>3</label>
-        <SELECT id="uface3" class="form-control">
+        <SELECT id="uface3" class="form-control" onchange="imageChange();">
           <OPTION value="d">dimgray</OPTION>
           <OPTION value="u" selected>lightgray</OPTION>
           <OPTION value="p">pink</OPTION>
@@ -102,7 +111,7 @@
       </div>
       <div class="col-xs-12 col-md-2">
       <label>4</label>
-        <SELECT id="uface4" class="form-control">
+        <SELECT id="uface4" class="form-control" onchange="imageChange();">
           <OPTION value="d">dimgray</OPTION>
           <OPTION value="u" selected>lightgray</OPTION>
           <OPTION value="p">pink</OPTION>
@@ -120,7 +129,7 @@
       </div>
       <div class="col-xs-12 col-md-2">
       <label>5</label>
-        <SELECT id="uface5" class="form-control">
+        <SELECT id="uface5" class="form-control" onchange="imageChange();">
           <OPTION value="d">dimgray</OPTION>
           <OPTION value="u" selected>lightgray</OPTION>
           <OPTION value="p">pink</OPTION>
@@ -141,7 +150,7 @@
     <div class="row">
       <div class="col-xs-12 col-md-2">
       <label>6</label>
-        <SELECT id="uface6" class="form-control">
+        <SELECT id="uface6" class="form-control" onchange="imageChange();">
           <OPTION value="d">dimgray</OPTION>
           <OPTION value="u" selected>lightgray</OPTION>
           <OPTION value="p">pink</OPTION>
@@ -159,7 +168,7 @@
       </div>
       <div class="col-xs-12 col-md-2">
       <label>7</label>
-        <SELECT id="uface7" class="form-control">
+        <SELECT id="uface7" class="form-control" onchange="imageChange();">
           <OPTION value="d">dimgray</OPTION>
           <OPTION value="u" selected>lightgray</OPTION>
           <OPTION value="p">pink</OPTION>
@@ -177,7 +186,7 @@
       </div>
       <div class="col-xs-12 col-md-2">
       <label>8</label>
-        <SELECT id="uface8" class="form-control">
+        <SELECT id="uface8" class="form-control" onchange="imageChange();">
           <OPTION value="d">dimgray</OPTION>
           <OPTION value="u" selected>lightgray</OPTION>
           <OPTION value="p">pink</OPTION>
@@ -195,7 +204,7 @@
       </div>
       <div class="col-xs-12 col-md-2">
       <label>9</label>
-        <SELECT id="uface9" class="form-control">
+        <SELECT id="uface9" class="form-control" onchange="imageChange();">
           <OPTION value="d">dimgray</OPTION>
           <OPTION value="u" selected>lightgray</OPTION>
           <OPTION value="p">pink</OPTION>
@@ -213,7 +222,7 @@
       </div>
       <div class="col-xs-12 col-md-2">
       <label>10</label>
-        <SELECT id="uface10" class="form-control">
+        <SELECT id="uface10" class="form-control" onchange="imageChange();">
           <OPTION value="d">dimgray</OPTION>
           <OPTION value="u" selected>lightgray</OPTION>
           <OPTION value="p">pink</OPTION>
@@ -235,7 +244,7 @@
     <div class="row">
       <div class="col-xs-12 col-md-2">
       <label>1</label>
-        <SELECT id="sface1" class="form-control">
+        <SELECT id="sface1" class="form-control" onchange="imageChange();">
           <OPTION value="d">dimgray</OPTION>
           <OPTION value="u">lightgray</OPTION>
           <OPTION value="p" selected>pink</OPTION>
@@ -253,7 +262,7 @@
       </div>
       <div class="col-xs-12 col-md-2">
       <label>2</label>
-        <SELECT id="sface2" class="form-control">
+        <SELECT id="sface2" class="form-control" onchange="imageChange();">
           <OPTION value="d">dimgray</OPTION>
           <OPTION value="u">lightgray</OPTION>
           <OPTION value="p" selected>pink</OPTION>
@@ -271,7 +280,7 @@
       </div>
       <div class="col-xs-12 col-md-2">
       <label>3</label>
-        <SELECT id="sface3" class="form-control">
+        <SELECT id="sface3" class="form-control" onchange="imageChange();">
           <OPTION value="d">dimgray</OPTION>
           <OPTION value="u">lightgray</OPTION>
           <OPTION value="p" selected>pink</OPTION>
@@ -289,7 +298,7 @@
       </div>
       <div class="col-xs-12 col-md-2">
       <label>4</label>
-        <SELECT id="sface4" class="form-control">
+        <SELECT id="sface4" class="form-control" onchange="imageChange();">
           <OPTION value="d">dimgray</OPTION>
           <OPTION value="u">lightgray</OPTION>
           <OPTION value="p">pink</OPTION>
@@ -307,7 +316,7 @@
       </div>
       <div class="col-xs-12 col-md-2">
       <label>5</label>
-        <SELECT id="sface5" class="form-control">
+        <SELECT id="sface5" class="form-control" onchange="imageChange();">
           <OPTION value="d">dimgray</OPTION>
           <OPTION value="u">lightgray</OPTION>
           <OPTION value="p">pink</OPTION>
@@ -325,7 +334,7 @@
       </div>
       <div class="col-xs-12 col-md-2">
         <label>6</label>
-          <SELECT id="sface6" class="form-control">
+          <SELECT id="sface6" class="form-control" onchange="imageChange();">
             <OPTION value="d">dimgray</OPTION>
             <OPTION value="u">lightgray</OPTION>
             <OPTION value="p">pink</OPTION>
@@ -346,7 +355,7 @@
     <div class="row">
       <div class="col-xs-12 col-md-2">
       <label>7</label>
-        <SELECT id="sface7" class="form-control">
+        <SELECT id="sface7" class="form-control" onchange="imageChange();">
           <OPTION value="d">dimgray</OPTION>
           <OPTION value="u">lightgray</OPTION>
           <OPTION value="p">pink</OPTION>
@@ -364,7 +373,7 @@
       </div>
       <div class="col-xs-12 col-md-2">
       <label>8</label>
-        <SELECT id="sface8" class="form-control">
+        <SELECT id="sface8" class="form-control" onchange="imageChange();">
           <OPTION value="d">dimgray</OPTION>
           <OPTION value="u">lightgray</OPTION>
           <OPTION value="p">pink</OPTION>
@@ -382,7 +391,7 @@
       </div>
       <div class="col-xs-12 col-md-2">
       <label>9</label>
-        <SELECT id="sface9" class="form-control">
+        <SELECT id="sface9" class="form-control" onchange="imageChange();">
           <OPTION value="d">dimgray</OPTION>
           <OPTION value="u">lightgray</OPTION>
           <OPTION value="p">pink</OPTION>
@@ -400,7 +409,7 @@
       </div>
       <div class="col-xs-12 col-md-2">
       <label>10</label>
-        <SELECT id="sface10" class="form-control">
+        <SELECT id="sface10" class="form-control" onchange="imageChange();">
           <OPTION value="d">dimgray</OPTION>
           <OPTION value="u">lightgray</OPTION>
           <OPTION value="p">pink</OPTION>
@@ -418,7 +427,7 @@
       </div>
       <div class="col-xs-12 col-md-2">
       <label>11</label>
-        <SELECT id="sface11" class="form-control">
+        <SELECT id="sface11" class="form-control" onchange="imageChange();">
           <OPTION value="d">dimgray</OPTION>
           <OPTION value="u">lightgray</OPTION>
           <OPTION value="p">pink</OPTION>
@@ -436,7 +445,7 @@
       </div>
       <div class="col-xs-12 col-md-2">
       <label>12</label>
-        <SELECT id="sface12" class="form-control">
+        <SELECT id="sface12" class="form-control" onchange="imageChange();">
           <OPTION value="d">dimgray</OPTION>
           <OPTION value="u">lightgray</OPTION>
           <OPTION value="p">pink</OPTION>
@@ -457,7 +466,7 @@
     <div class="row">
       <div class="col-xs-12 col-md-2">
       <label>13</label>
-        <SELECT id="sface13" class="form-control">
+        <SELECT id="sface13" class="form-control" onchange="imageChange();">
           <OPTION value="d">dimgray</OPTION>
           <OPTION value="u">lightgray</OPTION>
           <OPTION value="p">pink</OPTION>
@@ -475,7 +484,7 @@
       </div>
       <div class="col-xs-12 col-md-2">
       <label>14</label>
-        <SELECT id="sface14" class="form-control">
+        <SELECT id="sface14" class="form-control" onchange="imageChange();">
           <OPTION value="d">dimgray</OPTION>
           <OPTION value="u">lightgray</OPTION>
           <OPTION value="p">pink</OPTION>
@@ -493,7 +502,7 @@
       </div>
       <div class="col-xs-12 col-md-2">
       <label>15</label>
-        <SELECT id="sface15" class="form-control">
+        <SELECT id="sface15" class="form-control" onchange="imageChange();">
           <OPTION value="d">dimgray</OPTION>
           <OPTION value="u">lightgray</OPTION>
           <OPTION value="p">pink</OPTION>
