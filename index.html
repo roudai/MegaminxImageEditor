@@ -4,11 +4,513 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title></title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <title>Megaminx Image Editor</title>
 </head>
 <body>
-  <canvas id="canvas" width="240" height="240" bcolor="w" ucolor="wwwwwwwwwww" scolor="bbbyyysssgggrrr"></canvas>
-  <canvas id="canvas" width="240" height="240" bcolor="w" ucolor="uuuuuuuuuuu" scolor="pppcccaaaooolll"></canvas>
+  <div class="container">
+    <ol class="breadcrumb">
+      <li>Megaminx Image Editor</li>
+    </ol>
+    <div class="float-right">
+      <a href="https://github.com/roudai/Megaminx">GitHub</a>
+    </div>
+    <br>
+    <div class="text-center">
+      <canvas id="canvas" width="128" height="128" bcolor="w" ucolor="uuuuuuuuuuu" scolor="pppcccaaaooolll"></canvas>
+    </div>
+    <div class="text-center">
+      <button type="submit" class="btn btn-primary" onclick="imageChange();">submit</button>
+    </div>
+    <label for="size">Size of generated image</label>
+    <input id="imageSize" class="form-control" name="size" type="number" value="128" min="1" max="1024" step="1">
+  
+    <label>Center Color</label>
+    <SELECT id="uface0" class="form-control">
+      <OPTION value="d">dimgray</OPTION>
+      <OPTION value="u" selected>lightgray</OPTION>
+      <OPTION value="p">pink</OPTION>
+      <OPTION value="c">lemonchiffon</OPTION>
+      <OPTION value="a">aqua</OPTION>
+      <OPTION value="o">orange</OPTION>
+      <OPTION value="l">lawngreen</OPTION>
+      <OPTION value="b">dodgerblue</OPTION>
+      <OPTION value="y">yellow</OPTION>
+      <OPTION value="s">darkviolet</OPTION>
+      <OPTION value="g">seagreen</OPTION>
+      <OPTION value="r">red</OPTION>
+      <OPTION value="w">white</OPTION>
+    </SELECT>
+
+    <div>U Face Color</div>
+    <div class="row">
+      <div class="col-xs-12 col-md-2">
+      <label>1</label>
+        <SELECT id="uface1" class="form-control">
+          <OPTION value="d">dimgray</OPTION>
+          <OPTION value="u" selected>lightgray</OPTION>
+          <OPTION value="p">pink</OPTION>
+          <OPTION value="c">lemonchiffon</OPTION>
+          <OPTION value="a">aqua</OPTION>
+          <OPTION value="o">orange</OPTION>
+          <OPTION value="l">lawngreen</OPTION>
+          <OPTION value="b">dodgerblue</OPTION>
+          <OPTION value="y">yellow</OPTION>
+          <OPTION value="s">darkviolet</OPTION>
+          <OPTION value="g">seagreen</OPTION>
+          <OPTION value="r">red</OPTION>
+          <OPTION value="w">white</OPTION>
+        </SELECT>
+      </div>
+      <div class="col-xs-12 col-md-2">
+      <label>2</label>
+        <SELECT id="uface2" class="form-control">
+          <OPTION value="d">dimgray</OPTION>
+          <OPTION value="u" selected>lightgray</OPTION>
+          <OPTION value="p">pink</OPTION>
+          <OPTION value="c">lemonchiffon</OPTION>
+          <OPTION value="a">aqua</OPTION>
+          <OPTION value="o">orange</OPTION>
+          <OPTION value="l">lawngreen</OPTION>
+          <OPTION value="b">dodgerblue</OPTION>
+          <OPTION value="y">yellow</OPTION>
+          <OPTION value="s">darkviolet</OPTION>
+          <OPTION value="g">seagreen</OPTION>
+          <OPTION value="r">red</OPTION>
+          <OPTION value="w">white</OPTION>
+        </SELECT>
+      </div>
+      <div class="col-xs-12 col-md-2">
+      <label>3</label>
+        <SELECT id="uface3" class="form-control">
+          <OPTION value="d">dimgray</OPTION>
+          <OPTION value="u" selected>lightgray</OPTION>
+          <OPTION value="p">pink</OPTION>
+          <OPTION value="c">lemonchiffon</OPTION>
+          <OPTION value="a">aqua</OPTION>
+          <OPTION value="o">orange</OPTION>
+          <OPTION value="l">lawngreen</OPTION>
+          <OPTION value="b">dodgerblue</OPTION>
+          <OPTION value="y">yellow</OPTION>
+          <OPTION value="s">darkviolet</OPTION>
+          <OPTION value="g">seagreen</OPTION>
+          <OPTION value="r">red</OPTION>
+          <OPTION value="w">white</OPTION>
+        </SELECT>
+      </div>
+      <div class="col-xs-12 col-md-2">
+      <label>4</label>
+        <SELECT id="uface4" class="form-control">
+          <OPTION value="d">dimgray</OPTION>
+          <OPTION value="u" selected>lightgray</OPTION>
+          <OPTION value="p">pink</OPTION>
+          <OPTION value="c">lemonchiffon</OPTION>
+          <OPTION value="a">aqua</OPTION>
+          <OPTION value="o">orange</OPTION>
+          <OPTION value="l">lawngreen</OPTION>
+          <OPTION value="b">dodgerblue</OPTION>
+          <OPTION value="y">yellow</OPTION>
+          <OPTION value="s">darkviolet</OPTION>
+          <OPTION value="g">seagreen</OPTION>
+          <OPTION value="r">red</OPTION>
+          <OPTION value="w">white</OPTION>
+        </SELECT>
+      </div>
+      <div class="col-xs-12 col-md-2">
+      <label>5</label>
+        <SELECT id="uface5" class="form-control">
+          <OPTION value="d">dimgray</OPTION>
+          <OPTION value="u" selected>lightgray</OPTION>
+          <OPTION value="p">pink</OPTION>
+          <OPTION value="c">lemonchiffon</OPTION>
+          <OPTION value="a">aqua</OPTION>
+          <OPTION value="o">orange</OPTION>
+          <OPTION value="l">lawngreen</OPTION>
+          <OPTION value="b">dodgerblue</OPTION>
+          <OPTION value="y">yellow</OPTION>
+          <OPTION value="s">darkviolet</OPTION>
+          <OPTION value="g">seagreen</OPTION>
+          <OPTION value="r">red</OPTION>
+          <OPTION value="w">white</OPTION>
+        </SELECT>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-xs-12 col-md-2">
+      <label>6</label>
+        <SELECT id="uface6" class="form-control">
+          <OPTION value="d">dimgray</OPTION>
+          <OPTION value="u" selected>lightgray</OPTION>
+          <OPTION value="p">pink</OPTION>
+          <OPTION value="c">lemonchiffon</OPTION>
+          <OPTION value="a">aqua</OPTION>
+          <OPTION value="o">orange</OPTION>
+          <OPTION value="l">lawngreen</OPTION>
+          <OPTION value="b">dodgerblue</OPTION>
+          <OPTION value="y">yellow</OPTION>
+          <OPTION value="s">darkviolet</OPTION>
+          <OPTION value="g">seagreen</OPTION>
+          <OPTION value="r">red</OPTION>
+          <OPTION value="w">white</OPTION>
+        </SELECT>
+      </div>
+      <div class="col-xs-12 col-md-2">
+      <label>7</label>
+        <SELECT id="uface7" class="form-control">
+          <OPTION value="d">dimgray</OPTION>
+          <OPTION value="u" selected>lightgray</OPTION>
+          <OPTION value="p">pink</OPTION>
+          <OPTION value="c">lemonchiffon</OPTION>
+          <OPTION value="a">aqua</OPTION>
+          <OPTION value="o">orange</OPTION>
+          <OPTION value="l">lawngreen</OPTION>
+          <OPTION value="b">dodgerblue</OPTION>
+          <OPTION value="y">yellow</OPTION>
+          <OPTION value="s">darkviolet</OPTION>
+          <OPTION value="g">seagreen</OPTION>
+          <OPTION value="r">red</OPTION>
+          <OPTION value="w">white</OPTION>
+        </SELECT>
+      </div>
+      <div class="col-xs-12 col-md-2">
+      <label>8</label>
+        <SELECT id="uface8" class="form-control">
+          <OPTION value="d">dimgray</OPTION>
+          <OPTION value="u" selected>lightgray</OPTION>
+          <OPTION value="p">pink</OPTION>
+          <OPTION value="c">lemonchiffon</OPTION>
+          <OPTION value="a">aqua</OPTION>
+          <OPTION value="o">orange</OPTION>
+          <OPTION value="l">lawngreen</OPTION>
+          <OPTION value="b">dodgerblue</OPTION>
+          <OPTION value="y">yellow</OPTION>
+          <OPTION value="s">darkviolet</OPTION>
+          <OPTION value="g">seagreen</OPTION>
+          <OPTION value="r">red</OPTION>
+          <OPTION value="w">white</OPTION>
+        </SELECT>
+      </div>
+      <div class="col-xs-12 col-md-2">
+      <label>9</label>
+        <SELECT id="uface9" class="form-control">
+          <OPTION value="d">dimgray</OPTION>
+          <OPTION value="u" selected>lightgray</OPTION>
+          <OPTION value="p">pink</OPTION>
+          <OPTION value="c">lemonchiffon</OPTION>
+          <OPTION value="a">aqua</OPTION>
+          <OPTION value="o">orange</OPTION>
+          <OPTION value="l">lawngreen</OPTION>
+          <OPTION value="b">dodgerblue</OPTION>
+          <OPTION value="y">yellow</OPTION>
+          <OPTION value="s">darkviolet</OPTION>
+          <OPTION value="g">seagreen</OPTION>
+          <OPTION value="r">red</OPTION>
+          <OPTION value="w">white</OPTION>
+        </SELECT>
+      </div>
+      <div class="col-xs-12 col-md-2">
+      <label>10</label>
+        <SELECT id="uface10" class="form-control">
+          <OPTION value="d">dimgray</OPTION>
+          <OPTION value="u" selected>lightgray</OPTION>
+          <OPTION value="p">pink</OPTION>
+          <OPTION value="c">lemonchiffon</OPTION>
+          <OPTION value="a">aqua</OPTION>
+          <OPTION value="o">orange</OPTION>
+          <OPTION value="l">lawngreen</OPTION>
+          <OPTION value="b">dodgerblue</OPTION>
+          <OPTION value="y">yellow</OPTION>
+          <OPTION value="s">darkviolet</OPTION>
+          <OPTION value="g">seagreen</OPTION>
+          <OPTION value="r">red</OPTION>
+          <OPTION value="w">white</OPTION>
+        </SELECT>
+      </div>
+    </div>
+
+    <div>Side Face Color</div>
+    <div class="row">
+      <div class="col-xs-12 col-md-2">
+      <label>1</label>
+        <SELECT id="sface1" class="form-control">
+          <OPTION value="d">dimgray</OPTION>
+          <OPTION value="u">lightgray</OPTION>
+          <OPTION value="p" selected>pink</OPTION>
+          <OPTION value="c">lemonchiffon</OPTION>
+          <OPTION value="a">aqua</OPTION>
+          <OPTION value="o">orange</OPTION>
+          <OPTION value="l">lawngreen</OPTION>
+          <OPTION value="b">dodgerblue</OPTION>
+          <OPTION value="y">yellow</OPTION>
+          <OPTION value="s">darkviolet</OPTION>
+          <OPTION value="g">seagreen</OPTION>
+          <OPTION value="r">red</OPTION>
+          <OPTION value="w">white</OPTION>
+        </SELECT>
+      </div>
+      <div class="col-xs-12 col-md-2">
+      <label>2</label>
+        <SELECT id="sface2" class="form-control">
+          <OPTION value="d">dimgray</OPTION>
+          <OPTION value="u">lightgray</OPTION>
+          <OPTION value="p" selected>pink</OPTION>
+          <OPTION value="c">lemonchiffon</OPTION>
+          <OPTION value="a">aqua</OPTION>
+          <OPTION value="o">orange</OPTION>
+          <OPTION value="l">lawngreen</OPTION>
+          <OPTION value="b">dodgerblue</OPTION>
+          <OPTION value="y">yellow</OPTION>
+          <OPTION value="s">darkviolet</OPTION>
+          <OPTION value="g">seagreen</OPTION>
+          <OPTION value="r">red</OPTION>
+          <OPTION value="w">white</OPTION>
+        </SELECT>
+      </div>
+      <div class="col-xs-12 col-md-2">
+      <label>3</label>
+        <SELECT id="sface3" class="form-control">
+          <OPTION value="d">dimgray</OPTION>
+          <OPTION value="u">lightgray</OPTION>
+          <OPTION value="p" selected>pink</OPTION>
+          <OPTION value="c">lemonchiffon</OPTION>
+          <OPTION value="a">aqua</OPTION>
+          <OPTION value="o">orange</OPTION>
+          <OPTION value="l">lawngreen</OPTION>
+          <OPTION value="b">dodgerblue</OPTION>
+          <OPTION value="y">yellow</OPTION>
+          <OPTION value="s">darkviolet</OPTION>
+          <OPTION value="g">seagreen</OPTION>
+          <OPTION value="r">red</OPTION>
+          <OPTION value="w">white</OPTION>
+        </SELECT>
+      </div>
+      <div class="col-xs-12 col-md-2">
+      <label>4</label>
+        <SELECT id="sface4" class="form-control">
+          <OPTION value="d">dimgray</OPTION>
+          <OPTION value="u">lightgray</OPTION>
+          <OPTION value="p">pink</OPTION>
+          <OPTION value="c" selected>lemonchiffon</OPTION>
+          <OPTION value="a">aqua</OPTION>
+          <OPTION value="o">orange</OPTION>
+          <OPTION value="l">lawngreen</OPTION>
+          <OPTION value="b">dodgerblue</OPTION>
+          <OPTION value="y">yellow</OPTION>
+          <OPTION value="s">darkviolet</OPTION>
+          <OPTION value="g">seagreen</OPTION>
+          <OPTION value="r">red</OPTION>
+          <OPTION value="w">white</OPTION>
+        </SELECT>
+      </div>
+      <div class="col-xs-12 col-md-2">
+      <label>5</label>
+        <SELECT id="sface5" class="form-control">
+          <OPTION value="d">dimgray</OPTION>
+          <OPTION value="u">lightgray</OPTION>
+          <OPTION value="p">pink</OPTION>
+          <OPTION value="c" selected>lemonchiffon</OPTION>
+          <OPTION value="a">aqua</OPTION>
+          <OPTION value="o">orange</OPTION>
+          <OPTION value="l">lawngreen</OPTION>
+          <OPTION value="b">dodgerblue</OPTION>
+          <OPTION value="y">yellow</OPTION>
+          <OPTION value="s">darkviolet</OPTION>
+          <OPTION value="g">seagreen</OPTION>
+          <OPTION value="r">red</OPTION>
+          <OPTION value="w">white</OPTION>
+        </SELECT>
+      </div>
+      <div class="col-xs-12 col-md-2">
+        <label>6</label>
+          <SELECT id="sface6" class="form-control">
+            <OPTION value="d">dimgray</OPTION>
+            <OPTION value="u">lightgray</OPTION>
+            <OPTION value="p">pink</OPTION>
+            <OPTION value="c" selected>lemonchiffon</OPTION>
+            <OPTION value="a">aqua</OPTION>
+            <OPTION value="o">orange</OPTION>
+            <OPTION value="l">lawngreen</OPTION>
+            <OPTION value="b">dodgerblue</OPTION>
+            <OPTION value="y">yellow</OPTION>
+            <OPTION value="s">darkviolet</OPTION>
+            <OPTION value="g">seagreen</OPTION>
+            <OPTION value="r">red</OPTION>
+            <OPTION value="w">white</OPTION>
+          </SELECT>
+        </div>
+    </div>
+
+    <div class="row">
+      <div class="col-xs-12 col-md-2">
+      <label>7</label>
+        <SELECT id="sface7" class="form-control">
+          <OPTION value="d">dimgray</OPTION>
+          <OPTION value="u">lightgray</OPTION>
+          <OPTION value="p">pink</OPTION>
+          <OPTION value="c">lemonchiffon</OPTION>
+          <OPTION value="a" selected>aqua</OPTION>
+          <OPTION value="o">orange</OPTION>
+          <OPTION value="l">lawngreen</OPTION>
+          <OPTION value="b">dodgerblue</OPTION>
+          <OPTION value="y">yellow</OPTION>
+          <OPTION value="s">darkviolet</OPTION>
+          <OPTION value="g">seagreen</OPTION>
+          <OPTION value="r">red</OPTION>
+          <OPTION value="w">white</OPTION>
+        </SELECT>
+      </div>
+      <div class="col-xs-12 col-md-2">
+      <label>8</label>
+        <SELECT id="sface8" class="form-control">
+          <OPTION value="d">dimgray</OPTION>
+          <OPTION value="u">lightgray</OPTION>
+          <OPTION value="p">pink</OPTION>
+          <OPTION value="c">lemonchiffon</OPTION>
+          <OPTION value="a" selected>aqua</OPTION>
+          <OPTION value="o">orange</OPTION>
+          <OPTION value="l">lawngreen</OPTION>
+          <OPTION value="b">dodgerblue</OPTION>
+          <OPTION value="y">yellow</OPTION>
+          <OPTION value="s">darkviolet</OPTION>
+          <OPTION value="g">seagreen</OPTION>
+          <OPTION value="r">red</OPTION>
+          <OPTION value="w">white</OPTION>
+        </SELECT>
+      </div>
+      <div class="col-xs-12 col-md-2">
+      <label>9</label>
+        <SELECT id="sface9" class="form-control">
+          <OPTION value="d">dimgray</OPTION>
+          <OPTION value="u">lightgray</OPTION>
+          <OPTION value="p">pink</OPTION>
+          <OPTION value="c">lemonchiffon</OPTION>
+          <OPTION value="a" selected>aqua</OPTION>
+          <OPTION value="o">orange</OPTION>
+          <OPTION value="l">lawngreen</OPTION>
+          <OPTION value="b">dodgerblue</OPTION>
+          <OPTION value="y">yellow</OPTION>
+          <OPTION value="s">darkviolet</OPTION>
+          <OPTION value="g">seagreen</OPTION>
+          <OPTION value="r">red</OPTION>
+          <OPTION value="w">white</OPTION>
+        </SELECT>
+      </div>
+      <div class="col-xs-12 col-md-2">
+      <label>10</label>
+        <SELECT id="sface10" class="form-control">
+          <OPTION value="d">dimgray</OPTION>
+          <OPTION value="u">lightgray</OPTION>
+          <OPTION value="p">pink</OPTION>
+          <OPTION value="c">lemonchiffon</OPTION>
+          <OPTION value="a">aqua</OPTION>
+          <OPTION value="o" selected>orange</OPTION>
+          <OPTION value="l">lawngreen</OPTION>
+          <OPTION value="b">dodgerblue</OPTION>
+          <OPTION value="y">yellow</OPTION>
+          <OPTION value="s">darkviolet</OPTION>
+          <OPTION value="g">seagreen</OPTION>
+          <OPTION value="r">red</OPTION>
+          <OPTION value="w">white</OPTION>
+        </SELECT>
+      </div>
+      <div class="col-xs-12 col-md-2">
+      <label>11</label>
+        <SELECT id="sface11" class="form-control">
+          <OPTION value="d">dimgray</OPTION>
+          <OPTION value="u">lightgray</OPTION>
+          <OPTION value="p">pink</OPTION>
+          <OPTION value="c">lemonchiffon</OPTION>
+          <OPTION value="a">aqua</OPTION>
+          <OPTION value="o" selected>orange</OPTION>
+          <OPTION value="l">lawngreen</OPTION>
+          <OPTION value="b">dodgerblue</OPTION>
+          <OPTION value="y">yellow</OPTION>
+          <OPTION value="s">darkviolet</OPTION>
+          <OPTION value="g">seagreen</OPTION>
+          <OPTION value="r">red</OPTION>
+          <OPTION value="w">white</OPTION>
+        </SELECT>
+      </div>
+      <div class="col-xs-12 col-md-2">
+      <label>12</label>
+        <SELECT id="sface12" class="form-control">
+          <OPTION value="d">dimgray</OPTION>
+          <OPTION value="u">lightgray</OPTION>
+          <OPTION value="p">pink</OPTION>
+          <OPTION value="c">lemonchiffon</OPTION>
+          <OPTION value="a">aqua</OPTION>
+          <OPTION value="o" selected>orange</OPTION>
+          <OPTION value="l">lawngreen</OPTION>
+          <OPTION value="b">dodgerblue</OPTION>
+          <OPTION value="y">yellow</OPTION>
+          <OPTION value="s">darkviolet</OPTION>
+          <OPTION value="g">seagreen</OPTION>
+          <OPTION value="r">red</OPTION>
+          <OPTION value="w">white</OPTION>
+        </SELECT>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-xs-12 col-md-2">
+      <label>13</label>
+        <SELECT id="sface13" class="form-control">
+          <OPTION value="d">dimgray</OPTION>
+          <OPTION value="u">lightgray</OPTION>
+          <OPTION value="p">pink</OPTION>
+          <OPTION value="c">lemonchiffon</OPTION>
+          <OPTION value="a">aqua</OPTION>
+          <OPTION value="o">orange</OPTION>
+          <OPTION value="l" selected>lawngreen</OPTION>
+          <OPTION value="b">dodgerblue</OPTION>
+          <OPTION value="y">yellow</OPTION>
+          <OPTION value="s">darkviolet</OPTION>
+          <OPTION value="g">seagreen</OPTION>
+          <OPTION value="r">red</OPTION>
+          <OPTION value="w">white</OPTION>
+        </SELECT>
+      </div>
+      <div class="col-xs-12 col-md-2">
+      <label>14</label>
+        <SELECT id="sface14" class="form-control">
+          <OPTION value="d">dimgray</OPTION>
+          <OPTION value="u">lightgray</OPTION>
+          <OPTION value="p">pink</OPTION>
+          <OPTION value="c">lemonchiffon</OPTION>
+          <OPTION value="a">aqua</OPTION>
+          <OPTION value="o">orange</OPTION>
+          <OPTION value="l" selected>lawngreen</OPTION>
+          <OPTION value="b">dodgerblue</OPTION>
+          <OPTION value="y">yellow</OPTION>
+          <OPTION value="s">darkviolet</OPTION>
+          <OPTION value="g">seagreen</OPTION>
+          <OPTION value="r">red</OPTION>
+          <OPTION value="w">white</OPTION>
+        </SELECT>
+      </div>
+      <div class="col-xs-12 col-md-2">
+      <label>15</label>
+        <SELECT id="sface15" class="form-control">
+          <OPTION value="d">dimgray</OPTION>
+          <OPTION value="u">lightgray</OPTION>
+          <OPTION value="p">pink</OPTION>
+          <OPTION value="c">lemonchiffon</OPTION>
+          <OPTION value="a">aqua</OPTION>
+          <OPTION value="o">orange</OPTION>
+          <OPTION value="l" selected>lawngreen</OPTION>
+          <OPTION value="b">dodgerblue</OPTION>
+          <OPTION value="y">yellow</OPTION>
+          <OPTION value="s">darkviolet</OPTION>
+          <OPTION value="g">seagreen</OPTION>
+          <OPTION value="r">red</OPTION>
+          <OPTION value="w">white</OPTION>
+        </SELECT>
+      </div>
+    </div>
+  </div>
   <script type="text/javascript" src="megaminx.js"></script>
 </body>
 </html>

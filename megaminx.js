@@ -1,11 +1,12 @@
-const origin = document.getElementById('canvas').width / 2;
-const radius1 = origin * 35  / 105
-const radius2 = origin * 80  / 105
-const radius3 = origin * 100 / 105
-const radius4 = origin * 65  / 105
-const radius5 = origin * 84  / 105
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
+
+var origin = document.getElementById('canvas').width / 2;
+var radius1 = origin * 35  / 105
+var radius2 = origin * 80  / 105
+var radius3 = origin * 100 / 105
+var radius4 = origin * 65  / 105
+var radius5 = origin * 84  / 105
 
 let bcolor = document.getElementById('canvas').getAttribute('bcolor');
 let ucolor = document.getElementById('canvas').getAttribute('ucolor');
@@ -13,45 +14,103 @@ ucolor.split();
 let scolor = document.getElementById('canvas').getAttribute('scolor');
 scolor.split();
 
-/* コンテキストの設定 */
-ctx.lineWidth = 2;
-ctx.strokeStyle = '#000';
+imageView();
 
-ctx.fillStyle = color_convert(bcolor[0]);
-ctx.fillRect(0, 0, origin*2, origin*2)
+function imageChange(){
+  const sizeValue =  document.getElementById('imageSize').value
+  canvas.width = sizeValue
+  canvas.height = sizeValue
 
-pentagon(radius1,color_convert(ucolor[0])) // ブロック1
+  origin = document.getElementById('imageSize').value / 2;
+  radius1 = origin * 35  / 105
+  radius2 = origin * 80  / 105
+  radius3 = origin * 100 / 105
+  radius4 = origin * 65  / 105
+  radius5 = origin * 84  / 105
 
-upface_corner(0,color_convert(ucolor[1])) // ブロック2
-upface_edge  (0,color_convert(ucolor[2])) // ブロック3
-upface_corner(1,color_convert(ucolor[3])) // ブロック4
-upface_edge  (1,color_convert(ucolor[4])) // ブロック5
-upface_corner(2,color_convert(ucolor[5])) // ブロック6
-upface_edge  (2,color_convert(ucolor[6])) // ブロック7
-upface_corner(3,color_convert(ucolor[7])) // ブロック8
-upface_edge  (3,color_convert(ucolor[8])) // ブロック9
-upface_corner(4,color_convert(ucolor[9])) // ブロック10
-upface_edge  (4,color_convert(ucolor[10])) // ブロック11
+  ucolor = [document.getElementById('uface0').value,
+            document.getElementById('uface1').value,
+            document.getElementById('uface2').value,
+            document.getElementById('uface3').value,
+            document.getElementById('uface4').value,
+            document.getElementById('uface5').value,
+            document.getElementById('uface6').value,
+            document.getElementById('uface7').value,
+            document.getElementById('uface8').value,
+            document.getElementById('uface9').value,
+            document.getElementById('uface10').value]
 
-side_corner1(0,color_convert(scolor[0])) // ブロック12
-side_edge   (0,color_convert(scolor[1])) // ブロック13
-side_corner2(1,color_convert(scolor[2])) // ブロック14
-side_corner1(1,color_convert(scolor[3])) // ブロック15
-side_edge   (1,color_convert(scolor[4])) // ブロック16
-side_corner2(2,color_convert(scolor[5])) // ブロック17
-side_corner1(2,color_convert(scolor[6])) // ブロック18
-side_edge   (2,color_convert(scolor[7])) // ブロック19
-side_corner2(3,color_convert(scolor[8])) // ブロック20
-side_corner1(3,color_convert(scolor[9])) // ブロック21
-side_edge   (3,color_convert(scolor[10])) // ブロック20
-side_corner2(4,color_convert(scolor[11])) // ブロック23
-side_corner1(4,color_convert(scolor[12])) // ブロック24
-side_edge   (4,color_convert(scolor[13])) // ブロック25
-side_corner2(0,color_convert(scolor[14])) // ブロック26
+  scolor = [document.getElementById('sface1').value,
+            document.getElementById('sface2').value,
+            document.getElementById('sface3').value,
+            document.getElementById('sface4').value,
+            document.getElementById('sface5').value,
+            document.getElementById('sface6').value,
+            document.getElementById('sface7').value,
+            document.getElementById('sface8').value,
+            document.getElementById('sface9').value,
+            document.getElementById('sface10').value,
+            document.getElementById('sface11').value,
+            document.getElementById('sface12').value,
+            document.getElementById('sface13').value,
+            document.getElementById('sface14').value,
+            document.getElementById('sface15').value]
 
-ctx.lineWidth = 4;
-pentagon(radius2)
-pentagon(radius3)
+  imageView()
+}
+
+function imageView(){
+  /* コンテキストの設定 */
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#000';
+
+  ctx.fillStyle = color_convert(bcolor[0]);
+  ctx.fillRect(0, 0, origin*2, origin*2)
+
+  pentagon(radius1,color_convert(ucolor[0])) // ブロック1
+
+  upface_corner(0,color_convert(ucolor[1])) // ブロック2
+  upface_edge  (0,color_convert(ucolor[2])) // ブロック3
+  upface_corner(1,color_convert(ucolor[3])) // ブロック4
+  upface_edge  (1,color_convert(ucolor[4])) // ブロック5
+  upface_corner(2,color_convert(ucolor[5])) // ブロック6
+  upface_edge  (2,color_convert(ucolor[6])) // ブロック7
+  upface_corner(3,color_convert(ucolor[7])) // ブロック8
+  upface_edge  (3,color_convert(ucolor[8])) // ブロック9
+  upface_corner(4,color_convert(ucolor[9])) // ブロック10
+  upface_edge  (4,color_convert(ucolor[10])) // ブロック11
+
+  side_corner1(0,color_convert(scolor[0])) // ブロック12
+  side_edge   (0,color_convert(scolor[1])) // ブロック13
+  side_corner2(1,color_convert(scolor[2])) // ブロック14
+  side_corner1(1,color_convert(scolor[3])) // ブロック15
+  side_edge   (1,color_convert(scolor[4])) // ブロック16
+  side_corner2(2,color_convert(scolor[5])) // ブロック17
+  side_corner1(2,color_convert(scolor[6])) // ブロック18
+  side_edge   (2,color_convert(scolor[7])) // ブロック19
+  side_corner2(3,color_convert(scolor[8])) // ブロック20
+  side_corner1(3,color_convert(scolor[9])) // ブロック21
+  side_edge   (3,color_convert(scolor[10])) // ブロック20
+  side_corner2(4,color_convert(scolor[11])) // ブロック23
+  side_corner1(4,color_convert(scolor[12])) // ブロック24
+  side_edge   (4,color_convert(scolor[13])) // ブロック25
+  side_corner2(0,color_convert(scolor[14])) // ブロック26
+
+  ctx.lineWidth = 4;
+  pentagon(radius2)
+  pentagon(radius3)
+  ctx.moveTo(megaminx_corner("x",radius2,0), megaminx_corner("y",radius2,0));
+  ctx.lineTo(megaminx_corner("x",radius3,0), megaminx_corner("y",radius3,0));
+  ctx.moveTo(megaminx_corner("x",radius2,1), megaminx_corner("y",radius2,1));
+  ctx.lineTo(megaminx_corner("x",radius3,1), megaminx_corner("y",radius3,1));
+  ctx.moveTo(megaminx_corner("x",radius2,2), megaminx_corner("y",radius2,2));
+  ctx.lineTo(megaminx_corner("x",radius3,2), megaminx_corner("y",radius3,2));
+  ctx.moveTo(megaminx_corner("x",radius2,3), megaminx_corner("y",radius2,3));
+  ctx.lineTo(megaminx_corner("x",radius3,3), megaminx_corner("y",radius3,3));
+  ctx.moveTo(megaminx_corner("x",radius2,4), megaminx_corner("y",radius2,4));
+  ctx.lineTo(megaminx_corner("x",radius3,4), megaminx_corner("y",radius3,4));
+  ctx.stroke();
+}
 
 function pentagon(size,color){
   ctx.beginPath();
@@ -177,7 +236,7 @@ function megaminx_edge(axis,side,k,l){
 }
 
 function color_convert(color){
-  if     (color == "d"){ return "darkgray"}
+  if     (color == "d"){ return "dimgray"}
   else if(color == "u"){ return "lightgray"}
   else if(color == "p"){ return "pink"}
   else if(color == "c"){ return "lemonchiffon"}
