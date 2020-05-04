@@ -259,7 +259,8 @@ function color_convert(color){
   else if(color == "g"){ return "seagreen"}
   else if(color == "r"){ return "red"}
   else if(color == "w"){ return "white"}
-  else if(color == "z"){ return "black"}
+  else if(color == "x"){ return "black"}
+  else if(color == "z"){ return "#1b1b1b"}
 }
 
 function downloadImage(){
