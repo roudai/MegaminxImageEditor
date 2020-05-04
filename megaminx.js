@@ -62,9 +62,8 @@ function imageChange(){
 }
 
 function imageView(){
-  /* コンテキストの設定 */
   ctx.lineWidth = 2;
-  ctx.strokeStyle = '#000';
+  ctx.strokeStyle = color_convert(document.getElementById('border').value);
 
   ctx.fillStyle = color_convert(bcolor[0]);
   ctx.fillRect(0, 0, origin*2, origin*2)
@@ -251,6 +250,7 @@ function color_convert(color){
   else if(color == "g"){ return "seagreen"}
   else if(color == "r"){ return "red"}
   else if(color == "w"){ return "white"}
+  else if(color == "z"){ return "black"}
 }
 
 function downloadImage(){
