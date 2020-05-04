@@ -23,12 +23,15 @@
     <div class="text-center">
       <button type="submit" class="btn btn-info" onclick="downloadImage();">download</button>
     </div>
-    
+
+    <label for="name">File Name</label>
+    <input id="fname" class="form-control" type="text" value="megaminx.png">
+
     <label for="size">Size of generated image</label>
     <input onchange="imageChange();" id="imageSize" class="form-control" name="size" type="number" value="200" min="1" max="1024" step="1">
   
     <label for="fmt">Image Format</label>
-    <SELECT id="fmt" class = "form-control">
+    <SELECT onchange="formatChange();" id="fmt" class = "form-control">
       <OPTION value="png" selected>png</OPTION>
       <OPTION value="gif">gif</OPTION>
       <OPTION value="jpg">jpg</OPTION>

@@ -61,6 +61,13 @@ function imageChange(){
   imageView()
 }
 
+function formatChange(){
+  imageChange()
+
+  fileName = document.getElementById('fname').value.split('.')[0]
+  document.getElementById('fname').value = fileName + "." + document.getElementById('fmt').value
+}
+
 function imageView(){
   ctx.lineWidth = 2;
   ctx.strokeStyle = color_convert(document.getElementById('border').value);
@@ -272,6 +279,7 @@ function downloadImage(){
     link.download = "megaminx.jpg";
   }
 
+  link.download = document.getElementById('fname').value;
   link.click();
 }
 
