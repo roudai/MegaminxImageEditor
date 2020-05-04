@@ -66,7 +66,9 @@ function imageView(){
   ctx.strokeStyle = color_convert(document.getElementById('border').value);
 
   ctx.fillStyle = color_convert(bcolor[0]);
-  ctx.fillRect(0, 0, origin*2, origin*2)
+  if(document.getElementById('bg').value == "n"){
+    ctx.fillRect(0, 0, origin*2, origin*2)
+  }
 
   pentagon(radius1,color_convert(ucolor[0])) // ブロック1
 
@@ -258,6 +260,7 @@ function downloadImage(){
   let canvas = document.getElementById("canvas");
   let link = document.createElement("a");
 
+  imageView()
   if(format=="png"){
     link.href = canvas.toDataURL("image/png");
     link.download = "megaminx.png";
@@ -282,4 +285,8 @@ function sizecheck(){
   }else if(imageSize > 1000){
     document.getElementById('imageSize').value = 1000
   }
+}
+
+function selecter(){
+  
 }
