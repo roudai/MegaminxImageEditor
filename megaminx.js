@@ -294,7 +294,3 @@ function sizecheck(){
     document.getElementById('imageSize').value = 1000
   }
 }
-
-function selecter(){
-  
-}
