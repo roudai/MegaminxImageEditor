@@ -2,11 +2,7 @@ const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
 var origin = document.getElementById('canvas').width / 2;
-var radius1 = origin * 35  / 105
-var radius2 = origin * 80  / 105
-var radius3 = origin * 100 / 105
-var radius4 = origin * 65  / 105
-var radius5 = origin * 84  / 105
+var radius1,radius2,radius3,radius4,radius5;
 
 let bcolor = document.getElementById('canvas').getAttribute('bcolor');
 let ucolor = document.getElementById('canvas').getAttribute('ucolor');
@@ -24,11 +20,6 @@ function imageChange(){
   canvas.height = sizeValue
 
   origin = document.getElementById('imageSize').value / 2;
-  radius1 = origin * 35  / 105
-  radius2 = origin * 80  / 105
-  radius3 = origin * 100 / 105
-  radius4 = origin * 65  / 105
-  radius5 = origin * 84  / 105
 
   ucolor = [document.getElementById('uface0').value,
             document.getElementById('uface1').value,
@@ -69,9 +60,14 @@ function formatChange(){
 }
 
 function imageView(){
+  radius1 = origin * 35  / 105
+  radius2 = origin * 80  / 105
+  radius3 = origin * 100 / 105
+  radius4 = origin * 65  / 105
+  radius5 = origin * 84  / 105
+  
   ctx.lineWidth = 2;
   ctx.strokeStyle = color_convert(document.getElementById('border').value);
-
   ctx.fillStyle = color_convert(bcolor[0]);
   if(document.getElementById('bg').value == "n"){
     ctx.fillRect(0, 0, origin*2, origin*2)
@@ -138,12 +134,7 @@ function pentagon(size,color){
 }
 
 function upface_corner(k,color){
-  var m;
-  if(k == 0){
-    m = 4
-  } else {
-    m = k - 1
-  }
+  var m = km_convert(k);
 
   ctx.beginPath();
   ctx.moveTo(megaminx_corner("x",radius1,k), megaminx_corner("y",radius1,k));
@@ -181,12 +172,7 @@ function side_corner1(k,color){
 }
 
 function side_corner2(k,color){
-  var m;
-  if(k == 0){
-    m = 4
-  } else {
-    m = k - 1
-  }
+  var m = km_convert(k);
 
   ctx.beginPath();
   ctx.lineTo(megaminx_corner("x",radius2,k), megaminx_corner("y",radius2,k))
@@ -261,6 +247,14 @@ function color_convert(color){
   else if(color == "w"){ return "white"}
   else if(color == "x"){ return "black"}
   else if(color == "z"){ return "#1b1b1b"}
+}
+
+function km_convert(k){
+  if(k == 0){
+    return 4
+  } else {
+    return k - 1
+  }
 }
 
 function downloadImage(){
