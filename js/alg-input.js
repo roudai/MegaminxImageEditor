@@ -1,8 +1,8 @@
-// 手順入力：megaminx-state.js で色を計算し、既存の uface0..10 / sface1..15 に書き込んで再描画する。
+// 手順入力：megaminx-state.js で色を計算し、uface0..10 / sface1..15（state-editor.js が生成）に書き込んで再描画する。
 // 種類（visualcube に合わせる）
 //   alg   : Algorithm to apply         … 手順を適用した状態
 //   case  : Algorithm to solve case    … その手順で揃う状態（逆手順を適用）
-//   state : Defines the puzzle state   … 各ステッカーを手で指定（直前の計算結果から編集できる）
+//   state : Defines the puzzle state   … 各ステッカーを手で指定（state-editor.js。直前の計算結果から編集できる）
 // URLパラメータ: ?alg=R U R' U' または ?case=R U R' U'
 (function () {
   'use strict';
@@ -107,20 +107,9 @@
     else if (preset.value === 'oll') setScheme(M.ollMask({ U: faceInputs.U.value }, CODE_HEX.d));
   }
 
-  // 27個のセレクトに書き込む。14色にない色は一時的な選択肢を足して保持する
-  function setSelectColor(select, hex) {
-    const code = HEX_CODE[hex];
-    select.querySelectorAll('option[data-custom]').forEach((o) => o.remove());
-    if (code) {
-      select.value = code;
-      return;
-    }
-    const option = document.createElement('option');
-    option.value = hex;
-    option.textContent = hex;
-    option.dataset.custom = '1';
-    select.append(option);
-    select.value = hex;
+  // ステッカーの値（state-editor.js が作る hidden input）に書き込む。14色にある色は色コードにする
+  function setStickerColor(input, hex) {
+    input.value = HEX_CODE[hex] || hex;
   }
 
   function update() {
@@ -139,8 +128,8 @@
     input.classList.remove('is-invalid');
 
     const colors = M.toImageColors(state, currentScheme());
-    colors.ucolor.forEach((c, i) => setSelectColor($('uface' + i), c));
-    colors.scolor.forEach((c, i) => setSelectColor($('sface' + (i + 1)), c));
+    colors.ucolor.forEach((c, i) => setStickerColor($('uface' + i), c));
+    colors.scolor.forEach((c, i) => setStickerColor($('sface' + (i + 1)), c));
     imageChange();
   }
 
