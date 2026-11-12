@@ -51,6 +51,7 @@
     input.value = initialValue(def.id);
 
     const label = document.createElement('label');
+    label.className = 'form-label';
     label.htmlFor = def.id + '-swatch';
     label.textContent = def.label;
 

@@ -32,7 +32,7 @@
     BUTTONS.forEach((token) => {
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = 'btn btn-outline-secondary btn-sm mr-1 mb-1';
+      button.className = 'btn btn-outline-secondary btn-sm me-1 mb-1';
       button.textContent = token;
       button.addEventListener('click', () => addToken(token));
       container.append(button);
@@ -71,6 +71,7 @@
       const col = document.createElement('div');
       col.className = 'col-4 col-md-2';
       const label = document.createElement('label');
+      label.className = 'form-label';
       label.htmlFor = 'facecolor-' + face;
       label.textContent = face;
       const picker = document.createElement('input');

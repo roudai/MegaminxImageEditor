@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" rel="preload" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" as="style">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.9/dist/css/bootstrap.min.css" integrity="sha384-yEPZ7jP9S0QKiUQ0m3jjsO4ProIW7wvR9gXkI7JOGa2XVsw53Yke2bsdkBbjmmiX" crossorigin="anonymous">
   <title>Megaminx Image Editor 2.0</title>
   <style>
     .sticker-swatch {
@@ -17,7 +17,7 @@
     }
     .sticker-swatch:focus {
       outline: none;
-      box-shadow: 0 0 0 .2rem rgba(0, 123, 255, .25);
+      box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .25);
     }
     .sticker-palette {
       position: absolute;
@@ -42,13 +42,13 @@
       border-radius: .2rem;
     }
     .sticker-palette-color.selected {
-      box-shadow: 0 0 0 2px #fff, 0 0 0 4px #007bff;
+      box-shadow: 0 0 0 2px #fff, 0 0 0 4px #0d6efd;
     }
   </style>
 </head>
 <body>
   <div class="container pb-5">
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg bg-light">
       <div class="container-fluid">
         <a class="navbar-brand">Megaminx Image Editor 2.0</a>
         <span class="navbar-text">
@@ -67,24 +67,24 @@
     </div>
     <br>
     <div class="text-center">
-      <button type="submit" class="btn btn-info" onclick="downloadImage();">download</button>
+      <button type="button" class="btn btn-secondary" onclick="downloadImage();">download</button>
     </div>
 
-    <label for="name">File Name</label>
+    <label class="form-label" for="fname">File Name</label>
     <input id="fname" class="form-control" type="text" value="megaminx.png">
 
-    <label for="size">Size of generated image</label>
+    <label class="form-label" for="imageSize">Size of generated image</label>
     <input onchange="imageChange();" id="imageSize" class="form-control" name="size" type="number" value="200" min="1" max="1024" step="1">
   
-    <label for="fmt">Image Format</label>
-    <SELECT onchange="formatChange();" id="fmt" class = "form-control">
+    <label class="form-label" for="fmt">Image Format</label>
+    <SELECT onchange="formatChange();" id="fmt" class="form-select">
       <OPTION value="png" selected>png</OPTION>
       <OPTION value="gif">gif</OPTION>
       <OPTION value="jpg">jpg</OPTION>
     </SELECT>
 
     <hr>
-    <label for="alg">Algorithm</label>
+    <label class="form-label" for="alg">Algorithm</label>
     <div>
       <div class="form-check form-check-inline">
         <input class="form-check-input" type="radio" name="algType" id="algTypeAlg" value="alg" checked>
@@ -102,24 +102,22 @@
 
     <div id="algEditor">
       <div id="algButtons" class="mt-2"></div>
-      <div class="input-group mt-2">
+      <div class="input-group has-validation mt-2">
         <input id="alg" class="form-control" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">
-        <div class="input-group-append">
-          <button id="algClear" class="btn btn-outline-secondary" type="button">Clear</button>
-        </div>
+        <button id="algClear" class="btn btn-outline-secondary" type="button">Clear</button>
         <div id="algError" class="invalid-feedback"></div>
       </div>
 
-      <label for="algPreset" class="mt-2">Color Preset</label>
-      <SELECT id="algPreset" class="form-control">
+      <label class="form-label mt-2" for="algPreset">Color Preset</label>
+      <SELECT id="algPreset" class="form-select">
         <OPTION value="standard" selected>standard</OPTION>
         <OPTION value="oll">OLL (U color only)</OPTION>
         <OPTION value="custom" hidden>custom</OPTION>
       </SELECT>
 
       <div class="mt-2">
-        <label>Face Colors</label>
-        <button id="faceColorsReset" class="btn btn-outline-secondary btn-sm ml-2" type="button">Reset</button>
+        <label class="form-label">Face Colors</label>
+        <button id="faceColorsReset" class="btn btn-outline-secondary btn-sm ms-2" type="button">Reset</button>
       </div>
       <div id="faceColors" class="row"></div>
     </div>
@@ -130,27 +128,23 @@
 
     <div class="row">
       <div class="col-12 col-md-6">
-        <label for="border">Body Color</label>
+        <label class="form-label" for="border">Body Color</label>
         <div class="input-group">
           <input id="border" class="form-control" type="color" value="#000000" oninput="imageChange();">
-          <div class="input-group-append">
-            <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('border').value = '#000000'; imageChange();">Reset</button>
-          </div>
+          <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('border').value = '#000000'; imageChange();">Reset</button>
         </div>
       </div>
       <div class="col-12 col-md-6">
-        <label for="bgColor">Background Color of image</label>
+        <label class="form-label" for="bgColor">Background Color of image</label>
         <div class="input-group">
           <input id="bgColor" class="form-control" type="color" value="#ffffff" oninput="document.getElementById('bg').value = 'n'; imageChange();">
-          <div class="input-group-append">
-            <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('bgColor').value = '#ffffff'; imageChange();">Reset</button>
-          </div>
+          <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('bgColor').value = '#ffffff'; imageChange();">Reset</button>
         </div>
       </div>
     </div>
 
-    <label>Background(PNG,GIF)</label>
-    <SELECT id="bg" class="form-control" onchange="imageChange();">
+    <label class="form-label" for="bg">Background(PNG,GIF)</label>
+    <SELECT id="bg" class="form-select" onchange="imageChange();">
       <OPTION value="y" selected>transparent</OPTION>
       <OPTION value="n">non-transparent</OPTION>
     </SELECT>
