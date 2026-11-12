@@ -4,7 +4,6 @@ const ctx = canvas.getContext('2d');
 var origin = document.getElementById('canvas').width / 2;
 var radius1,radius2,radius3,radius4,radius5;
 
-let bcolor = document.getElementById('canvas').getAttribute('bcolor');
 let ucolor = document.getElementById('canvas').getAttribute('ucolor');
 ucolor.split();
 let scolor = document.getElementById('canvas').getAttribute('scolor');
@@ -68,7 +67,7 @@ function imageView(){
   
   ctx.lineWidth = 2;
   ctx.strokeStyle = color_convert(document.getElementById('border').value);
-  ctx.fillStyle = color_convert(bcolor[0]);
+  ctx.fillStyle = document.getElementById('bgColor').value;
   if(document.getElementById('bg').value == "n"){
     ctx.fillRect(0, 0, origin*2, origin*2)
   }
@@ -232,7 +231,8 @@ function megaminx_edge(axis,side,k,l){
 }
 
 function color_convert(color){
-  if     (color == "d"){ return "dimgray"}
+  if     (typeof color == "string" && color[0] == "#"){ return color } // 任意色（#rrggbb）
+  else if(color == "d"){ return "dimgray"}
   else if(color == "u"){ return "lightgray"}
   else if(color == "p"){ return "pink"}
   else if(color == "c"){ return "lemonchiffon"}

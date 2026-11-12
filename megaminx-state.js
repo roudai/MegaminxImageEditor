@@ -134,7 +134,7 @@
   function readAmount(src, pos) {
     AMOUNT_RE.lastIndex = pos;
     const m = AMOUNT_RE.exec(src);
-    if (m[1] && m[3]) throw new SyntaxError('解釈できない記号: ' + JSON.stringify(m[0]) + '（位置 ' + pos + '）');
+    if (m[1] && m[3]) throw new SyntaxError('Invalid move: ' + JSON.stringify(m[0]) + ' (at character ' + (pos + 1) + ')');
     const digits = m[1] || m[3];
     return { n: digits ? parseInt(digits, 10) : 1, prime: !!m[2], end: pos + m[0].length };
   }
@@ -149,12 +149,12 @@
       for (;;) {
         while (src[pos] === ' ') pos++;
         if (pos >= src.length) {
-          if (depth > 0) throw new SyntaxError('括弧が閉じていません');
+          if (depth > 0) throw new SyntaxError('Missing closing parenthesis');
           return out;
         }
         const ch = src[pos];
         if (ch === ')') {
-          if (depth === 0) throw new SyntaxError('対応しない ")"（位置 ' + pos + '）');
+          if (depth === 0) throw new SyntaxError('Unmatched ")" (at character ' + (pos + 1) + ')');
           pos++;
           return out;
         }
@@ -172,7 +172,7 @@
         const fm = FACE_RE.exec(src);
         if (!fm) {
           const rest = src.slice(pos).split(' ')[0];
-          throw new SyntaxError('解釈できない記号: ' + JSON.stringify(rest) + '（位置 ' + pos + '）');
+          throw new SyntaxError('Invalid move: ' + JSON.stringify(rest) + ' (at character ' + (pos + 1) + ')');
         }
         const a = readAmount(src, pos + fm[0].length);
         pos = a.end;
@@ -272,7 +272,7 @@
   function toImageColors(state, faceColors) {
     const scheme = faceColors || DEFAULT_SCHEME;
     const color = (face) => {
-      if (!(face in scheme)) throw new Error('色が未設定の面: ' + face);
+      if (!(face in scheme)) throw new Error('No color set for face: ' + face);
       return scheme[face];
     };
     const v = topView(state);

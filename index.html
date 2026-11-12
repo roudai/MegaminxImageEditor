@@ -9,15 +9,22 @@
 </head>
 <body>
   <div class="container">
-    <ol class="breadcrumb">
-      <li>Megaminx Image Editor</li>
-    </ol>
-    <div class="float-right">
-      <a href="https://github.com/roudai/MegaminxImageEditor">GitHub</a>
-    </div>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container-fluid">
+        <a class="navbar-brand">Megaminx Image Editor</a>
+        <span class="navbar-text">
+          <a href="https://github.com/roudai/MegaminxImageEditor" aria-label="GitHub">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-github" viewBox="0 0 16 16">
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+            </svg>
+          </a>
+        </span>
+      </div>
+    </nav>
+    <div class="d-flex justify-content-end text-muted small">presented by&nbsp;<a href="https://roudai.net" style="text-decoration: none">roudai.net</a></div>
     <br>
     <div class="text-center">
-      <canvas id="canvas" width="200" height="200" bcolor="w" ucolor="uuuuuuuuuuu" scolor="pppcccaaaooolll"></canvas>
+      <canvas id="canvas" width="200" height="200" ucolor="uuuuuuuuuuu" scolor="pppcccaaaooolll"></canvas>
     </div>
     <br>
     <div class="text-center">
@@ -37,6 +44,48 @@
       <OPTION value="jpg">jpg</OPTION>
     </SELECT>
 
+    <hr>
+    <label for="alg">Algorithm</label>
+    <div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="algType" id="algTypeAlg" value="alg" checked>
+        <label class="form-check-label" for="algTypeAlg">Algorithm to apply</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="algType" id="algTypeCase" value="case">
+        <label class="form-check-label" for="algTypeCase">Algorithm to solve case</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="algType" id="algTypeState" value="state">
+        <label class="form-check-label" for="algTypeState">Defines the cube state</label>
+      </div>
+    </div>
+
+    <div id="algEditor">
+      <div id="algButtons" class="mt-2"></div>
+      <div class="input-group mt-2">
+        <input id="alg" class="form-control" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <div class="input-group-append">
+          <button id="algClear" class="btn btn-outline-secondary" type="button">Clear</button>
+        </div>
+        <div id="algError" class="invalid-feedback"></div>
+      </div>
+
+      <label for="algPreset" class="mt-2">Color Preset</label>
+      <SELECT id="algPreset" class="form-control">
+        <OPTION value="standard" selected>standard</OPTION>
+        <OPTION value="oll">OLL (U color only)</OPTION>
+        <OPTION value="custom" hidden>custom</OPTION>
+      </SELECT>
+
+      <div class="mt-2">
+        <label>Face Colors</label>
+        <button id="faceColorsReset" class="btn btn-outline-secondary btn-sm ml-2" type="button">Reset</button>
+      </div>
+      <div id="faceColors" class="row"></div>
+    </div>
+
+    <div id="stateEditor" hidden>
     <label>Center Color</label>
     <SELECT id="uface0" class="form-control" onchange="imageChange();">
       <OPTION value="d">dimgray</OPTION>
@@ -546,31 +595,39 @@
         </SELECT>
       </div>
     </div>
+    </div>
 
-    <label>Border Color</label>
-    <SELECT id="border" class="form-control" onchange="imageChange();">
-      <OPTION value="d">dimgray</OPTION>
-      <OPTION value="u">lightgray</OPTION>
-      <OPTION value="p">pink</OPTION>
-      <OPTION value="c">lemonchiffon</OPTION>
-      <OPTION value="a">aqua</OPTION>
-      <OPTION value="o">orange</OPTION>
-      <OPTION value="l">lawngreen</OPTION>
-      <OPTION value="b">dodgerblue</OPTION>
-      <OPTION value="y">yellow</OPTION>
-      <OPTION value="s">darkviolet</OPTION>
-      <OPTION value="g">seagreen</OPTION>
-      <OPTION value="r">red</OPTION>
-      <OPTION value="w">white</OPTION>
-      <OPTION value="x" selected>black</OPTION>
-    </SELECT>
+    <hr>
+
+    <div class="row">
+      <div class="col-12 col-md-6">
+        <label for="border">Body Color</label>
+        <div class="input-group">
+          <input id="border" class="form-control" type="color" value="#000000" oninput="imageChange();">
+          <div class="input-group-append">
+            <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('border').value = '#000000'; imageChange();">Reset</button>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-6">
+        <label for="bgColor">Background Color of image</label>
+        <div class="input-group">
+          <input id="bgColor" class="form-control" type="color" value="#ffffff" oninput="document.getElementById('bg').value = 'n'; imageChange();">
+          <div class="input-group-append">
+            <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('bgColor').value = '#ffffff'; imageChange();">Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <label>Background(PNG,GIF)</label>
-    <SELECT id="bg" class="form-control">
+    <SELECT id="bg" class="form-control" onchange="imageChange();">
       <OPTION value="y" selected>transparent</OPTION>
       <OPTION value="n">non-transparent</OPTION>
     </SELECT>
   </div>
+  <script type="text/javascript" src="megaminx-state.js"></script>
   <script type="text/javascript" src="megaminx.js"></script>
+  <script type="text/javascript" src="alg-input.js"></script>
 </body>
 </html>

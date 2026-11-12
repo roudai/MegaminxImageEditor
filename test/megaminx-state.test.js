@@ -128,5 +128,5 @@ test('ollMask：U色以外は灰色', () => {
 });
 
 test('未設定の面があればエラー', () => {
-  assert.throws(() => M.toImageColors(SOLVED, { U: 'w' }), /色が未設定/);
+  assert.throws(() => M.toImageColors(SOLVED, { U: 'w' }), /No color set for face/);
 });
