@@ -1,8 +1,8 @@
 // 手順入力：megaminx-state.js で色を計算し、既存の uface0..10 / sface1..15 に書き込んで再描画する。
 // 種類（visualcube に合わせる）
-//   alg   : Algorithm to apply       … 手順を適用した状態
-//   case  : Algorithm to solve case  … その手順で揃う状態（逆手順を適用）
-//   state : Defines the cube state   … 各ステッカーを手で指定（直前の計算結果から編集できる）
+//   alg   : Algorithm to apply         … 手順を適用した状態
+//   case  : Algorithm to solve case    … その手順で揃う状態（逆手順を適用）
+//   state : Defines the puzzle state   … 各ステッカーを手で指定（直前の計算結果から編集できる）
 // URLパラメータ: ?alg=R U R' U' または ?case=R U R' U'
 (function () {
   'use strict';

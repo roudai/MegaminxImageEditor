@@ -16,7 +16,7 @@
 2. 既存の `megaminx.js` の描画処理は変更しない
 3. UI：手順入力欄を追加 → 計算結果を `uface0..10` / `sface1..15` のセレクトに書き込み → `imageChange()` を呼ぶ（手での微調整も可能なまま）
 4. 機能
-   - Algorithm to apply（適用後、既定）/ Algorithm to solve case（逆手順を適用）/ Defines the cube state（手で指定）の切り替え
+   - Algorithm to apply（適用後、既定）/ Algorithm to solve case（逆手順を適用）/ Defines the puzzle state（手で指定）の切り替え
    - 全体回転 `y`, `y'`, `y2`、括弧、全角アポストロフィ `’` に対応
    - 面→色の割り当て設定。OLL用マスク（U色のみ着色、他は灰色）プリセット
    - URLパラメータ `?alg=...`（適用）/ `?case=...`（ケース表示）
