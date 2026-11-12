@@ -1,5 +1,5 @@
 // メガミンクス上面（U面11枚＋側面上段15枚）の画像を canvas に描く。
-// 外から使う関数（index.html と他のスクリプト）: imageChange, formatChange, downloadImage, color_convert
+// 外から使う関数（index.html と他のスクリプト）: imageChange, downloadImage, color_convert
 //
 // 描画の座標：頂点 k（0..4）は上から反時計回り、辺 k は頂点 k と k+1 の間（辺2が下＝F）。
 //   ucolor[0]        U中心
@@ -127,20 +127,13 @@
     render();
   }
 
-  // 画像形式を変えたら、ファイル名の拡張子も合わせる
-  function formatChange() {
-    imageChange();
-    const fileName = $('fname').value.split('.')[0];
-    $('fname').value = fileName + '.' + $('fmt').value;
-  }
-
-  const MIME_TYPES = { png: 'image/png', gif: 'image/gif', jpg: 'image/jpg' };
-
+  // PNG で保存する。ファイル名が .png で終わらなければ付け足す（空欄なら megaminx.png）
   function downloadImage() {
     render();
+    const name = $('fname').value.trim() || 'megaminx';
     const link = document.createElement('a');
-    link.href = canvas.toDataURL(MIME_TYPES[$('fmt').value]);
-    link.download = $('fname').value;
+    link.href = canvas.toDataURL('image/png');
+    link.download = /\.png$/i.test(name) ? name : name + '.png';
     link.click();
   }
 
@@ -153,7 +146,6 @@
   }
 
   window.imageChange = imageChange;
-  window.formatChange = formatChange;
   window.downloadImage = downloadImage;
   window.color_convert = color_convert;
 

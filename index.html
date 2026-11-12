@@ -67,21 +67,14 @@
     </div>
     <br>
     <div class="text-center">
-      <button type="button" class="btn btn-secondary" onclick="downloadImage();">download</button>
+      <button type="button" class="btn btn-secondary" onclick="downloadImage();">Download</button>
     </div>
 
     <label class="form-label" for="fname">File Name</label>
     <input id="fname" class="form-control" type="text" value="megaminx.png">
 
-    <label class="form-label" for="imageSize">Size of generated image</label>
+    <label class="form-label" for="imageSize">Image Size (px)</label>
     <input onchange="imageChange();" id="imageSize" class="form-control" name="size" type="number" value="200" min="1" max="1024" step="1">
-  
-    <label class="form-label" for="fmt">Image Format</label>
-    <SELECT onchange="formatChange();" id="fmt" class="form-select">
-      <OPTION value="png" selected>png</OPTION>
-      <OPTION value="gif">gif</OPTION>
-      <OPTION value="jpg">jpg</OPTION>
-    </SELECT>
 
     <hr>
     <label class="form-label" for="alg">Algorithm</label>
@@ -110,9 +103,9 @@
 
       <label class="form-label mt-2" for="algPreset">Color Preset</label>
       <SELECT id="algPreset" class="form-select">
-        <OPTION value="standard" selected>standard</OPTION>
+        <OPTION value="standard" selected>Standard</OPTION>
         <OPTION value="oll">OLL (U color only)</OPTION>
-        <OPTION value="custom" hidden>custom</OPTION>
+        <OPTION value="custom" hidden>Custom</OPTION>
       </SELECT>
 
       <div class="mt-2">
@@ -135,7 +128,7 @@
         </div>
       </div>
       <div class="col-12 col-md-6">
-        <label class="form-label" for="bgColor">Background Color of image</label>
+        <label class="form-label" for="bgColor">Background Color</label>
         <div class="input-group">
           <input id="bgColor" class="form-control" type="color" value="#ffffff" oninput="document.getElementById('bg').value = 'n'; imageChange();">
           <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('bgColor').value = '#ffffff'; imageChange();">Reset</button>
@@ -143,10 +136,10 @@
       </div>
     </div>
 
-    <label class="form-label" for="bg">Background(PNG,GIF)</label>
+    <label class="form-label" for="bg">Background</label>
     <SELECT id="bg" class="form-select" onchange="imageChange();">
-      <OPTION value="y" selected>transparent</OPTION>
-      <OPTION value="n">non-transparent</OPTION>
+      <OPTION value="y" selected>Transparent</OPTION>
+      <OPTION value="n">Opaque</OPTION>
     </SELECT>
   </div>
   <script type="text/javascript" src="js/megaminx-state.js"></script>
