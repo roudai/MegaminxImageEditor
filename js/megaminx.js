@@ -65,7 +65,7 @@ function imageView(){
   radius4 = origin * 65  / 105
   radius5 = origin * 84  / 105
   
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 2 * origin / 100; // 200px のとき 2px（画像サイズに比例）
   ctx.strokeStyle = color_convert(document.getElementById('border').value);
   ctx.fillStyle = document.getElementById('bgColor').value;
   if(document.getElementById('bg').value == "n"){
@@ -101,7 +101,7 @@ function imageView(){
   side_edge   (4,color_convert(scolor[13])) // ブロック25
   side_corner2(0,color_convert(scolor[14])) // ブロック26
 
-  ctx.lineWidth = 4;
+  ctx.lineWidth = 4 * origin / 100; // 200px のとき 4px（画像サイズに比例）
   pentagon(radius2)
   pentagon(radius3)
   ctx.moveTo(megaminx_corner("x",radius2,0), megaminx_corner("y",radius2,0));
