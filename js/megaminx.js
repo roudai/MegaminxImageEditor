@@ -1,291 +1,161 @@
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
+// メガミンクス上面（U面11枚＋側面上段15枚）の画像を canvas に描く。
+// 外から使う関数（index.html と他のスクリプト）: imageChange, formatChange, downloadImage, color_convert
+//
+// 描画の座標：頂点 k（0..4）は上から反時計回り、辺 k は頂点 k と k+1 の間（辺2が下＝F）。
+//   ucolor[0]        U中心
+//   ucolor[1 + 2k]   U面の角（頂点 k）
+//   ucolor[2 + 2k]   U面の辺（辺 k）
+//   scolor[3k..3k+2] 辺 k の側面上段（左の角・辺・右の角）
+(function () {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const canvas = $('canvas');
+  const ctx = canvas.getContext('2d');
 
-var origin = document.getElementById('canvas').width / 2;
-var radius1,radius2,radius3,radius4,radius5;
-
-let ucolor = document.getElementById('canvas').getAttribute('ucolor');
-ucolor.split();
-let scolor = document.getElementById('canvas').getAttribute('scolor');
-scolor.split();
-
-imageView();
-
-function imageChange(){
-  sizecheck()
-
-  const sizeValue =  document.getElementById('imageSize').value
-  canvas.width = sizeValue
-  canvas.height = sizeValue
-
-  origin = document.getElementById('imageSize').value / 2;
-
-  ucolor = [document.getElementById('uface0').value,
-            document.getElementById('uface1').value,
-            document.getElementById('uface2').value,
-            document.getElementById('uface3').value,
-            document.getElementById('uface4').value,
-            document.getElementById('uface5').value,
-            document.getElementById('uface6').value,
-            document.getElementById('uface7').value,
-            document.getElementById('uface8').value,
-            document.getElementById('uface9').value,
-            document.getElementById('uface10').value]
-
-  scolor = [document.getElementById('sface1').value,
-            document.getElementById('sface2').value,
-            document.getElementById('sface3').value,
-            document.getElementById('sface4').value,
-            document.getElementById('sface5').value,
-            document.getElementById('sface6').value,
-            document.getElementById('sface7').value,
-            document.getElementById('sface8').value,
-            document.getElementById('sface9').value,
-            document.getElementById('sface10').value,
-            document.getElementById('sface11').value,
-            document.getElementById('sface12').value,
-            document.getElementById('sface13').value,
-            document.getElementById('sface14').value,
-            document.getElementById('sface15').value]
-
-  imageView()
-}
-
-function formatChange(){
-  imageChange()
-
-  fileName = document.getElementById('fname').value.split('.')[0]
-  document.getElementById('fname').value = fileName + "." + document.getElementById('fmt').value
-}
-
-function imageView(){
-  radius1 = origin * 35  / 105
-  radius2 = origin * 80  / 105
-  radius3 = origin * 100 / 105
-  radius4 = origin * 65  / 105
-  radius5 = origin * 84  / 105
-  
-  ctx.lineWidth = 2 * origin / 100; // 200px のとき 2px（画像サイズに比例）
-  ctx.strokeStyle = color_convert(document.getElementById('border').value);
-  ctx.fillStyle = document.getElementById('bgColor').value;
-  if(document.getElementById('bg').value == "n"){
-    ctx.fillRect(0, 0, origin*2, origin*2)
+  // 色コード → CSSの色。'#' で始まる値（任意色）はそのまま使う
+  const COLORS = {
+    d: 'dimgray', u: 'lightgray', p: 'pink', c: 'lemonchiffon', a: 'aqua', o: 'orange', l: 'lawngreen',
+    b: 'dodgerblue', y: 'yellow', s: 'darkviolet', g: 'seagreen', r: 'red', w: 'white', x: 'black', z: '#1b1b1b',
+  };
+  function color_convert(color) {
+    return typeof color === 'string' && color[0] === '#' ? color : COLORS[color];
   }
 
-  pentagon(radius1,color_convert(ucolor[0])) // ブロック1
+  // ---- 描画の状態（初期値は canvas の属性）----
+  let origin = canvas.width / 2; // 画像サイズの半分
+  let ucolor = canvas.getAttribute('ucolor');
+  let scolor = canvas.getAttribute('scolor');
+  let R; // 半径（render で origin から計算）
 
-  upface_corner(0,color_convert(ucolor[1])) // ブロック2
-  upface_edge  (0,color_convert(ucolor[2])) // ブロック3
-  upface_corner(1,color_convert(ucolor[3])) // ブロック4
-  upface_edge  (1,color_convert(ucolor[4])) // ブロック5
-  upface_corner(2,color_convert(ucolor[5])) // ブロック6
-  upface_edge  (2,color_convert(ucolor[6])) // ブロック7
-  upface_corner(3,color_convert(ucolor[7])) // ブロック8
-  upface_edge  (3,color_convert(ucolor[8])) // ブロック9
-  upface_corner(4,color_convert(ucolor[9])) // ブロック10
-  upface_edge  (4,color_convert(ucolor[10])) // ブロック11
-
-  side_corner1(0,color_convert(scolor[0])) // ブロック12
-  side_edge   (0,color_convert(scolor[1])) // ブロック13
-  side_corner2(1,color_convert(scolor[2])) // ブロック14
-  side_corner1(1,color_convert(scolor[3])) // ブロック15
-  side_edge   (1,color_convert(scolor[4])) // ブロック16
-  side_corner2(2,color_convert(scolor[5])) // ブロック17
-  side_corner1(2,color_convert(scolor[6])) // ブロック18
-  side_edge   (2,color_convert(scolor[7])) // ブロック19
-  side_corner2(3,color_convert(scolor[8])) // ブロック20
-  side_corner1(3,color_convert(scolor[9])) // ブロック21
-  side_edge   (3,color_convert(scolor[10])) // ブロック20
-  side_corner2(4,color_convert(scolor[11])) // ブロック23
-  side_corner1(4,color_convert(scolor[12])) // ブロック24
-  side_edge   (4,color_convert(scolor[13])) // ブロック25
-  side_corner2(0,color_convert(scolor[14])) // ブロック26
-
-  ctx.lineWidth = 4 * origin / 100; // 200px のとき 4px（画像サイズに比例）
-  pentagon(radius2)
-  pentagon(radius3)
-  ctx.moveTo(megaminx_corner("x",radius2,0), megaminx_corner("y",radius2,0));
-  ctx.lineTo(megaminx_corner("x",radius3,0), megaminx_corner("y",radius3,0));
-  ctx.moveTo(megaminx_corner("x",radius2,1), megaminx_corner("y",radius2,1));
-  ctx.lineTo(megaminx_corner("x",radius3,1), megaminx_corner("y",radius3,1));
-  ctx.moveTo(megaminx_corner("x",radius2,2), megaminx_corner("y",radius2,2));
-  ctx.lineTo(megaminx_corner("x",radius3,2), megaminx_corner("y",radius3,2));
-  ctx.moveTo(megaminx_corner("x",radius2,3), megaminx_corner("y",radius2,3));
-  ctx.lineTo(megaminx_corner("x",radius3,3), megaminx_corner("y",radius3,3));
-  ctx.moveTo(megaminx_corner("x",radius2,4), megaminx_corner("y",radius2,4));
-  ctx.lineTo(megaminx_corner("x",radius3,4), megaminx_corner("y",radius3,4));
-  ctx.stroke();
-}
-
-function pentagon(size,color){
-  ctx.beginPath();
-  ctx.moveTo(megaminx_corner("x",size,0), megaminx_corner("y",size,0));
-  ctx.lineTo(megaminx_corner("x",size,1), megaminx_corner("y",size,1));
-  ctx.lineTo(megaminx_corner("x",size,2), megaminx_corner("y",size,2));
-  ctx.lineTo(megaminx_corner("x",size,3), megaminx_corner("y",size,3));
-  ctx.lineTo(megaminx_corner("x",size,4), megaminx_corner("y",size,4));
-  ctx.closePath();
-  if(color != null){
-    ctx.fillStyle = color;
-    ctx.fill();
-  }
-  ctx.stroke();
-}
-
-function upface_corner(k,color){
-  var m = km_convert(k);
-
-  ctx.beginPath();
-  ctx.moveTo(megaminx_corner("x",radius1,k), megaminx_corner("y",radius1,k));
-  ctx.lineTo(megaminx_edge("x","in" ,m,1), megaminx_edge("y","in" ,m,1));
-  ctx.lineTo(megaminx_corner("x",radius2,k), megaminx_corner("y",radius2,k));
-  ctx.lineTo(megaminx_edge("x","in" ,k,0), megaminx_edge("y","in" ,k,0));
-  ctx.closePath();
-  ctx.fillStyle = color;
-  ctx.fill();
-  ctx.stroke();
-}
-
-function upface_edge(k,color){
-  ctx.beginPath();
-  ctx.moveTo(megaminx_corner("x",radius1,k), megaminx_corner("y",radius1,k))
-  ctx.lineTo(megaminx_edge("x","in" ,k,0), megaminx_edge("y","in" ,k,0));
-  ctx.lineTo(megaminx_edge("x","in" ,k,1), megaminx_edge("y","in" ,k,1));
-  ctx.lineTo(megaminx_corner("x",radius1,k+1), megaminx_corner("y",radius1,k+1));
-  ctx.closePath();
-  ctx.fillStyle = color;
-  ctx.fill();
-  ctx.stroke();
-}
-
-function side_corner1(k,color){
-  ctx.beginPath();
-  ctx.lineTo(megaminx_corner("x",radius2,k), megaminx_corner("y",radius2,k))
-  ctx.lineTo(megaminx_corner("x",radius3,k), megaminx_corner("y",radius3,k))
-  ctx.lineTo(megaminx_edge("x","out",k,0), megaminx_edge("y","out",k,0));
-  ctx.lineTo(megaminx_edge("x","in",k,0), megaminx_edge("y","in",k,0));
-  ctx.closePath();
-  ctx.fillStyle = color;
-  ctx.fill();
-  ctx.stroke();  
-}
-
-function side_corner2(k,color){
-  var m = km_convert(k);
-
-  ctx.beginPath();
-  ctx.lineTo(megaminx_corner("x",radius2,k), megaminx_corner("y",radius2,k))
-  ctx.lineTo(megaminx_corner("x",radius3,k), megaminx_corner("y",radius3,k))
-  ctx.lineTo(megaminx_edge("x","out",m,1), megaminx_edge("y","out",m,1));
-  ctx.lineTo(megaminx_edge("x","in",m,1), megaminx_edge("y","in",m,1));
-  ctx.closePath();
-  ctx.fillStyle = color;
-  ctx.fill();
-  ctx.stroke();  
-}
-
-function side_edge(k,color){
-  ctx.beginPath();
-  ctx.lineTo(megaminx_edge("x","in",k,0), megaminx_edge("y","in",k,0));
-  ctx.lineTo(megaminx_edge("x","out",k,0), megaminx_edge("y","out",k,0));
-  ctx.lineTo(megaminx_edge("x","out",k,1), megaminx_edge("y","out",k,1));
-  ctx.lineTo(megaminx_edge("x","in",k,1), megaminx_edge("y","in",k,1));
-  ctx.closePath();
-  ctx.fillStyle = color;
-  ctx.fill();
-  ctx.stroke();  
-}
-
-function megaminx_corner(axis,r,k){
-  if(axis == "x"){
-    return origin + r * Math.cos((2 * Math.PI * k) / 5 + Math.PI / 2);
-  }else if(axis == "y"){
-    return origin - r * Math.sin((2 * Math.PI * k) / 5 + Math.PI / 2) + origin / 12;
-  }
-}
-
-function megaminx_edge(axis,side,k,l){
-  var angle;
-  var r;
-  var gap;
-
-  if(side == "in"){
-    r = radius4
-    gap = 0.043
-  }else if(side == "out"){
-    r = radius5
-    gap = 0.081
+  // ---- 座標 ----
+  // 頂点 k の方向にある半径 r の点
+  function corner(r, k) {
+    const t = (2 * Math.PI * k) / 5 + Math.PI / 2;
+    return [origin + r * Math.cos(t), origin - r * Math.sin(t) + origin / 12];
   }
 
-  if(l == 0){
-    angle = 0.4 * k + 0.2 - gap
-  }else if(l == 1){
-    angle = 0.4 * k + 0.2 + gap
+  // 辺 k の中央付近の点。side: 'in'（U面との境）/ 'out'（外周）、l: 0（頂点 k 側）/ 1（頂点 k+1 側）
+  function edge(side, k, l) {
+    const r = side === 'in' ? R.in : R.out;
+    const gap = side === 'in' ? 0.043 : 0.081;
+    const angle = l === 0 ? 0.4 * k + 0.2 - gap : 0.4 * k + 0.2 + gap;
+    const t = angle * Math.PI + Math.PI / 2;
+    return [origin + r * Math.cos(t), origin - r * Math.sin(t) + origin / 12];
   }
 
-  if(axis == "x"){
-    return origin + r * Math.cos((angle * Math.PI) + Math.PI / 2);
-  }else if(axis == "y"){
-    return origin - r * Math.sin((angle * Math.PI) + Math.PI / 2) + origin / 12;
-  }
-}
+  const prev = (k) => (k + 4) % 5;
+  const pentagonPoints = (r) => [0, 1, 2, 3, 4].map((k) => corner(r, k));
 
-function color_convert(color){
-  if     (typeof color == "string" && color[0] == "#"){ return color } // 任意色（#rrggbb）
-  else if(color == "d"){ return "dimgray"}
-  else if(color == "u"){ return "lightgray"}
-  else if(color == "p"){ return "pink"}
-  else if(color == "c"){ return "lemonchiffon"}
-  else if(color == "a"){ return "aqua"}
-  else if(color == "o"){ return "orange"}
-  else if(color == "l"){ return "lawngreen"}
-  else if(color == "b"){ return "dodgerblue"}
-  else if(color == "y"){ return "yellow"}
-  else if(color == "s"){ return "darkviolet"}
-  else if(color == "g"){ return "seagreen"}
-  else if(color == "r"){ return "red"}
-  else if(color == "w"){ return "white"}
-  else if(color == "x"){ return "black"}
-  else if(color == "z"){ return "#1b1b1b"}
-}
-
-function km_convert(k){
-  if(k == 0){
-    return 4
-  } else {
-    return k - 1
-  }
-}
-
-function downloadImage(){
-  const format = document.getElementById('fmt').value
-  let canvas = document.getElementById("canvas");
-  let link = document.createElement("a");
-
-  imageView()
-  if(format=="png"){
-    link.href = canvas.toDataURL("image/png");
-    link.download = "megaminx.png";
-  }else if(format=="gif"){
-    link.href = canvas.toDataURL("image/gif");
-    link.download = "megaminx.gif";
-  }else if(format=="jpg"){
-    link.href = canvas.toDataURL("image/jpg");
-    link.download = "megaminx.jpg";
+  // ---- 図形 ----
+  // 多角形を描く（color を渡したときだけ塗る）。線は現在の lineWidth / strokeStyle
+  function polygon(points, color) {
+    ctx.beginPath();
+    ctx.moveTo(points[0][0], points[0][1]);
+    points.slice(1).forEach((p) => ctx.lineTo(p[0], p[1]));
+    ctx.closePath();
+    if (color != null) {
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+    ctx.stroke();
   }
 
-  link.download = document.getElementById('fname').value;
-  link.click();
-}
+  const upCorner = (k) => [corner(R.center, k), edge('in', prev(k), 1), corner(R.inner, k), edge('in', k, 0)];
+  const upEdge = (k) => [corner(R.center, k), edge('in', k, 0), edge('in', k, 1), corner(R.center, k + 1)];
+  const sideCornerLeft = (k) => [corner(R.inner, k), corner(R.outer, k), edge('out', k, 0), edge('in', k, 0)];
+  const sideCornerRight = (k) => [corner(R.inner, k), corner(R.outer, k), edge('out', prev(k), 1), edge('in', prev(k), 1)];
+  const sideEdge = (k) => [edge('in', k, 0), edge('out', k, 0), edge('out', k, 1), edge('in', k, 1)];
 
-function sizecheck(){
-  let imageSize = document.getElementById('imageSize').value
-  
-  if(imageSize==""){
-    document.getElementById('imageSize').value = 200
-  }else if(imageSize < 100){
-    document.getElementById('imageSize').value = 100
-  }else if(imageSize > 1000){
-    document.getElementById('imageSize').value = 1000
+  // ---- 描画 ----
+  function render() {
+    R = {
+      center: (origin * 35) / 105, // U中心の五角形
+      inner: (origin * 80) / 105, // U面の外周
+      outer: (origin * 100) / 105, // 側面の外周
+      in: (origin * 65) / 105, // 辺の点（U面側）
+      out: (origin * 84) / 105, // 辺の点（外周側）
+    };
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if ($('bg').value === 'n') {
+      ctx.fillStyle = $('bgColor').value;
+      ctx.fillRect(0, 0, origin * 2, origin * 2);
+    }
+
+    // ステッカー（線の太さは画像サイズに比例。200px のとき 2px）
+    ctx.lineWidth = (2 * origin) / 100;
+    ctx.strokeStyle = color_convert($('border').value);
+
+    polygon(pentagonPoints(R.center), color_convert(ucolor[0]));
+    for (let k = 0; k < 5; k++) {
+      polygon(upCorner(k), color_convert(ucolor[1 + 2 * k]));
+      polygon(upEdge(k), color_convert(ucolor[2 + 2 * k]));
+    }
+    for (let k = 0; k < 5; k++) {
+      polygon(sideCornerLeft(k), color_convert(scolor[3 * k]));
+      polygon(sideEdge(k), color_convert(scolor[3 * k + 1]));
+      polygon(sideCornerRight((k + 1) % 5), color_convert(scolor[3 * k + 2]));
+    }
+
+    // 輪郭（200px のとき 4px）：U面の外周、側面の外周、側面の区切り5本
+    ctx.lineWidth = (4 * origin) / 100;
+    polygon(pentagonPoints(R.inner));
+    polygon(pentagonPoints(R.outer));
+    for (let k = 0; k < 5; k++) {
+      const [x1, y1] = corner(R.inner, k);
+      const [x2, y2] = corner(R.outer, k);
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+    }
+    ctx.stroke();
   }
-}
+
+  // ---- 外から呼ぶ関数 ----
+  // 入力欄（サイズ・各ステッカーの色）を読み直して描き直す
+  function imageChange() {
+    sizecheck();
+    const size = $('imageSize').value;
+    canvas.width = size;
+    canvas.height = size;
+    origin = size / 2;
+
+    ucolor = [];
+    for (let i = 0; i <= 10; i++) ucolor.push($('uface' + i).value);
+    scolor = [];
+    for (let i = 1; i <= 15; i++) scolor.push($('sface' + i).value);
+
+    render();
+  }
+
+  // 画像形式を変えたら、ファイル名の拡張子も合わせる
+  function formatChange() {
+    imageChange();
+    const fileName = $('fname').value.split('.')[0];
+    $('fname').value = fileName + '.' + $('fmt').value;
+  }
+
+  const MIME_TYPES = { png: 'image/png', gif: 'image/gif', jpg: 'image/jpg' };
+
+  function downloadImage() {
+    render();
+    const link = document.createElement('a');
+    link.href = canvas.toDataURL(MIME_TYPES[$('fmt').value]);
+    link.download = $('fname').value;
+    link.click();
+  }
+
+  // 画像サイズを 100〜1000 に収める（空欄なら 200）
+  function sizecheck() {
+    const size = $('imageSize').value;
+    if (size === '') $('imageSize').value = 200;
+    else if (size < 100) $('imageSize').value = 100;
+    else if (size > 1000) $('imageSize').value = 1000;
+  }
+
+  window.imageChange = imageChange;
+  window.formatChange = formatChange;
+  window.downloadImage = downloadImage;
+  window.color_convert = color_convert;
+
+  render();
+})();
