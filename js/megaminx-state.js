@@ -130,11 +130,11 @@
       .map((m) => ({ face: m.face, turns: (5 - m.turns) % 5 }));
   }
 
-  // 回数と ' を読む。戻り値 { n, prime }
-  function readAmount(src, pos) {
+  // 回数と ' を読む。戻り値 { n, prime, end }。start は記号の先頭（エラー表示用）
+  function readAmount(src, pos, start) {
     AMOUNT_RE.lastIndex = pos;
     const m = AMOUNT_RE.exec(src);
-    if (m[1] && m[3]) throw new SyntaxError('Invalid move: ' + JSON.stringify(m[0]) + ' (at character ' + (pos + 1) + ')');
+    if (m[1] && m[3]) throw new SyntaxError('Invalid move: ' + JSON.stringify(src.slice(start, pos + m[0].length)));
     const digits = m[1] || m[3];
     return { n: digits ? parseInt(digits, 10) : 1, prime: !!m[2], end: pos + m[0].length };
   }
@@ -154,14 +154,15 @@
         }
         const ch = src[pos];
         if (ch === ')') {
-          if (depth === 0) throw new SyntaxError('Unmatched ")" (at character ' + (pos + 1) + ')');
+          if (depth === 0) throw new SyntaxError('Unmatched ")"');
           pos++;
           return out;
         }
         if (ch === '(') {
+          const start = pos;
           pos++;
           const inner = seq(depth + 1);
-          const a = readAmount(src, pos);
+          const a = readAmount(src, pos, start);
           pos = a.end;
           let group = [];
           for (let i = 0; i < a.n; i++) group = group.concat(inner);
@@ -172,9 +173,9 @@
         const fm = FACE_RE.exec(src);
         if (!fm) {
           const rest = src.slice(pos).split(' ')[0];
-          throw new SyntaxError('Invalid move: ' + JSON.stringify(rest) + ' (at character ' + (pos + 1) + ')');
+          throw new SyntaxError('Invalid move: ' + JSON.stringify(rest));
         }
-        const a = readAmount(src, pos + fm[0].length);
+        const a = readAmount(src, pos + fm[0].length, pos);
         pos = a.end;
         const n = a.prime ? -a.n : a.n;
         out.push({ face: fm[0], turns: ((n % 5) + 5) % 5 });
