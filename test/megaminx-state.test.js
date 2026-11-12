@@ -1,7 +1,7 @@
 // 実行: node --test test/
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const M = require('../megaminx-state.js');
+const M = require('../js/megaminx-state.js');
 
 const SOLVED = M.solved();
 const ALL_MOVES = M.FACES.concat(['y']);
