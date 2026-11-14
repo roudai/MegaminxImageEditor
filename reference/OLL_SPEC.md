@@ -60,6 +60,7 @@ OLL  [Group ▼] [Case ▼] [‹ Prev][Next ›]
 - 画像は solve case の状態。配色は、エディタで保存した U の色だけを残した OLL 配色（他の面は dimgray）。Body Color も保存した設定
 - ケースをクリックすると、そのケースを選んだ状態でエディタ（`index.html?oll=<名前>`）を開く
 - ナビバー：エディタは `PLL List`・`OLL List`、一覧ページは `Editor` ともう一方の一覧へのリンク
+- 覚えた度の印・進み具合・絞り込みも PLL 一覧と同じ（`reference/PLL_SPEC.md`。保存は PLL と別）
 
 ## テスト（`test/oll-data.test.js`）
 - `js/oll-data.js` が元データの全259ケースを順番どおり含み、名前が重複しない。生成し直しても変わらない
