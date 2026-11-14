@@ -123,6 +123,7 @@ PLLを選んでいる間は、種類に応じて入力欄 `#alg` に入れる手
 ## 一括ダウンロード
 - `Download` ボタンの右の **Download all PLL (.zip)** で、全151ケースの画像を1つの zip（`megaminx-pll.zip`）にまとめてダウンロードする
   - OLL の一括ダウンロードを追加するときも、同じ場所に `Download all OLL (.zip)` として並べる
+  - パソコン向けの機能なので、狭い画面（md 未満、幅 768px 未満）では表示しない（Bootstrap の `d-none d-md-inline-block`）
 - 各ケースは **solve case**（`alg` の逆手順を適用し、持ち替え y の合計を打ち消す）の状態で描く。選択中の種類やケースには関係しない
 - 画像には今の画面の設定を使う：Face Colors（Color Preset・U ↻・Flip の結果を含む）、Image Size、Body Color、Background
 - ファイル名は個別ダウンロードと同じ `pll-<名前>.png`（例：`pll-A1+.png`）。フォルダには分けず、データの並び順で入れる
