@@ -24,10 +24,14 @@ test('js/pll-data.js が最新（生成し直しても変わらない）', () =>
 });
 
 PLL.forEach((c) => {
-  test(`${c.name}: setup に alg を適用すると揃い、case 表示は setup の状態と一致する`, () => {
+  test(`${c.name}: alg は最後のAUFなしで setup を揃え、case 表示は setup の状態と一致する`, () => {
     const caseState = M.applyAlg(c.setup);
-    assert.ok(same(M.applyAlg(c.alg, { state: caseState }), SOLVED), 'setup + alg で揃わない');
-    assert.ok(same(M.applyAlg(c.alg, { inverse: true }), caseState), 'case 表示が setup と違う');
+    // 手順中の持ち替え（y）による完成後の向きの違いは無視する（画面の case 表示と同じ扱い）
+    const end = M.applyAlg(c.alg, { state: caseState, cancelRotation: true });
+    assert.ok(["", 'U', 'U2', "U2'", "U'"].some((u) => same(M.applyAlg(u, { state: end }), SOLVED)), 'setup + alg + AUF で揃わない');
+    assert.ok(same(M.applyAlg(c.alg, { inverse: true, cancelRotation: true }), caseState), 'case 表示が setup と違う');
+    assert.ok(!/\(U[^)]*\)\s*$/.test(c.alg), '最後にAUFが付いている');
+    assert.ok(!/\sy\S*\s*$/.test(c.alg), '最後に持ち替え（y）が付いている');
     assert.ok(M.toImageColors(caseState).ucolor.every((x, _, arr) => x === arr[0]), '上面がU色だけでない');
   });
 });

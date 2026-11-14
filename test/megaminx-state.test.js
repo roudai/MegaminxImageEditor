@@ -130,3 +130,16 @@ test('ollMask：U色以外は灰色', () => {
 test('未設定の面があればエラー', () => {
   assert.throws(() => M.toImageColors(SOLVED, { U: 'w' }), /No color set for face/);
 });
+
+test('cancelRotation：手順中の持ち替え（y）の合計を打ち消す', () => {
+  const same = (a, b) => a.every((x, i) => x === b[i]);
+  // 持ち替えだけなら揃った状態のまま
+  assert.ok(same(M.applyAlg("y y2'", { cancelRotation: true }), SOLVED));
+  assert.ok(same(M.applyAlg('y', { inverse: true, cancelRotation: true }), SOLVED));
+  // 最後に持ち替えを戻した手順と同じ結果になる
+  const alg = "R U y' R U' R'";
+  assert.ok(same(M.applyAlg(alg, { cancelRotation: true }), M.applyAlg(alg + ' y')));
+  assert.ok(same(M.applyAlg(alg, { inverse: true, cancelRotation: true }), M.applyAlg(alg + ' y', { inverse: true })));
+  // 持ち替えが無ければ変わらない
+  assert.ok(same(M.applyAlg("R U R'", { cancelRotation: true }), M.applyAlg("R U R'")));
+});

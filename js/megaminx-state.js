@@ -208,12 +208,24 @@
    * 手順を適用した状態を返す。
    * options.inverse: true なら逆手順を適用（＝その手順で解けるケースの状態）
    * options.state:   開始状態（省略時は揃った状態）
+   * options.cancelRotation: true なら手順中の持ち替え（y）の合計を打ち消し、向きを元に戻した状態を返す。
+   *   手順の最後に持ち替えを書かなくても、完成後の向きの違いを気にせず扱える（PLL の case 表示などに使う）
    */
   function applyAlg(alg, options) {
     const opts = options || {};
     let moves = parseAlg(alg);
     if (opts.inverse) moves = invertMoves(moves);
+    if (opts.cancelRotation) {
+      const fix = { face: 'y', turns: (5 - netRotation(moves)) % 5 };
+      // 逆手順は「持ち替えを戻してから」、通常の手順は「最後に」打ち消す
+      moves = opts.inverse ? [fix].concat(moves) : moves.concat([fix]);
+    }
     return applyMoves(opts.state || solved(), moves);
+  }
+
+  /** 手順中の持ち替え（y）の合計（時計回り72°単位で 0..4） */
+  function netRotation(moves) {
+    return moves.reduce((sum, m) => (m.face === 'y' ? (sum + m.turns) % 5 : sum), 0);
   }
 
   /** 上面と側面上段を面名で返す（reference/megaminx_top.py の top_view と同じ形） */

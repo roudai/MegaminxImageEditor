@@ -1,9 +1,11 @@
 // 手順入力：megaminx-state.js で色を計算し、uface0..10 / sface1..15（state-editor.js が生成）に書き込んで再描画する。
 // 種類（visualcube に合わせる）
 //   alg   : Algorithm to apply         … 手順を適用した状態
-//   case  : Algorithm to solve case    … その手順で揃う状態（逆手順を適用）
+//   case  : Algorithm to solve case    … その手順で揃う状態（逆手順を適用。持ち替え y の合計は打ち消す）
 //   state : Defines the puzzle state   … 各ステッカーを手で指定（state-editor.js。直前の計算結果から編集できる）
-// URLパラメータ: ?alg=R U R' U' または ?case=R U R' U'
+// PLL選択（pll-data.js）: Group → Case で選ぶ。選んでいる間は種類に応じて入力欄を差し替える
+//   alg → setup（そのケースになる手順） / case → alg（AUF込みの解く手順）。仕様: reference/PLL_SPEC.md
+// URLパラメータ: ?alg=R U R' U' または ?case=R U R' U' または ?pll=A1%2B（?pll が優先）
 (function () {
   'use strict';
   const M = window.MegaminxState;
@@ -17,6 +19,9 @@
   const preset = $('algPreset');
   const typeRadios = document.querySelectorAll('input[name="algType"]');
   const faceInputs = {};
+  const PLL = window.PLL_DATA || [];
+  const pllGroup = $('pllGroup');
+  const pllCase = $('pllCase');
 
   const algType = () => document.querySelector('input[name="algType"]:checked').value;
 
@@ -44,7 +49,88 @@
     let value = input.value;
     if (!SUFFIXES.includes(token) && value && !/[\s(]$/.test(value)) value += ' ';
     input.value = value + token;
+    clearPll();
     update();
+  }
+
+  // ---- PLL選択 ----
+  const option = (value, text) => {
+    const o = document.createElement('option');
+    o.value = value;
+    o.textContent = text;
+    return o;
+  };
+
+  // グループの特徴（選択肢に「A (3 corner CP)」のように括弧付きで出す）
+  const PLL_GROUP_NOTES = {
+    A: '3 corner CP',
+    B: 'Double R block',
+    C: '2 2x1s touching',
+    D: '3x1 and 2x2',
+    E: '4 corner CP',
+    F: '3x1 and 2x1(s)',
+    G: '2x1 and headlights',
+    H: '5 piece EP/CP',
+    I: '2x1',
+    J: 'J block',
+    K: '5 corner CP',
+    L: 'Double headlights, no blocks',
+    M: '2 3x1s',
+    N: '5 2x1s',
+    P: 'R block',
+    Q: '5 edge EP',
+    R: 'R block and 2x1',
+    S: '2 2x1s, not touching',
+    T: '2, 3 or 4 2x1s',
+    U: '3 edge EP',
+    V: '2x2 and 2x1',
+    W: '2 2x2s',
+    X: 'No blocks or headlights',
+    Y: '2 2x1s in Y pattern and other stuff',
+    Z: '4 edge EP',
+  };
+
+  function buildPllGroups() {
+    pllGroup.append(option('', '-- PLL --'));
+    PLL.map((c) => c.group)
+      .filter((g, i, all) => all.indexOf(g) === i)
+      .forEach((g) => pllGroup.append(option(g, PLL_GROUP_NOTES[g] ? `${g} (${PLL_GROUP_NOTES[g]})` : g)));
+  }
+
+  function fillPllCases(group) {
+    pllCase.replaceChildren(...PLL.filter((c) => c.group === group).map((c) => option(c.name, c.name)));
+    pllCase.disabled = !group;
+  }
+
+  const selectedPll = () => (pllCase.disabled ? null : PLL.find((c) => c.name === pllCase.value) || null);
+
+  // 選択中のPLLの手順を、種類に合わせて入力欄に入れる（state のときは変更しない）
+  function fillPllAlg() {
+    const pll = selectedPll();
+    const type = algType();
+    if (!pll || type === 'state') return;
+    input.value = type === 'alg' ? pll.setup : pll.alg;
+  }
+
+  // 未選択から選んだときは case にする。PLLを選んだまま別のPLLに変えたときは種類をそのままにする
+  function selectPll(pll) {
+    const keepType = selectedPll() !== null;
+    pllGroup.value = pll.group;
+    fillPllCases(pll.group);
+    pllCase.value = pll.name;
+    $('fname').value = 'pll-' + pll.name + '.png';
+    if (keepType) onTypeChange(); // 手順を入れて再描画する
+    else setAlgType('case');
+  }
+
+  function clearPll() {
+    pllGroup.value = '';
+    fillPllCases('');
+  }
+
+  // URLでは + が空白になるので、見つからなければ空白を + に戻して探す
+  function findPll(name) {
+    return PLL.find((c) => c.name === name) || PLL.find((c) => c.name === name.replace(/ /g, '+')) || null;
   }
 
   // 既存の色コード ⇔ #rrggbb（megaminx.js の color_convert と同じ色）
@@ -119,7 +205,8 @@
 
     let state;
     try {
-      state = M.applyAlg(input.value, { inverse: type === 'case' });
+      // case は「この手順で揃う状態」。手順中の持ち替え（y）で完成後の向きが変わっても揃ったとみなす
+      state = M.applyAlg(input.value, { inverse: type === 'case', cancelRotation: type === 'case' });
     } catch (e) {
       error.textContent = e.message;
       input.classList.add('is-invalid');
@@ -138,19 +225,44 @@
     const isState = algType() === 'state';
     $('algEditor').hidden = isState;
     $('stateEditor').hidden = !isState;
+    fillPllAlg();
     update();
   }
 
   buildButtons();
+  buildPllGroups();
+  fillPllCases('');
   buildFaceColorInputs();
   setScheme(M.DEFAULT_SCHEME);
 
-  input.addEventListener('input', update);
+  input.addEventListener('input', () => {
+    clearPll();
+    update();
+  });
   typeRadios.forEach((r) => r.addEventListener('change', onTypeChange));
   $('algClear').addEventListener('click', () => {
     input.value = '';
+    clearPll();
     update();
   });
+  pllGroup.addEventListener('change', () => {
+    const first = PLL.find((c) => c.group === pllGroup.value);
+    if (first) selectPll(first);
+    else clearPll();
+  });
+  pllCase.addEventListener('change', () => {
+    const pll = selectedPll();
+    if (pll) selectPll(pll);
+  });
+  // 前後のPLLへ（データの並び順。端では反対の端に回る。未選択なら Next は先頭、Prev は末尾）
+  function stepPll(delta) {
+    if (!PLL.length) return;
+    const i = PLL.indexOf(selectedPll());
+    const next = i < 0 ? (delta > 0 ? 0 : PLL.length - 1) : (i + delta + PLL.length) % PLL.length;
+    selectPll(PLL[next]);
+  }
+  $('pllPrev').addEventListener('click', () => stepPll(-1));
+  $('pllNext').addEventListener('click', () => stepPll(1));
   preset.addEventListener('change', () => {
     applyPreset();
     update();
@@ -162,7 +274,10 @@
   });
 
   const params = new URLSearchParams(location.search);
-  if (params.has('case')) {
+  const urlPll = params.has('pll') ? findPll(params.get('pll')) : null;
+  if (urlPll) {
+    selectPll(urlPll);
+  } else if (params.has('case')) {
     input.value = params.get('case');
     setAlgType('case');
   } else if (params.has('alg')) {

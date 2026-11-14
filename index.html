@@ -94,6 +94,23 @@
     </div>
 
     <div id="algEditor">
+      <div class="row g-2 mt-1 align-items-center">
+        <div class="col-12 col-md-auto">
+          <label class="col-form-label" for="pllGroup">PLL</label>
+        </div>
+        <div class="col-6 col-md-4">
+          <select id="pllGroup" class="form-select" aria-label="PLL group"></select>
+        </div>
+        <div class="col-6 col-md-3">
+          <select id="pllCase" class="form-select" aria-label="PLL case" disabled></select>
+        </div>
+        <div class="col-12 col-md-auto">
+          <div class="btn-group" role="group" aria-label="PLL navigation">
+            <button id="pllPrev" class="btn btn-outline-secondary" type="button">&lsaquo; Prev</button>
+            <button id="pllNext" class="btn btn-outline-secondary" type="button">Next &rsaquo;</button>
+          </div>
+        </div>
+      </div>
       <div id="algButtons" class="mt-2"></div>
       <div class="input-group has-validation mt-2">
         <input id="alg" class="form-control" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">
@@ -145,6 +162,7 @@
   <script type="text/javascript" src="js/megaminx-state.js"></script>
   <script type="text/javascript" src="js/megaminx.js"></script>
   <script type="text/javascript" src="js/state-editor.js"></script>
+  <script type="text/javascript" src="js/pll-data.js"></script>
   <script type="text/javascript" src="js/alg-input.js"></script>
 </body>
 </html>
