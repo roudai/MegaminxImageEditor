@@ -6,6 +6,7 @@
 // PLL選択（pll-data.js）: Group → Case で選ぶ。選んでいる間は種類に応じて入力欄を差し替える
 //   alg → setup（そのケースになる手順） / case → alg（AUF込みの解く手順）。仕様: reference/PLL_SPEC.md
 // 一括ダウンロード: 全PLLを今の配色で描いて zip にする（zip-store.js、megaminx.js の renderImage）
+// 設定の保存: 配色・画像サイズ・Body/Background の色・背景を localStorage に保存し、次に開いたときに戻す
 // URLパラメータ: ?alg=R U R' U' または ?case=R U R' U' または ?pll=A1%2B（?pll が優先）
 (function () {
   'use strict';
@@ -341,6 +342,51 @@
     update();
   });
 
+  // ---- 設定の保存（localStorage）----
+  // 配色（Color Preset・Face Colors）、Image Size、Body Color、Background Color、Background を保存し、
+  // 次に開いたときに戻す。手順・種類・PLLの選択・ファイル名は保存しない（URLパラメータで指定する）。
+  // 保存できない環境（プライベートモードなど）では何もしない
+  const SETTINGS_KEY = 'megaminx-image-editor:settings';
+  const HEX = /^#[0-9a-f]{6}$/i;
+  const SETTING_IDS = ['imageSize', 'border', 'bgColor', 'bg'];
+
+  function saveSettings() {
+    const settings = { preset: preset.value, faceColors: currentScheme() };
+    SETTING_IDS.forEach((id) => {
+      settings[id] = $(id).value;
+    });
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    } catch (e) {
+      // 保存できなくても動作は続ける
+    }
+  }
+
+  // 保存された値のうち、正しい形のものだけを入力欄に戻す
+  function loadSettings() {
+    let settings;
+    try {
+      settings = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+    } catch (e) {
+      return;
+    }
+    if (!settings || typeof settings !== 'object') return;
+    const faceColors = settings.faceColors || {};
+    M.FACES.forEach((face) => {
+      if (HEX.test(faceColors[face])) faceInputs[face].value = faceColors[face].toLowerCase();
+    });
+    if ([...preset.options].some((o) => o.value === settings.preset)) preset.value = settings.preset;
+    if (/^\d+$/.test(settings.imageSize)) $('imageSize').value = settings.imageSize;
+    ['border', 'bgColor'].forEach((id) => {
+      if (HEX.test(settings[id])) $(id).value = settings[id];
+    });
+    if (settings.bg === 'y' || settings.bg === 'n') $('bg').value = settings.bg;
+  }
+
+  loadSettings();
+  // 各入力欄・ボタンの処理が終わったあと（document まで伝わったとき）に保存する
+  ['input', 'change', 'click'].forEach((type) => document.addEventListener(type, saveSettings));
+
   const params = new URLSearchParams(location.search);
   const urlPll = params.has('pll') ? findPll(params.get('pll')) : null;
   if (urlPll) {
@@ -351,5 +397,7 @@
   } else if (params.has('alg')) {
     input.value = params.get('alg');
     setAlgType('alg');
+  } else {
+    update(); // 戻した配色・サイズで描き直す
   }
 })();
