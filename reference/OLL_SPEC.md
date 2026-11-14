@@ -31,26 +31,35 @@ PLL  [Group ▼] [Case ▼] [‹ Prev][Next ›]
 OLL  [Group ▼] [Case ▼] [‹ Prev][Next ›]
 ```
 - PLL の行の下に OLL の行を置く。並びと狭い画面での縦並びは PLL と同じ
-- Group は `-- OLL --`（未選択）とデータに出てくる順のグループ。名前を括弧付きで添える（一覧は `js/alg-input.js` の `SETS.oll.notes`）
+- Group は `-- OLL --`（未選択）とデータに出てくる順のグループ。名前を括弧付きで添える（一覧は `js/case-groups.js` の `oll`）
   - 1〜37：形の名前（例：`6 (Anchor)`、`18 (Long Block)`）
   - `1C`・38〜53：Dot 系のカテゴリー名（`1C (Dot EO)`、38〜43 `Dot 2 Corner CO`、44〜49 `Dot 3 Corner CO`、50〜52 `Dot 4 Corner CO`、53 `Dot 5 Corner CO`）
 - 同時に選べるのは PLL・OLL のどちらか1つ。片方を選ぶともう片方は未選択に戻る
 - Prev / Next は OLL の中だけで前後に動く（端では反対の端に回る）
 
 ## 動作（PLL と違う点）
-- **配色**：OLL を選ぶと Color Preset を `OLL (U color only)` にする。OLL のあとに PLL を選んだときは、OLL を選ぶ前の配色（Preset と Face Colors）に戻す
-  - 「OLL のあと」は、最後に選んだのが OLL だった場合（間に手で入力して未選択になっていても同じ）
-  - 戻す配色を覚えていないとき（OLL 配色のまま再読み込みした場合、最初から OLL 配色だった場合）は `Standard` にする
-  - OLL を選んだあとに色を変えていた場合（Preset が OLL でなくなった場合）は何もしない
-  - PLL から PLL へ選び直したときは配色を変えない
+- **配色**：OLL を選ぶと Color Preset を `OLL (U color only)` にする。PLL を選んだときに OLL 配色なら、OLL を選ぶ前の配色（Preset と Face Colors）に戻す
+  - OLL のあとに PLL を選んだ場合のほか、OLL 配色のまま再読み込みした場合や、PLL 一覧（`pll.html`）から `?pll=` で開いた場合も含む
+  - OLL を選ぶ前の配色は設定と一緒に localStorage に保存する（`beforeOll`）。OLL 一覧からエディタに来て、そのまま PLL 一覧へ移動しても、PLL 一覧はこの配色で表示する
+  - 手で配色を変えたとき（Color Preset の変更・面の色の変更）は、覚えた配色を忘れる
+  - 戻す配色を覚えていないときは `Standard` にする（PLL 一覧の表示と同じ色になる）
+- **Color Preset の Custom**：選択肢に `Custom` を表示する。色を変えて Custom になったときの配色（最後のカスタム配色）を覚えておき（localStorage の `customScheme`）、OLL や Standard に切り替えたあとでも `Custom` を選べばその配色に戻る。覚えた配色が無ければ今の色のまま
+  - OLL を選んだあとに色を変えていた場合（Preset が OLL でなくなった場合）や、PLL から PLL へ選び直したときは配色を変えない
 - ファイル名は `oll-<名前>.png`
 - URL：`?oll=<名前>`（例：`?oll=3A%2B`）。優先順位は `?pll` → `?oll` → `?case` → `?alg`
 - その他（種類による入力欄の差し替え、手での書き換えで未選択に戻る、など）は PLL と同じ
 
 ## 一括ダウンロード
-- `Download all PLL (.zip)` の右に **Download all OLL (.zip)** を置く（広い画面のときだけ表示）
+- OLL の一覧ページ（`oll.html`）に **Download all OLL (.zip)** を置く（広い画面のときだけ表示。エディタには置かない）
 - 全259ケースを solve case の状態で描き、`megaminx-oll.zip` にまとめる。ファイル名は `oll-<名前>.png`
-- 配色は、今の U の色だけを残した OLL 配色（他の面は dimgray）。サイズ・Body Color・背景は今の設定
+- 配色は一覧と同じ（保存した U の色だけを残した OLL 配色、他の面は dimgray）。サイズ・Body Color・背景はエディタで保存した設定
+
+## 一覧ページ（`oll.html`）
+- PLL の一覧ページ（`pll.html`、`reference/PLL_SPEC.md`）と同じ作り（`js/cases.js` を `<body data-set="oll">` で使う）
+- 全259ケースを、グループ名付きの見出し（例：`6 (Anchor)`）で並べる。上部にグループへのジャンプボタン
+- 画像は solve case の状態。配色は、エディタで保存した U の色だけを残した OLL 配色（他の面は dimgray）。Body Color も保存した設定
+- ケースをクリックすると、そのケースを選んだ状態でエディタ（`index.html?oll=<名前>`）を開く
+- ナビバー：エディタは `PLL List`・`OLL List`、一覧ページは `Editor` ともう一方の一覧へのリンク
 
 ## テスト（`test/oll-data.test.js`）
 - `js/oll-data.js` が元データの全259ケースを順番どおり含み、名前が重複しない。生成し直しても変わらない

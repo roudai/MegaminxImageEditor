@@ -6,9 +6,8 @@
 // PLL・OLL選択（pll-data.js / oll-data.js）: それぞれの行で Group → Case で選ぶ（同時に選べるのはどちらか1つ）。
 //   選んでいる間は種類に応じて入力欄を差し替える
 //   alg → setup（そのケースになる手順） / case → alg（AUF込みの解く手順）
-//   OLL を選ぶと Color Preset を OLL にし、そのあと PLL を選ぶと OLL を選ぶ前の配色に戻す（覚えていなければ Standard）
+//   OLL を選ぶと Color Preset を OLL にし、OLL 配色のまま PLL を選ぶと OLL を選ぶ前の配色に戻す（覚えていなければ Standard）
 //   仕様: reference/PLL_SPEC.md、reference/OLL_SPEC.md
-// 一括ダウンロード: 全PLL（今の配色）・全OLL（OLL配色）を描いて zip にする（zip-store.js、megaminx.js の renderImage）
 // 設定の保存: 配色・画像サイズ・Body/Background の色・背景を localStorage に保存し、次に開いたときに戻す
 // URLパラメータ: ?alg=R U R' U' / ?case=R U R' U' / ?pll=A1%2B / ?oll=1A（?pll → ?oll → ?case → ?alg の順に優先）
 (function () {
@@ -24,7 +23,7 @@
   const preset = $('algPreset');
   const typeRadios = document.querySelectorAll('input[name="algType"]');
   const faceInputs = {};
-  // 選べるケースの種類（PLL・OLL）。各行の要素 id は <key>Group / <key>Case / <key>Prev / <key>Next / <key>Zip
+  // 選べるケースの種類（PLL・OLL）。各行の要素 id は <key>Group / <key>Case / <key>Prev / <key>Next
   const SETS = {
     pll: { label: 'PLL', data: window.PLL_DATA || [] },
     oll: { label: 'OLL', data: window.OLL_DATA || [] },
@@ -71,93 +70,9 @@
     return o;
   };
 
-  // PLL グループの特徴（選択肢に「A (3 corner CP)」のように括弧付きで出す）
-  SETS.pll.notes = {
-    A: '3 corner CP',
-    B: 'Double R block',
-    C: '2 2x1s touching',
-    D: '3x1 and 2x2',
-    E: '4 corner CP',
-    F: '3x1 and 2x1(s)',
-    G: '2x1 and headlights',
-    H: '5 piece EP/CP',
-    I: '2x1',
-    J: 'J block',
-    K: '5 corner CP',
-    L: 'Double headlights, no blocks',
-    M: '2 3x1s',
-    N: '5 2x1s',
-    P: 'R block',
-    Q: '5 edge EP',
-    R: 'R block and 2x1',
-    S: '2 2x1s, not touching',
-    T: '2, 3 or 4 2x1s',
-    U: '3 edge EP',
-    V: '2x2 and 2x1',
-    W: '2 2x2s',
-    X: 'No blocks or headlights',
-    Y: '2 2x1s in Y pattern and other stuff',
-    Z: '4 edge EP',
-  };
-
-  // OLL グループの名前（選択肢に「6 (Anchor)」のように括弧付きで出す）
-  // 1〜37 は形の名前、1C・38〜53 は Dot 系のカテゴリー名（53 は上面の角5つの向きが崩れた Dot ケース）
-  SETS.oll.notes = {
-    1: 'EO',
-    2: '2 Corner CO',
-    3: '3 Corner CO',
-    4: '4 Corner CO',
-    5: '5 Corner CO',
-    6: 'Anchor',
-    7: 'T',
-    8: 'C',
-    9: 'S',
-    10: 'Pi',
-    11: 'Y',
-    12: 'Hammerhead',
-    13: 'W',
-    14: 'Duckhead',
-    15: 'Megaphone',
-    16: 'Claw',
-    17: 'Rabbit',
-    18: 'Long Block',
-    19: 'Fox Head',
-    20: 'Scorpion',
-    21: 'Line',
-    22: 'Flower',
-    23: 'Chandelier',
-    24: 'P',
-    25: 'E',
-    26: 'Sprinter',
-    27: 'Eagle',
-    28: 'Big Block',
-    29: 'Lobster',
-    30: 'Lightning',
-    31: 'Cobra',
-    32: 'Hand',
-    33: 'Magic Lamp',
-    34: 'Human',
-    35: 'Axe',
-    36: 'Parrot',
-    37: 'L',
-    '1C': 'Dot EO',
-    38: 'Dot 2 Corner CO',
-    39: 'Dot 2 Corner CO',
-    40: 'Dot 2 Corner CO',
-    41: 'Dot 2 Corner CO',
-    42: 'Dot 2 Corner CO',
-    43: 'Dot 2 Corner CO',
-    44: 'Dot 3 Corner CO',
-    45: 'Dot 3 Corner CO',
-    46: 'Dot 3 Corner CO',
-    47: 'Dot 3 Corner CO',
-    48: 'Dot 3 Corner CO',
-    49: 'Dot 3 Corner CO',
-    50: 'Dot 4 Corner CO',
-    51: 'Dot 4 Corner CO',
-    52: 'Dot 4 Corner CO',
-    53: 'Dot 5 Corner CO',
-  };
+  // グループ名（case-groups.js）
+  SETS.pll.notes = (window.CASE_GROUP_NOTES || {}).pll;
+  SETS.oll.notes = (window.CASE_GROUP_NOTES || {}).oll;
 
   function buildGroups(set) {
     const notes = set.notes || {};
@@ -192,14 +107,15 @@
     input.value = type === 'alg' ? sel.c.setup : sel.c.alg;
   }
 
-  // 最後に選んだ種類と、OLL を選ぶ前の配色（OLL のあとに PLL を選んだときに戻すため）
-  let lastSet = null;
+  // OLL を選ぶ前の配色 { preset, scheme }（OLL 配色のまま PLL を選んだときに戻すため）。
+  // 設定と一緒に localStorage にも保存し、ページを移動・再読み込みしても戻せるようにする（PLL 一覧もこれを使う）。
+  // 手で配色を変えたら（Color Preset の変更・面の色の変更）忘れる
   let schemeBeforeOll = null;
 
   // OLL を選んだら OLL 配色にする（もともと OLL 配色でなければ、その前の配色を覚えておく）。
-  // OLL のあとに PLL を選んだら、OLL 配色のままなら OLL を選ぶ前の配色に戻す。
-  // 覚えた配色が無いとき（OLL 配色のまま再読み込みした場合など）は Standard にする。
-  // OLL を選んだあとに色を変えていた場合（Preset が OLL でない）は何もしない
+  // PLL を選んだとき OLL 配色なら（OLL のあと・OLL 配色のまま再読み込みした・PLL 一覧から開いた など）、
+  // OLL を選ぶ前の配色に戻す。覚えた配色が無ければ Standard にする（PLL 一覧の表示と同じ）。
+  // OLL 配色でなければ何もしない
   function applySetScheme(set) {
     if (set.key === 'oll') {
       if (preset.value !== 'oll') {
@@ -207,7 +123,7 @@
         preset.value = 'oll';
         applyPreset();
       }
-    } else if (lastSet && lastSet.key === 'oll' && preset.value === 'oll') {
+    } else if (preset.value === 'oll') {
       if (schemeBeforeOll) {
         preset.value = schemeBeforeOll.preset;
         setScheme(schemeBeforeOll.scheme);
@@ -230,7 +146,6 @@
     set.case.value = c.name;
     $('fname').value = `${set.key}-${c.name}.png`;
     applySetScheme(set);
-    lastSet = set;
     if (keepType) onTypeChange(); // 手順を入れて再描画する
     else setAlgType('case');
   }
@@ -256,37 +171,6 @@
     const i = list.indexOf(selectedIn(set));
     const next = i < 0 ? (delta > 0 ? 0 : list.length - 1) : (i + delta + list.length) % list.length;
     selectCase(set, list[next]);
-  }
-
-  // その種類の全ケースを描き、zip にまとめてダウンロードする。
-  // 各ケースは solve case（alg の逆手順を適用、持ち替え y は打ち消す）の状態で描く。ファイル名は <pll|oll>-<名前>.png
-  // 配色：PLL は今の配色、OLL は今の U の色だけを残した OLL 配色。サイズ・Body Color・背景は今の設定
-  async function downloadAll(set, button) {
-    const label = button.textContent;
-    button.disabled = true;
-    try {
-      const scheme = set.key === 'oll' ? M.ollMask({ U: currentScheme().U }, CODE_HEX.d) : currentScheme();
-      const list = set.data;
-      const files = [];
-      for (let i = 0; i < list.length; i++) {
-        const c = list[i];
-        button.textContent = `Creating... ${i + 1}/${list.length}`;
-        const state = M.applyAlg(c.alg, { inverse: true, cancelRotation: true });
-        const colors = M.toImageColors(state, scheme);
-        const canvas = window.renderImage(colors.ucolor, colors.scolor);
-        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
-        files.push({ name: `${set.key}-${c.name}.png`, data: new Uint8Array(await blob.arrayBuffer()) });
-      }
-      const zip = new Blob([window.ZipStore.create(files)], { type: 'application/zip' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(zip);
-      link.download = `megaminx-${set.key}.zip`;
-      link.click();
-      setTimeout(() => URL.revokeObjectURL(link.href), 10000);
-    } finally {
-      button.textContent = label;
-      button.disabled = false;
-    }
   }
 
   // 既存の色コード ⇔ #rrggbb（megaminx.js の color_convert と同じ色）
@@ -322,6 +206,7 @@
       picker.className = 'form-control';
       picker.addEventListener('input', () => {
         preset.value = 'custom';
+        schemeBeforeOll = null;
         update();
       });
       col.append(label, picker);
@@ -374,9 +259,18 @@
     setScheme(after);
   }
 
+  // 最後のカスタム配色（色を変えて Preset が Custom になったときの配色）。
+  // Color Preset で Custom を選ぶとこの配色に戻す。設定と一緒に localStorage に保存する
+  let customScheme = null;
+
+  function rememberCustomScheme() {
+    if (preset.value === 'custom') customScheme = currentScheme();
+  }
+
   function applyPreset() {
     if (preset.value === 'standard') setScheme(M.DEFAULT_SCHEME);
     else if (preset.value === 'oll') setScheme(M.ollMask({ U: faceInputs.U.value }, CODE_HEX.d));
+    else if (preset.value === 'custom' && customScheme) setScheme(customScheme);
   }
 
   // ステッカーの値（state-editor.js が作る hidden input）に書き込む。14色にある色は色コードにする
@@ -385,6 +279,7 @@
   }
 
   function update() {
+    rememberCustomScheme();
     const type = algType();
     if (type === 'state') return;
 
@@ -444,9 +339,9 @@
     });
     $(set.key + 'Prev').addEventListener('click', () => stepCase(set, -1));
     $(set.key + 'Next').addEventListener('click', () => stepCase(set, 1));
-    $(set.key + 'Zip').addEventListener('click', (e) => downloadAll(set, e.currentTarget));
   });
   preset.addEventListener('change', () => {
+    schemeBeforeOll = null;
     applyPreset();
     update();
   });
@@ -465,7 +360,7 @@
   });
 
   // ---- 設定の保存（localStorage）----
-  // 配色（Color Preset・Face Colors）、Image Size、Body Color、Background Color、Background を保存し、
+  // 配色（Color Preset・Face Colors・OLL を選ぶ前の配色・最後のカスタム配色）、Image Size、Body Color、Background Color、Background を保存し、
   // 次に開いたときに戻す。手順・種類・PLL/OLLの選択・ファイル名は保存しない（URLパラメータで指定する）。
   // 保存できない環境（プライベートモードなど）では何もしない
   const SETTINGS_KEY = 'megaminx-image-editor:settings';
@@ -473,7 +368,14 @@
   const SETTING_IDS = ['imageSize', 'border', 'bgColor', 'bg'];
 
   function saveSettings() {
-    const settings = { preset: preset.value, faceColors: currentScheme() };
+    // ここでは rememberCustomScheme() を呼ばない。セレクトは change の前に input が来るので、
+    // Custom を選んだ瞬間（まだ色が戻る前）の配色を覚えてしまう
+    const settings = {
+      preset: preset.value,
+      faceColors: currentScheme(),
+      beforeOll: schemeBeforeOll,
+      customScheme: customScheme,
+    };
     SETTING_IDS.forEach((id) => {
       settings[id] = $(id).value;
     });
@@ -503,6 +405,18 @@
       if (HEX.test(settings[id])) $(id).value = settings[id];
     });
     if (settings.bg === 'y' || settings.bg === 'n') $('bg').value = settings.bg;
+    schemeBeforeOll = validBeforeOll(settings.beforeOll);
+    if (validScheme(settings.customScheme)) customScheme = settings.customScheme;
+    else if (preset.value === 'custom') customScheme = currentScheme();
+  }
+
+  const validScheme = (scheme) => !!scheme && typeof scheme === 'object' && M.FACES.every((face) => HEX.test(scheme[face]));
+
+  // 保存された「OLL を選ぶ前の配色」が正しい形ならそのまま、そうでなければ null
+  function validBeforeOll(value) {
+    if (!value || typeof value !== 'object' || !validScheme(value.scheme)) return null;
+    if (![...preset.options].some((o) => o.value === value.preset)) return null;
+    return { preset: value.preset, scheme: value.scheme };
   }
 
   loadSettings();

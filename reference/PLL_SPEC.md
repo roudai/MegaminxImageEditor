@@ -87,7 +87,7 @@ s = [AUF] setup [AUF]
 PLL  [Group ▼ A (3 corner CP) ] [Case ▼ A1+ ] [‹ Prev][Next ›]
 ```
 - 置き場所：`#algEditor` 内、手順入力欄の上。狭い画面（md 未満）では Group・Case・ボタンを1行ずつ縦に並べる（Bootstrap の `row` / `col-12 col-md-*`）
-- **Group**：`-- PLL --`（未選択）と A〜Z の23グループ。グループの特徴を括弧付きで添える（例：`A (3 corner CP)`。一覧は `js/alg-input.js` の `PLL_GROUP_NOTES`）
+- **Group**：`-- PLL --`（未選択）と A〜Z の23グループ。グループの特徴を括弧付きで添える（例：`A (3 corner CP)`。一覧は `js/case-groups.js` の `pll`）
 - **Case**：選んだグループのケースだけを出す（最大でも I・X の14件程度）。グループ未選択なら無効
 - **‹ Prev / Next ›**：データの並び順（A1+ → A1- → … → Z3）で前後のケースを選ぶ。グループをまたいで移動し、端では反対の端に回る。未選択のときは Next で先頭、Prev で末尾を選ぶ
 - 選択肢はすべて JS でデータから生成する
@@ -121,15 +121,22 @@ PLLを選んでいる間は、種類に応じて入力欄 `#alg` に入れる手
    - 存在しない名前なら無視する（未選択のまま）
 
 ## 一括ダウンロード
-- `Download` ボタンの右の **Download all PLL (.zip)** で、全151ケースの画像を1つの zip（`megaminx-pll.zip`）にまとめてダウンロードする
-  - OLL の一括ダウンロードを追加するときも、同じ場所に `Download all OLL (.zip)` として並べる
+- 一覧ページ（`pll.html`）の見出しの下の **Download all PLL (.zip)** で、全151ケースの画像を1つの zip（`megaminx-pll.zip`）にまとめてダウンロードする（エディタには置かない）
   - パソコン向けの機能なので、狭い画面（md 未満、幅 768px 未満）では表示しない（Bootstrap の `d-none d-md-inline-block`）
-- 各ケースは **solve case**（`alg` の逆手順を適用し、持ち替え y の合計を打ち消す）の状態で描く。選択中の種類やケースには関係しない
-- 画像には今の画面の設定を使う：Face Colors（Color Preset・U ↻・Flip の結果を含む）、Image Size、Body Color、Background
+- 各ケースは **solve case**（`alg` の逆手順を適用し、持ち替え y の合計を打ち消す）の状態で描く
+- 配色は一覧に表示している色と同じ。Image Size（100〜1000、無ければ 200）・Body Color・Background はエディタで保存した設定を使う（ボタンを押した時点で読み直す）
 - ファイル名は個別ダウンロードと同じ `pll-<名前>.png`（例：`pll-A1+.png`）。フォルダには分けず、データの並び順で入れる
-- 画面の canvas は書き換えない（`megaminx.js` の `renderImage(ucolor, scolor)` が新しい canvas に描いて返す）
 - zip は `js/zip-store.js` で作る。外部ライブラリは使わず、PNG はすでに圧縮されているので無圧縮（store）で格納する。ファイル名は UTF-8
 - 作成中はボタンを無効にし、`Creating... 37/151` のように進み具合を出す
+
+## 一覧ページ（`pll.html`）
+- 全151ケースの画像・名前・手順（`alg`）を、グループごとに見出し（例：`A (3 corner CP)`）を付けて並べる
+- 上部にグループへのジャンプボタン（A〜Z）を置く
+- 画像は solve case の状態。配色と Body Color はエディタで保存した設定（localStorage）を使う。OLL 配色のときは OLL を選ぶ前の配色（`beforeOll`）、それも無いときは Standard
+- ケースをクリックすると、そのケースを選んだ状態でエディタ（`index.html?pll=<名前>`）を開く。保存した配色が OLL 配色のときは、エディタでも Standard で表示する（一覧と同じ色）
+- エディタのナビバーに `PLL List`・`OLL List`、一覧ページのナビバーに `Editor` ともう一方の一覧へのリンクを置く
+- 並べる列の数は画面幅に合わせる（スマホ2列〜PC6列）
+- 描画は `js/megaminx-draw.js`（入力欄に依存しない描画。エディタの `megaminx.js` もこれを使う）、グループ名は `js/case-groups.js`（エディタと共通）、ページの処理は `js/cases.js`
 
 ## テスト（`test/pll-data.test.js`、node で実行）
 - `js/pll-data.js` が元データの全151ケースを含み、名前が重複していない
@@ -149,9 +156,13 @@ PLLを選んでいる間は、種類に応じて入力欄 `#alg` に入れる手
 | `index.html` | `pll-data.js` の読み込み、セレクトを置く場所 |
 | `test/pll-data.test.js` | 新規。上記テスト |
 | `js/zip-store.js` | 新規。無圧縮の zip を作る（一括ダウンロード用） |
+| `pll.html` | 新規。PLL の一覧ページ |
+| `js/cases.js` | 新規。一覧ページの処理 |
+| `js/megaminx-draw.js` | 新規。`megaminx.js` から描画処理を切り出したもの |
+| `js/case-groups.js` | 新規。PLL・OLL のグループ名（`alg-input.js` から移した） |
 | `test/zip-store.test.js` | 新規。zip の中身を読み戻して確認する |
 
-`megaminx.js`（描画）には、一括ダウンロード用に別の canvas へ描く `renderImage` だけを足す。`megaminx-state.js`（状態計算）には `applyAlg` の `cancelRotation` だけを足す。
+`megaminx.js`（描画）の描画処理そのものは `megaminx-draw.js` に切り出した（一覧ページ・一括ダウンロードでも使う）。`megaminx-state.js`（状態計算）には `applyAlg` の `cancelRotation` だけを足す。
 
 ## 補足
 - 名前は `pll/algs_info.json` の `name` をそのまま使う（元データの `Q1A` は、Q1- と対にするため `Q1+` に変えた）
