@@ -5,6 +5,7 @@
 //   state : Defines the puzzle state   … 各ステッカーを手で指定（state-editor.js。直前の計算結果から編集できる）
 // PLL選択（pll-data.js）: Group → Case で選ぶ。選んでいる間は種類に応じて入力欄を差し替える
 //   alg → setup（そのケースになる手順） / case → alg（AUF込みの解く手順）。仕様: reference/PLL_SPEC.md
+// 一括ダウンロード: 全PLLを今の配色で描いて zip にする（zip-store.js、megaminx.js の renderImage）
 // URLパラメータ: ?alg=R U R' U' または ?case=R U R' U' または ?pll=A1%2B（?pll が優先）
 (function () {
   'use strict';
@@ -131,6 +132,35 @@
   // URLでは + が空白になるので、見つからなければ空白を + に戻して探す
   function findPll(name) {
     return PLL.find((c) => c.name === name) || PLL.find((c) => c.name === name.replace(/ /g, '+')) || null;
+  }
+
+  // 全PLLを今の配色・設定で描き、zip にまとめてダウンロードする。
+  // 各ケースは solve case（alg の逆手順を適用、持ち替え y は打ち消す）の状態で描く。ファイル名は pll-<名前>.png
+  async function downloadAllPll(button) {
+    const label = button.textContent;
+    button.disabled = true;
+    try {
+      const scheme = currentScheme();
+      const files = [];
+      for (let i = 0; i < PLL.length; i++) {
+        const c = PLL[i];
+        button.textContent = `Creating... ${i + 1}/${PLL.length}`;
+        const state = M.applyAlg(c.alg, { inverse: true, cancelRotation: true });
+        const colors = M.toImageColors(state, scheme);
+        const canvas = window.renderImage(colors.ucolor, colors.scolor);
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+        files.push({ name: `pll-${c.name}.png`, data: new Uint8Array(await blob.arrayBuffer()) });
+      }
+      const zip = new Blob([window.ZipStore.create(files)], { type: 'application/zip' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(zip);
+      link.download = 'megaminx-pll.zip';
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(link.href), 10000);
+    } finally {
+      button.textContent = label;
+      button.disabled = false;
+    }
   }
 
   // 既存の色コード ⇔ #rrggbb（megaminx.js の color_convert と同じ色）
@@ -292,6 +322,7 @@
   }
   $('pllPrev').addEventListener('click', () => stepPll(-1));
   $('pllNext').addEventListener('click', () => stepPll(1));
+  $('downloadPllZip').addEventListener('click', (e) => downloadAllPll(e.currentTarget));
   preset.addEventListener('change', () => {
     applyPreset();
     update();

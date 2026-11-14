@@ -120,6 +120,16 @@ PLLを選んでいる間は、種類に応じて入力欄 `#alg` に入れる手
    - `?alg=` / `?case=` と同時に指定された場合は `?pll=` を優先する
    - 存在しない名前なら無視する（未選択のまま）
 
+## 一括ダウンロード
+- `Download` ボタンの右の **Download all PLL (.zip)** で、全151ケースの画像を1つの zip（`megaminx-pll.zip`）にまとめてダウンロードする
+  - OLL の一括ダウンロードを追加するときも、同じ場所に `Download all OLL (.zip)` として並べる
+- 各ケースは **solve case**（`alg` の逆手順を適用し、持ち替え y の合計を打ち消す）の状態で描く。選択中の種類やケースには関係しない
+- 画像には今の画面の設定を使う：Face Colors（Color Preset・U ↻・Flip の結果を含む）、Image Size、Body Color、Background
+- ファイル名は個別ダウンロードと同じ `pll-<名前>.png`（例：`pll-A1+.png`）。フォルダには分けず、データの並び順で入れる
+- 画面の canvas は書き換えない（`megaminx.js` の `renderImage(ucolor, scolor)` が新しい canvas に描いて返す）
+- zip は `js/zip-store.js` で作る。外部ライブラリは使わず、PNG はすでに圧縮されているので無圧縮（store）で格納する。ファイル名は UTF-8
+- 作成中はボタンを無効にし、`Creating... 37/151` のように進み具合を出す
+
 ## テスト（`test/pll-data.test.js`、node で実行）
 - `js/pll-data.js` が元データの全151ケースを含み、名前が重複していない
 - 各ケースについて
@@ -137,8 +147,10 @@ PLLを選んでいる間は、種類に応じて入力欄 `#alg` に入れる手
 | `js/alg-input.js` | セレクトの生成・選択時の処理・URLパラメータ |
 | `index.html` | `pll-data.js` の読み込み、セレクトを置く場所 |
 | `test/pll-data.test.js` | 新規。上記テスト |
+| `js/zip-store.js` | 新規。無圧縮の zip を作る（一括ダウンロード用） |
+| `test/zip-store.test.js` | 新規。zip の中身を読み戻して確認する |
 
-`megaminx.js`（描画）は変更しない。`megaminx-state.js`（状態計算）には `applyAlg` の `cancelRotation` だけを足す。
+`megaminx.js`（描画）には、一括ダウンロード用に別の canvas へ描く `renderImage` だけを足す。`megaminx-state.js`（状態計算）には `applyAlg` の `cancelRotation` だけを足す。
 
 ## 補足
 - 名前は `pll/algs_info.json` の `name` をそのまま使う（元データの `Q1A` は、Q1- と対にするため `Q1+` に変えた）

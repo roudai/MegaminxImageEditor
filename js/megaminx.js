@@ -1,5 +1,5 @@
 // メガミンクス上面（U面11枚＋側面上段15枚）の画像を canvas に描く。
-// 外から使う関数（index.html と他のスクリプト）: imageChange, downloadImage, color_convert
+// 外から使う関数（index.html と他のスクリプト）: imageChange, downloadImage, renderImage, color_convert
 //
 // 描画の座標：頂点 k（0..4）は上から反時計回り、辺 k は頂点 k と k+1 の間（辺2が下＝F）。
 //   ucolor[0]        U中心
@@ -9,8 +9,9 @@
 (function () {
   'use strict';
   const $ = (id) => document.getElementById(id);
-  const canvas = $('canvas');
-  const ctx = canvas.getContext('2d');
+  // 描画先（renderImage の間だけ別の canvas に差し替える）
+  let canvas = $('canvas');
+  let ctx = canvas.getContext('2d');
 
   // 色コード → CSSの色。'#' で始まる値（任意色）はそのまま使う
   const COLORS = {
@@ -137,6 +138,28 @@
     link.click();
   }
 
+  // 画面の canvas は変えずに、今の設定（サイズ・Body Color・Background）で
+  // 指定した色の画像を新しい canvas に描いて返す（一括ダウンロード用）
+  function renderImage(uc, sc) {
+    sizecheck();
+    const size = Number($('imageSize').value);
+    const target = document.createElement('canvas');
+    target.width = size;
+    target.height = size;
+    const saved = [canvas, ctx, origin, ucolor, scolor];
+    canvas = target;
+    ctx = target.getContext('2d');
+    origin = size / 2;
+    ucolor = uc;
+    scolor = sc;
+    try {
+      render();
+    } finally {
+      [canvas, ctx, origin, ucolor, scolor] = saved;
+    }
+    return target;
+  }
+
   // 画像サイズを 100〜1000 に収める（空欄なら 200）
   function sizecheck() {
     const size = $('imageSize').value;
@@ -147,6 +170,7 @@
 
   window.imageChange = imageChange;
   window.downloadImage = downloadImage;
+  window.renderImage = renderImage;
   window.color_convert = color_convert;
 
   render();
