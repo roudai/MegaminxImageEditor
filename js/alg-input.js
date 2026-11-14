@@ -189,6 +189,35 @@
     return scheme;
   }
 
+  // 面の色を U（y）と同じ向きに1回分回す：上段・下段とも、上から見て反時計回りに隣の面の色を受け取る
+  // （例：F には R の色が来る）。U・D の色は変わらない
+  function rotateSchemeU() {
+    const before = currentScheme();
+    const after = Object.assign({}, before);
+    [M.UPPER, M.LOWER].forEach((ring) => {
+      ring.forEach((face, i) => {
+        after[face] = before[ring[(i + 1) % ring.length]];
+      });
+    });
+    if (M.FACES.some((f) => after[f] !== before[f])) preset.value = 'custom';
+    setScheme(after);
+  }
+
+  // パズルを上下にひっくり返したときの配色にする（F と DR の間の辺の中点を通る水平軸まわりに180°）。
+  // 面 → その位置に来る面。2回で元に戻る。向きの違いは U ↻ で合わせる
+  const FLIP = {
+    U: 'D', D: 'U', F: 'DR', DR: 'F', R: 'DL', DL: 'R', BR: 'DBL', DBL: 'BR', BL: 'B', B: 'BL', L: 'DBR', DBR: 'L',
+  };
+  function flipScheme() {
+    const before = currentScheme();
+    const after = {};
+    M.FACES.forEach((face) => {
+      after[face] = before[FLIP[face]];
+    });
+    if (M.FACES.some((f) => after[f] !== before[f])) preset.value = 'custom';
+    setScheme(after);
+  }
+
   function applyPreset() {
     if (preset.value === 'standard') setScheme(M.DEFAULT_SCHEME);
     else if (preset.value === 'oll') setScheme(M.ollMask({ U: faceInputs.U.value }, CODE_HEX.d));
@@ -265,6 +294,14 @@
   $('pllNext').addEventListener('click', () => stepPll(1));
   preset.addEventListener('change', () => {
     applyPreset();
+    update();
+  });
+  $('faceColorsRotate').addEventListener('click', () => {
+    rotateSchemeU();
+    update();
+  });
+  $('faceColorsFlip').addEventListener('click', () => {
+    flipScheme();
     update();
   });
   $('faceColorsReset').addEventListener('click', () => {
