@@ -68,7 +68,8 @@
     <br>
     <div class="text-center">
       <button type="button" class="btn btn-secondary" onclick="downloadImage();">Download</button>
-      <button id="downloadPllZip" type="button" class="btn btn-outline-secondary ms-1 d-none d-md-inline-block" title="All 151 PLL cases with the current colors and settings">Download all PLL (.zip)</button>
+      <button id="pllZip" type="button" class="btn btn-outline-secondary ms-1 d-none d-md-inline-block" title="All 151 PLL cases with the current colors and settings">Download all PLL (.zip)</button>
+      <button id="ollZip" type="button" class="btn btn-outline-secondary ms-1 d-none d-md-inline-block" title="All 259 OLL cases with OLL colors (U color only) and the current settings">Download all OLL (.zip)</button>
     </div>
 
     <label class="form-label" for="fname">File Name</label>
@@ -109,6 +110,23 @@
           <div class="btn-group" role="group" aria-label="PLL navigation">
             <button id="pllPrev" class="btn btn-outline-secondary" type="button">&lsaquo; Prev</button>
             <button id="pllNext" class="btn btn-outline-secondary" type="button">Next &rsaquo;</button>
+          </div>
+        </div>
+      </div>
+      <div class="row g-2 mt-0 align-items-center">
+        <div class="col-12 col-md-auto">
+          <label class="col-form-label" for="ollGroup">OLL</label>
+        </div>
+        <div class="col-12 col-md-4">
+          <select id="ollGroup" class="form-select" aria-label="OLL group"></select>
+        </div>
+        <div class="col-12 col-md-3">
+          <select id="ollCase" class="form-select" aria-label="OLL case" disabled></select>
+        </div>
+        <div class="col-12 col-md-auto">
+          <div class="btn-group" role="group" aria-label="OLL navigation">
+            <button id="ollPrev" class="btn btn-outline-secondary" type="button">&lsaquo; Prev</button>
+            <button id="ollNext" class="btn btn-outline-secondary" type="button">Next &rsaquo;</button>
           </div>
         </div>
       </div>
@@ -167,6 +185,7 @@
   <script type="text/javascript" src="js/state-editor.js"></script>
   <script type="text/javascript" src="js/zip-store.js"></script>
   <script type="text/javascript" src="js/pll-data.js"></script>
+  <script type="text/javascript" src="js/oll-data.js"></script>
   <script type="text/javascript" src="js/alg-input.js"></script>
 </body>
 </html>
