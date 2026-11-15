@@ -1,0 +1,104 @@
+/*
+ * 自分の手順（PLL・OLL）。エディタの「My algorithm」で保存し、エディタ・一覧ページ・一括ダウンロードで使う。
+ * 仕様: reference/PLL_SPEC.md「自分の手順」
+ *
+ *   validate(set, c, input, data) 入力した手順がケース c（既定データの要素）を解けるか確かめ、
+ *                                 { ok: true, alg, setup, notes } または { ok: false, error } を返す
+ *                                   - 記法を読み替え（Br → BR など）、最後の AUF・持ち替え y は外す（notes で知らせる）
+ *                                   - setup は既定の setup の前後に AUF を付け直したもの（js/case-check.js の fitSetup）
+ *                                   - 解けなければ、実際に解けるケースを data から探してエラーに添える
+ *   get(set, name) / save(set, name, { alg, setup }) / reset(set, name)   localStorage の読み書き
+ *   merged(set, data)             既定データに自分の手順を重ねた配列（自分の手順のケースは custom: true）。
+ *                                 保存値が壊れている・確認を通らない場合は既定を使う
+ *
+ * 保存: localStorage 'megaminx-image-editor:custom-algs' = { pll: { "J3+": { alg, setup } }, oll: { ... } }
+ * ブラウザでは window.CustomAlgs、node では module.exports として公開する（node では保存しない）。
+ */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) {
+    module.exports = factory(require('./megaminx-state.js'), require('./case-check.js'));
+  } else {
+    root.CustomAlgs = factory(root.MegaminxState, root.CaseCheck);
+  }
+})(typeof self !== 'undefined' ? self : this, function (M, C) {
+  'use strict';
+
+  const KEY = 'megaminx-image-editor:custom-algs';
+  // 最後の AUF・持ち替え（括弧の有無を問わない）。最後の U は PLL でも AUF なので外してよい
+  const TRAILING = /(\s+\(?U[0-9']*\)?|\s+y[0-9']*)+\s*$/;
+
+  function validate(set, c, input, data) {
+    const raw = C.convert(String(input || '').replace(/\s+/g, ' ').trim());
+    if (!raw) return { ok: false, error: 'Enter an algorithm.' };
+    try {
+      M.parseAlg(raw);
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+    const notes = [];
+    // 先頭の括弧の無い U は前の AUF なので、既定データと同じく括弧で書く（例：U2 R U … → (U2) R U …）
+    const alg = raw.replace(TRAILING, '').trim().replace(/^U(2'|'2|2|')?(?=\s)/, (m) => `(${m})`);
+    if (TRAILING.test(raw)) notes.push('Removed the final AUF / rotation.');
+    if (!alg) return { ok: false, error: `This algorithm does not solve ${c.name}.` };
+    const fit = C.fitSetup(set, alg, c.defaultSetup || c.setup); // 自分の手順を重ねた要素でも既定の setup を元にする
+    if (fit) return { ok: true, alg: fit.a, setup: fit.s, notes: notes };
+    const other = data ? C.findCase(set, alg, data) : null;
+    return {
+      ok: false,
+      error: `This algorithm does not solve ${c.name}` + (other && other.name !== c.name ? ` (it solves ${other.name}).` : '.'),
+    };
+  }
+
+  // ---- 保存 ----
+  const storage = () => (typeof localStorage !== 'undefined' ? localStorage : null);
+  function readAll() {
+    try {
+      const value = JSON.parse(storage().getItem(KEY));
+      return value && typeof value === 'object' ? value : {};
+    } catch (e) {
+      return {};
+    }
+  }
+  function writeAll(all) {
+    try {
+      storage().setItem(KEY, JSON.stringify(all));
+    } catch (e) {
+      // 保存できなくても動作は続ける
+    }
+  }
+
+  function get(set, name) {
+    const v = (readAll()[set] || {})[name];
+    return v && typeof v.alg === 'string' && typeof v.setup === 'string' ? { alg: v.alg, setup: v.setup } : null;
+  }
+
+  function save(set, name, value) {
+    const all = readAll();
+    all[set] = all[set] && typeof all[set] === 'object' ? all[set] : {};
+    all[set][name] = { alg: value.alg, setup: value.setup };
+    writeAll(all);
+  }
+
+  function reset(set, name) {
+    const all = readAll();
+    if (all[set]) delete all[set][name];
+    writeAll(all);
+  }
+
+  function merged(set, data) {
+    const mine = readAll()[set] || {};
+    return data.map((c) => {
+      const v = mine[c.name];
+      if (!v || typeof v.alg !== 'string' || typeof v.setup !== 'string') return c;
+      // 合わない保存値は使わない（setup が確認を通り、しかもこのケースの手順であること）
+      try {
+        if (C.check(set, C.convert(v.alg), C.convert(v.setup)) || !C.fitSetup(set, v.alg, c.setup)) return c;
+      } catch (e) {
+        return c;
+      }
+      return Object.assign({}, c, { alg: v.alg, setup: v.setup, custom: true, defaultAlg: c.alg, defaultSetup: c.setup });
+    });
+  }
+
+  return { validate: validate, get: get, save: save, reset: reset, merged: merged };
+});

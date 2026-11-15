@@ -28,6 +28,19 @@
   text-decoration: none;
 }
 
+/* 自分の手順のケースの印 */
+.custom-tag {
+  margin-left: .35rem;
+  padding: .05rem .4rem;
+  border-radius: 50rem;
+  background-color: rgba(13, 110, 253, .1);
+  color: #0a58ca;
+  font-size: .65rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+  vertical-align: 2px;
+}
+
 /* ---- 右上の覚えた度バッジ（タップで 未着手 → 練習中 → 覚えた） ---- */
 .status-badge {
   position: absolute;

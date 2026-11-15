@@ -10,6 +10,7 @@
 //     上部に進み具合（積み上げバー・件数）と絞り込みチップ、グループ見出しに「覚えた数 / 全体」を出す
 //   - OLL は No Dot（algset ND、1〜37）と Dot（algset D、1C・38〜53）を切り替えて表示する（All も選べる）。
 //     件数・進捗バー・絞り込み・一括ダウンロードは選んだ範囲だけで数える（覚えた度の保存はケースごとで共通）
+//   - エディタで保存した自分の手順があれば、そのケースはその手順（と画像）で表示し、名前の横に「custom」を付ける
 //   - Download all (.zip)：全ケースを一覧と同じ配色で PNG にし、zip（megaminx-<pll|oll>.zip）にまとめる。
 //     画像サイズ・Body Color・背景はエディタで保存した設定（zip-store.js で無圧縮の zip を作る）
 (function () {
@@ -19,7 +20,9 @@
   const $ = (id) => document.getElementById(id);
 
   const SET = document.body.dataset.set;
-  const DATA = { pll: window.PLL_DATA, oll: window.OLL_DATA }[SET] || [];
+  const BASE = { pll: window.PLL_DATA, oll: window.OLL_DATA }[SET] || [];
+  // 自分の手順（エディタの My algorithm で保存したもの）を重ねる。手順・画像・一括ダウンロードはこちらを使う
+  const DATA = window.CustomAlgs ? window.CustomAlgs.merged(SET, BASE) : BASE;
   const NOTES = (window.CASE_GROUP_NOTES || {})[SET] || {};
   const IMAGE_SIZE = 120; // 表示サイズ（px）。高解像度の画面では devicePixelRatio 倍で描く
 
@@ -136,7 +139,13 @@
     D.draw(canvas, colors.ucolor, colors.scolor, { border: settings.border });
 
     const body = el('div', 'card-body p-2 text-center');
-    body.append(el('div', 'fw-bold', c.name), el('div', 'small font-monospace text-break', c.alg));
+    const name = el('div', 'fw-bold', c.name);
+    if (c.custom) {
+      const tag = el('span', 'custom-tag', 'custom');
+      tag.title = 'Your own algorithm (saved in the editor)';
+      name.append(tag);
+    }
+    body.append(name, el('div', 'small font-monospace text-break', c.alg));
     link.append(canvas, body);
 
     const badge = el('button', 'status-badge');

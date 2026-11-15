@@ -120,6 +120,21 @@ PLLを選んでいる間は、種類に応じて入力欄 `#alg` に入れる手
    - `?alg=` / `?case=` と同時に指定された場合は `?pll=` を優先する
    - 存在しない名前なら無視する（未選択のまま）
 
+## 自分の手順（PLL・OLL 共通）
+- エディタの選択欄の下に **My algorithm** の欄をいつも置く（出たり消えたりして下のレイアウトがずれないように）
+  - ケースを選んでいるときは見出しを **My algorithm for <名前>** にし、右上に `default` / `custom`、欄に今の手順（自分の手順があればそれ、無ければ既定）を入れる
+  - ケースを選んでいないとき（Algorithm 入力欄を手で書き換えて選択が外れたときを含む）は、欄とボタンを使えない状態にして案内を出す
+  - メッセージは1行分の高さをいつも確保し、長いときは省略する（全文はマウスを乗せると出る）
+  - **Save**（または Enter）：確かめてから保存し、Algorithm 入力欄と画像を新しい手順で描き直す。だめなら欄を赤枠にしてエラーを出し、保存しない
+  - **Reset**：自分の手順を消して既定に戻す（自分の手順があるときだけ押せる）
+- 確かめる内容（`js/custom-algs.js` の `validate`。確認処理は生成スクリプトと共通の `js/case-check.js`）
+  1. 記法を読み替える（`Br` → `BR`、`Bl` → `BL`、`Dfr` → `DR`）。読めなければ `Invalid move: …`
+  2. 最後の AUF・持ち替え y は外す（`Removed the final AUF / rotation.` と知らせる）。先頭の括弧の無い AUF は `(U2)` のように括弧で書き直す
+  3. 既定の setup の前後に AUF を付け直し（PLL は 5×5 通り、OLL は最後の AUF だけ）、生成スクリプトと同じ確認を通る setup を探す。見つかればそれを apply 用の setup として保存する
+  4. 見つからなければ `This algorithm does not solve J3+.`。ほかのケースなら解ける場合は `(it solves C2+)` と添える
+- 保存：localStorage の `megaminx-image-editor:custom-algs`（`{ pll: { "J3+": { alg, setup } }, oll: { ... } }`）。読み込むときに確認し、合わない値は無視して既定を使う
+- 一覧ページ（手順・画像・一括ダウンロード）も自分の手順を使い、名前の横に `custom` の印を付ける
+
 ## 一括ダウンロード
 - 一覧ページ（`pll.html`）の見出しの下の **Download all PLL (.zip)** で、全151ケースの画像を1つの zip（`megaminx-pll.zip`）にまとめてダウンロードする（エディタには置かない）
   - パソコン向けの機能なので、狭い画面（md 未満、幅 768px 未満）では表示しない（Bootstrap の `d-none d-md-inline-block`）
@@ -165,6 +180,9 @@ PLLを選んでいる間は、種類に応じて入力欄 `#alg` に入れる手
 | `index.html` | `pll-data.js` の読み込み、セレクトを置く場所 |
 | `test/pll-data.test.js` | 新規。上記テスト |
 | `js/zip-store.js` | 新規。無圧縮の zip を作る（一括ダウンロード用） |
+| `js/case-check.js` | 新規。手順の確認（生成スクリプトとエディタで共通） |
+| `js/custom-algs.js` | 新規。自分の手順の確認・保存 |
+| `test/case-check.test.js` | 新規。確認処理と自分の手順のテスト |
 | `pll.html` | 新規。PLL の一覧ページ |
 | `js/cases.js` | 新規。一覧ページの処理 |
 | `js/megaminx-draw.js` | 新規。`megaminx.js` から描画処理を切り出したもの |

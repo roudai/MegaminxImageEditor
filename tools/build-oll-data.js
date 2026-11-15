@@ -5,6 +5,7 @@
 //       a: [前AUF] 手順              例: "(U2') Br' R' U' R F U Br R U' R' F'"（最後のAUF・持ち替え y は付けない）
 //       s: [AUF] setup [AUF]         例: "F U2' F U2 R' U2' F' U2 R F' (U)"
 //   - 記法を読み替える（Br → BR, Bl → BL, Dfr → DR）。x（持ち替え）と LR のような同時回しには対応しない
+//   - 確認処理は js/case-check.js（エディタの「自分の手順」と共通）
 //   - 次を確認し、合わないケースがあれば直し方の候補を表示してエラーで止める
 //       s は最後の層（U層）だけを崩す
 //       a が s のケースの上面の向きを揃える（F2L は崩さない。手順中の y による完成後の向きの違いは無視）
@@ -14,69 +15,33 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const M = require('../js/megaminx-state.js');
 
 const ROOT = path.join(__dirname, '..');
 const SRC = path.join(ROOT, 'oll', 'algs_info.json');
 const OUT = path.join(ROOT, 'js', 'oll-data.js');
 
-// 72°単位の回数 → 記号の付け方
-const AMOUNT = ['', '', '2', "2'", "'"];
-const turn = (face, n) => (n === 0 ? '' : face + AMOUNT[n]);
-const auf = (n) => (n === 0 ? '' : '(' + turn('U', n) + ')');
+const C = require('../js/case-check.js');
 
-const convert = (alg) => alg.replace(/Br/g, 'BR').replace(/Bl/g, 'BL').replace(/Dfr/g, 'DR');
-const join = (...parts) => parts.filter(Boolean).join(' ');
+const convert = C.convert;
 
-// OLL では最後の U は向きに影響しないので、括弧の無い U も最後の AUF とみなす
-const TRAILING_AUF = /(\s*\(U[0-9']*\)|\s+U[0-9']*)+\s*$/;
-const TRAILING_AUF_OR_Y = /(\s*\(U[0-9']*\)|\s+U[0-9']*|\s+y[0-9']*)+\s*$/;
-const TRAILING_Y = /\s+y[0-9']*\s*$/;
-
-// 最後の層（U層）のステッカーの位置：U で動く位置と U の中心
-const SOLVED = M.solved();
-const INDEX = SOLVED.map((_, i) => i);
-const MOVED_BY_U = M.applyMoves(INDEX, M.parseAlg('U'));
-const LAST_LAYER = new Set(INDEX.filter((i) => MOVED_BY_U[i] !== i || SOLVED[i] === 'U'));
-
-const f2lSolved = (state) => state.every((x, i) => LAST_LAYER.has(i) || x === SOLVED[i]);
-const MASK = M.ollMask(M.DEFAULT_SCHEME);
-// 上面の向き（OLL配色での画像の色）
-const pattern = (state) => {
-  const c = M.toImageColors(state, MASK);
-  return c.ucolor.join('') + '|' + c.scolor.join('');
+// 確認の結果（js/case-check.js のコード）→ 表示する文
+const MESSAGES = {
+  'trailing-y': 'a の最後に持ち替え（y）が付いています（最後の持ち替えは付けない）',
+  'trailing-auf': 'a の最後に AUF が付いています（最後の AUF は付けない）',
+  'setup-f2l': 's で最後の層以外が崩れています',
+  'not-solved': 'a で s のケースの上面が揃いません',
+  mismatch: 'Algorithm to solve case（a）と Algorithm to apply（s）の上面の向きが一致しません',
 };
-const oriented = (state) => M.toImageColors(state, MASK).ucolor.every((x) => x === MASK.U);
 
 // a・s（読み替え済み）を確認し、問題があればその内容を返す。
 function check(a, s) {
-  if (TRAILING_Y.test(a)) return 'a の最後に持ち替え（y）が付いています（最後の持ち替えは付けない）';
-  if (TRAILING_AUF.test(a)) return 'a の最後に AUF が付いています（最後の AUF は付けない）';
-  const caseState = M.applyAlg(s);
-  if (!f2lSolved(caseState)) return 's で最後の層以外が崩れています';
-  const end = M.applyAlg(a, { state: caseState, cancelRotation: true });
-  if (!f2lSolved(end) || !oriented(end)) return 'a で s のケースの上面が揃いません';
-  if (pattern(M.applyAlg(a, { inverse: true, cancelRotation: true })) !== pattern(caseState)) {
-    return 'Algorithm to solve case（a）と Algorithm to apply（s）の上面の向きが一致しません';
-  }
-  return null;
+  const code = C.check('oll', a, s);
+  return code ? MESSAGES[code] : null;
 }
 
 // 直し方の候補：書かれた a をそのまま使い、s の最後の AUF を付け直して確認を通るものを探す。
 // a の最後に AUF や持ち替え（y）があれば外す。（OLL では s の前の AUF は上面の向きに影響しない）
-function suggest(a, s) {
-  const a2 = a.replace(TRAILING_AUF_OR_Y, '');
-  const sBody = s.replace(TRAILING_AUF, '');
-  for (let post = 0; post < 5; post++) {
-    const s2 = join(sBody, auf(post));
-    try {
-      if (!check(convert(a2), convert(s2))) return { a: a2, s: s2 };
-    } catch (e) {
-      return null;
-    }
-  }
-  return null;
-}
+const suggest = (a, s) => C.fitSetup('oll', a, s);
 
 function build() {
   const src = JSON.parse(fs.readFileSync(SRC, 'utf8'));

@@ -130,6 +130,18 @@
           </div>
         </div>
       </div>
+      <div id="myAlgBox" class="mt-2 p-2 border rounded bg-body-tertiary">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <label class="form-label small fw-semibold mb-0" for="myAlg" id="myAlgTitle">My algorithm</label>
+          <span id="myAlgBadge" class="badge rounded-pill text-bg-secondary fw-normal">default</span>
+        </div>
+        <div class="input-group input-group-sm has-validation">
+          <input id="myAlg" class="form-control font-monospace" type="text" placeholder="Select a PLL or OLL case to save your own algorithm" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="myAlgMessage">
+          <button id="myAlgSave" class="btn btn-outline-primary" type="button">Save</button>
+          <button id="myAlgReset" class="btn btn-outline-secondary" type="button">Reset</button>
+        </div>
+        <div id="myAlgMessage" class="small mt-1 text-truncate" style="min-height: 1.5em" aria-live="polite"></div>
+      </div>
       <div id="algButtons" class="mt-2"></div>
       <div class="input-group has-validation mt-2">
         <input id="alg" class="form-control" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">
@@ -187,6 +199,8 @@
   <script type="text/javascript" src="js/pll-data.js"></script>
   <script type="text/javascript" src="js/oll-data.js"></script>
   <script type="text/javascript" src="js/case-groups.js"></script>
+  <script type="text/javascript" src="js/case-check.js"></script>
+  <script type="text/javascript" src="js/custom-algs.js"></script>
   <script type="text/javascript" src="js/alg-input.js"></script>
 </body>
 </html>

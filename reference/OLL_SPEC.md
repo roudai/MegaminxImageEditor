@@ -17,6 +17,7 @@ PLL（`reference/PLL_SPEC.md`）と同じ仕組みで、OLL を選ぶと手順�
 - 記法の読み替え（生成時）：`Br` → `BR`、`Bl` → `BL`、`Dfr` → `DR`。`x`（持ち替え）と `LR` のような同時回しには対応しない
 
 ## 生成：`tools/build-oll-data.js`
+- 確認処理は `js/case-check.js`（エディタの自分の手順と共通）
 - `node tools/build-oll-data.js` で `js/oll-data.js`（`window.OLL_DATA` / node では `module.exports`）を作る。各要素は `{ name, group, algset, alg, setup }`
 - 次を確認し、合わないケースがあれば直し方の候補（`s` の最後の AUF）を表示してエラーで止める（`js/oll-data.js` は書き換えない）
   - `s` は最後の層（U層）だけを崩す
@@ -67,6 +68,9 @@ OLL  [Group ▼] [Case ▼] [‹ Prev][Next ›]
     （ダウンロードのボタン名は `Download No Dot OLL (.zip)` などに変わり、ファイル名は `megaminx-oll-nd.zip` / `megaminx-oll-d.zip`。All は `megaminx-oll.zip`）
   - 覚えた度の保存はケースごとなので、範囲を切り替えても印は共通。選んだ範囲は `megaminx-image-editor:list-filter` の `ollScope` に保存する
   - そのため `js/oll-data.js` の各ケースに `algset` を含める
+
+## 自分の手順
+- PLL と同じ（`reference/PLL_SPEC.md`「自分の手順」）。OLL では setup の最後の AUF だけを付け直し、上面の向きが揃うか（F2L を崩さないか）を確かめる
 
 ## テスト（`test/oll-data.test.js`）
 - `js/oll-data.js` が元データの全259ケースを順番どおり含み、名前が重複しない。生成し直しても変わらない
