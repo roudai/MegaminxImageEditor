@@ -7,7 +7,8 @@
 //   選んでいる間は種類に応じて入力欄を差し替える
 //   alg → setup（そのケースになる手順） / case → alg（AUF込みの解く手順）
 //   OLL を選ぶと Color Preset を OLL にし、OLL 配色のまま PLL を選ぶと OLL を選ぶ前の配色に戻す（覚えていなければ Standard）
-//   選んでいる間は「My algorithm」欄で自分の手順を保存できる（custom-algs.js。確認は case-check.js）
+//   選んでいる間は Algorithm 入力欄を書き換えても選択を外さず、その手順を自分の手順として保存できる
+//   （custom-algs.js。確認は case-check.js）
 //   仕様: reference/PLL_SPEC.md、reference/OLL_SPEC.md
 // 設定の保存: 配色・画像サイズ・Body/Background の色・背景を localStorage に保存し、次に開いたときに戻す
 // URLパラメータ: ?alg=R U R' U' / ?case=R U R' U' / ?pll=A1%2B / ?oll=1A（?pll → ?oll → ?case → ?alg の順に優先）
@@ -66,7 +67,7 @@
     let value = input.value;
     if (!SUFFIXES.includes(token) && value && !/[\s(]$/.test(value)) value += ' ';
     input.value = value + token;
-    clearSelection();
+    showCaseBar(); // ケースを選んだまま書き換えた（編集中）
     update();
   }
 
@@ -154,9 +155,10 @@
     set.case.value = c.name;
     $('fname').value = `${set.key}-${c.name}.png`;
     applySetScheme(set);
-    if (keepType) onTypeChange(); // 手順を入れて再描画する
+    if (keepType) onTypeChange(); // 手順を入れて再描画する（編集中の内容は捨てる）
     else setAlgType('case');
-    showMyAlg();
+    setMyAlgMessage('');
+    showCaseBar();
   }
 
   function clearSet(set) {
@@ -166,55 +168,62 @@
 
   function clearSelection() {
     Object.values(SETS).forEach(clearSet);
-    showMyAlg();
+    setMyAlgMessage('');
+    showCaseBar();
   }
 
-  // ---- 自分の手順（My algorithm）----
-  // 今の手順（自分の手順があればそれ、無ければ既定）を入れる。
-  // Save で確かめてから保存し（custom-algs.js）、だめならエラーを出す。Reset で既定に戻す
-  const myAlg = $('myAlg');
+  // ---- 自分の手順 ----
+  // ケースを選んでいる間は、Algorithm 入力欄を書き換えても選択を外さず「編集中」と出し、
+  // 「この手順で揃う状態（case）」のときに保存できる（custom-algs.js で確かめてから）。「既定に戻す」で自分の手順を消す。
+  // 入力欄の下の行（#caseAlgBar）は高さをいつも確保し、ケースを選んでいないときは中身を隠す（下のレイアウトがずれないように）
   const myAlgMessage = $('myAlgMessage');
+  const squash = (text) => text.replace(/\s+/g, ' ').trim();
+  const isEdited = (sel) => algType() === 'case' && squash(input.value) !== squash(sel.c.alg);
 
-  // 欄はいつも表示し（出たり消えたりして下のレイアウトがずれないように）、ケースを選んでいないときは使えない状態にする
-  function showMyAlg(message, kind) {
+  function showCaseBar() {
     const sel = selected();
-    $('myAlgBox').hidden = !CA;
-    if (!CA) return;
-    const badge = $('myAlgBadge');
-    if (sel) I.set($('myAlgTitle'), 'myAlg.titleFor', { name: sel.c.name });
-    else I.set($('myAlgTitle'), 'myAlg.title');
-    badge.hidden = !sel;
-    myAlg.disabled = !sel;
-    $('myAlgSave').disabled = !sel;
-    $('myAlgReset').disabled = !sel || !sel.c.custom;
-    myAlg.value = sel ? sel.c.alg : '';
-    myAlg.classList.toggle('is-invalid', !!sel && kind === 'error');
-    if (sel) {
-      I.set(badge, sel.c.custom ? 'myAlg.custom' : 'myAlg.default');
-      badge.className = `badge rounded-pill fw-normal ${sel.c.custom ? 'text-bg-success' : 'text-bg-secondary'}`;
+    const bar = $('caseAlgBar');
+    const enabled = !!sel && !!CA;
+    bar.classList.toggle('is-empty', !enabled);
+    if (!enabled) return;
+    $('caseAlgName').textContent = sel.c.name;
+    const badge = $('caseAlgBadge');
+    I.set(badge, sel.c.custom ? 'myAlg.custom' : 'myAlg.default');
+    badge.className = `badge rounded-pill fw-normal ${sel.c.custom ? 'text-bg-success' : 'text-bg-secondary'}`;
+    const edited = isEdited(sel);
+    $('caseAlgEdited').hidden = !edited;
+    const save = $('myAlgSave');
+    const canSave = algType() === 'case';
+    save.disabled = !canSave || !edited;
+    if (canSave) {
+      delete save.dataset.i18nTitle;
+      save.removeAttribute('title');
+    } else {
+      I.set(save, 'myAlg.caseOnly', null, 'title');
     }
-    setMyAlgMessage(sel ? message : '', kind);
+    $('myAlgReset').disabled = !sel.c.custom;
   }
 
   // メッセージは1行（長いときは省略し、全文はマウスを乗せると出る）。行の高さは空でも確保しておく
   function setMyAlgMessage(text, kind) {
     myAlgMessage.textContent = text || '';
     myAlgMessage.title = text || '';
-    myAlgMessage.className = `small mt-1 text-truncate ${kind === 'error' ? 'text-danger' : 'text-success'}`;
+    myAlgMessage.className = `small text-truncate ${kind === 'error' ? 'text-danger' : 'text-success'}`;
   }
 
-  // 保存・Reset のあと：データを作り直し、選択中のケースの手順で入力欄と画像を描き直す
-  function afterMyAlgChange(set) {
+  // 保存・既定に戻すのあと：データを作り直し、選択中のケースの手順で入力欄と画像を描き直す
+  function afterMyAlgChange(set, message) {
     mergeData(set);
     onTypeChange();
+    showCaseBar();
+    setMyAlgMessage(message);
   }
 
   function saveMyAlg() {
     const sel = selected();
-    if (!sel) return;
-    const result = CA.validate(sel.set.key, sel.c, myAlg.value, sel.set.base);
+    if (!sel || !CA || algType() !== 'case') return;
+    const result = CA.validate(sel.set.key, sel.c, input.value, sel.set.base);
     if (!result.ok) {
-      myAlg.classList.add('is-invalid');
       const text = result.code === 'parse' ? I.error(result.error) : I.t('myAlg.err.' + result.code, result.params);
       setMyAlgMessage('✗ ' + text, 'error');
       return;
@@ -222,22 +231,19 @@
     if (result.isDefault) {
       // 既定の手順と同じなら自分の手順としては保存しない（自分の手順があれば消して既定に戻す）
       CA.reset(sel.set.key, sel.c.name);
-      afterMyAlgChange(sel.set);
-      showMyAlg(I.t('myAlg.sameAsDefault'));
+      afterMyAlgChange(sel.set, I.t('myAlg.sameAsDefault'));
       return;
     }
     CA.save(sel.set.key, sel.c.name, result);
-    afterMyAlgChange(sel.set);
     const notes = result.notes.map((n) => I.t('myAlg.' + n));
-    showMyAlg([I.t('myAlg.saved')].concat(notes, [I.t('myAlg.setup', { setup: result.setup })]).join(' '));
+    afterMyAlgChange(sel.set, [I.t('myAlg.saved')].concat(notes, [I.t('myAlg.setup', { setup: result.setup })]).join(' '));
   }
 
   function resetMyAlg() {
     const sel = selected();
-    if (!sel) return;
+    if (!sel || !CA) return;
     CA.reset(sel.set.key, sel.c.name);
-    afterMyAlgChange(sel.set);
-    showMyAlg(I.t('myAlg.resetDone'));
+    afterMyAlgChange(sel.set, I.t('myAlg.resetDone'));
   }
 
   // URLでは + が空白になるので、見つからなければ空白を + に戻して探す
@@ -388,6 +394,8 @@
     $('stateEditor').hidden = !isState;
     fillCaseAlg();
     update();
+    setMyAlgMessage(''); // 前のメッセージ（保存のエラーなど）は消す
+    showCaseBar();
   }
 
   buildButtons();
@@ -398,9 +406,14 @@
   buildFaceColorInputs();
   setScheme(M.DEFAULT_SCHEME);
 
+  // 手で書き換えても選択は外さない（「編集中」と出し、この手順で揃う状態なら保存できる）
   input.addEventListener('input', () => {
-    clearSelection();
+    setMyAlgMessage('');
+    showCaseBar();
     update();
+  });
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !$('myAlgSave').disabled) saveMyAlg();
   });
   typeRadios.forEach((r) => r.addEventListener('change', onTypeChange));
   $('algClear').addEventListener('click', () => {
@@ -410,20 +423,13 @@
   });
   $('myAlgSave').addEventListener('click', saveMyAlg);
   $('myAlgReset').addEventListener('click', resetMyAlg);
-  myAlg.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') saveMyAlg();
-  });
-  myAlg.addEventListener('input', () => {
-    myAlg.classList.remove('is-invalid');
-    setMyAlgMessage('');
-  });
   Object.values(SETS).forEach((set) => {
     set.group.addEventListener('change', () => {
       const first = set.data.find((c) => c.group === set.group.value);
       if (first) selectCase(set, first);
       else {
         clearSet(set);
-        showMyAlg();
+        showCaseBar();
       }
     });
     set.case.addEventListener('change', () => {
@@ -506,10 +512,10 @@
   // 各入力欄・ボタンの処理が終わったあと（document まで伝わったとき）に保存する
   ['input', 'change', 'click'].forEach((type) => document.addEventListener(type, saveSettings));
 
-  showMyAlg(); // ケース未選択の状態で表示しておく
-  // 言語を切り替えたら、その場で作る文（エラー・自分の手順の欄）を作り直す
+  showCaseBar(); // ケース未選択の状態で表示しておく
+  // 言語を切り替えたら、その場で作る文（エラー・自分の手順の行）を作り直す
   I.onChange(() => {
-    showMyAlg();
+    showCaseBar();
     update();
   });
 

@@ -45,6 +45,15 @@
     .sticker-palette-color.selected {
       box-shadow: 0 0 0 2px #fff, 0 0 0 4px #0d6efd;
     }
+    .case-alg-bar {
+      min-height: 31px;
+    }
+    .case-alg-bar .flex-none {
+      flex: none;
+    }
+    .case-alg-bar.is-empty > * {
+      visibility: hidden;
+    }
   </style>
 </head>
 <body>
@@ -133,24 +142,25 @@
           </div>
         </div>
       </div>
-      <div id="myAlgBox" class="mt-2 p-2 border rounded bg-body-tertiary">
-        <div class="d-flex justify-content-between align-items-center mb-1">
-          <label class="form-label small fw-semibold mb-0" for="myAlg" id="myAlgTitle" data-i18n="myAlg.title">My algorithm</label>
-          <span id="myAlgBadge" class="badge rounded-pill text-bg-secondary fw-normal">default</span>
-        </div>
-        <div class="input-group input-group-sm has-validation">
-          <input id="myAlg" class="form-control font-monospace" type="text" placeholder="Select a PLL or OLL case to save your own algorithm" data-i18n-placeholder="myAlg.placeholder" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="myAlgMessage">
-          <button id="myAlgSave" class="btn btn-outline-primary" type="button" data-i18n="myAlg.save">Save</button>
-          <button id="myAlgReset" class="btn btn-outline-secondary" type="button" data-i18n="common.reset">Reset</button>
-        </div>
-        <div id="myAlgMessage" class="small mt-1 text-truncate" style="min-height: 1.5em" aria-live="polite"></div>
-      </div>
       <div id="algButtons" class="mt-2"></div>
       <div class="input-group has-validation mt-2">
         <input id="alg" class="form-control" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">
         <button id="algClear" class="btn btn-outline-secondary" type="button" data-i18n="editor.clear">Clear</button>
         <div id="algError" class="invalid-feedback"></div>
       </div>
+      <!-- 選んでいるケースの手順の状態と、自分の手順の保存（ケースを選んでいるときだけ中身を出す。高さはいつも確保） -->
+      <div id="caseAlgBar" class="case-alg-bar d-flex align-items-center justify-content-between gap-2 mt-1">
+        <div class="d-flex align-items-center gap-2 small text-truncate">
+          <span id="caseAlgName" class="fw-semibold"></span>
+          <span id="caseAlgBadge" class="badge rounded-pill fw-normal"></span>
+          <span id="caseAlgEdited" class="text-warning-emphasis" data-i18n="myAlg.edited" hidden>edited</span>
+        </div>
+        <div class="d-flex gap-1 flex-none">
+          <button id="myAlgSave" class="btn btn-sm btn-outline-primary" type="button" data-i18n="myAlg.save">Save</button>
+          <button id="myAlgReset" class="btn btn-sm btn-outline-secondary" type="button" data-i18n="myAlg.resetToDefault">Reset to default</button>
+        </div>
+      </div>
+      <div id="myAlgMessage" class="small text-truncate" style="min-height: 1.5em" aria-live="polite"></div>
 
       <label class="form-label mt-2" for="algPreset" data-i18n="editor.colorPreset">Color Preset</label>
       <SELECT id="algPreset" class="form-select">
