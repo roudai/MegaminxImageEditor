@@ -61,6 +61,27 @@ test('OLL：別の正しい手順は保存でき、向きは揃っても F2L を
   assert.equal(CA.validate('oll', c, `${c.alg} R`, OLL).ok, false);
 });
 
-test('merged：保存値が無ければ既定のまま', () => {
+test('既定と同じ手順は isDefault になる（空白・括弧・書き方の違いも同じとみなす）', () => {
+  const c = pll('A1+');
+  assert.equal(CA.validate('pll', c, c.alg, PLL).isDefault, true);
+  assert.equal(CA.validate('pll', c, '  ' + c.alg.replace(/ /g, '  ') + ' (U)', PLL).isDefault, true);
+  const o = oll('2B'); // 既定の手順の書き方を変えたもの（R → R6 は同じ回し方）
+  assert.equal(CA.validate('oll', o, o.alg.replace(/^F /, 'F6 '), OLL).isDefault, true);
+  assert.equal(CA.validate('pll', pll('J3+'), "R2 U R2' U' R2 U2' R2' U2 R2 U' R2' U2 R2 U2 R2'", PLL).isDefault, undefined);
+});
+
+test('merged：保存値が無ければ既定のまま。既定と同じ手順の保存値も既定として扱う', () => {
   assert.deepEqual(CA.merged('pll', PLL), PLL);
+  const j3 = CA.validate('pll', pll('J3+'), "R2 U R2' U' R2 U2' R2' U2 R2 U' R2' U2 R2 U2 R2'", PLL);
+  const saved = {
+    pll: { 'A1-': { alg: pll('A1-').alg, setup: pll('A1-').setup }, 'J3+': { alg: j3.alg, setup: j3.setup } },
+  };
+  global.localStorage = { getItem: () => JSON.stringify(saved), setItem() {} };
+  try {
+    const merged = CA.merged('pll', PLL);
+    assert.equal(merged.find((c) => c.name === 'A1-').custom, undefined);
+    assert.equal(merged.find((c) => c.name === 'J3+').custom, true); // 別の手順は自分の手順になる
+  } finally {
+    delete global.localStorage;
+  }
 });

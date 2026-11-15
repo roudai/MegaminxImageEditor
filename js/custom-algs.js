@@ -3,14 +3,15 @@
  * 仕様: reference/PLL_SPEC.md「自分の手順」
  *
  *   validate(set, c, input, data) 入力した手順がケース c（既定データの要素）を解けるか確かめ、
- *                                 { ok: true, alg, setup, notes } または { ok: false, code, params, error } を返す
+ *                                 { ok: true, alg, setup, notes }（既定と同じ手順なら isDefault: true）または
+ *                                 { ok: false, code, params, error } を返す
  *                                   （error は英語の文。画面では code・params を i18n.js で訳す。notes は 'stripped' など）
  *                                   - 記法を読み替え（Br → BR など）、最後の AUF・持ち替え y は外す（notes で知らせる）
  *                                   - setup は既定の setup の前後に AUF を付け直したもの（js/case-check.js の fitSetup）
  *                                   - 解けなければ、実際に解けるケースを data から探してエラーに添える
  *   get(set, name) / save(set, name, { alg, setup }) / reset(set, name)   localStorage の読み書き
  *   merged(set, data)             既定データに自分の手順を重ねた配列（自分の手順のケースは custom: true）。
- *                                 保存値が壊れている・確認を通らない場合は既定を使う
+ *                                 保存値が壊れている・確認を通らない・既定と同じ手順の場合は既定を使う
  *
  * 保存: localStorage 'megaminx-image-editor:custom-algs' = { pll: { "J3+": { alg, setup } }, oll: { ... } }
  * ブラウザでは window.CustomAlgs、node では module.exports として公開する（node では保存しない）。
@@ -28,6 +29,15 @@
   // 最後の AUF・持ち替え（括弧の有無を問わない）。最後の U は PLL でも AUF なので外してよい
   const TRAILING = /(\s+\(?U[0-9']*\)?|\s+y[0-9']*)+\s*$/;
 
+  // 回し方が同じか（空白・括弧の有無・R2' と R3 のような書き方の違いは同じとみなす）
+  function sameMoves(a, b) {
+    try {
+      return JSON.stringify(M.parseAlg(C.convert(a))) === JSON.stringify(M.parseAlg(C.convert(b)));
+    } catch (e) {
+      return false;
+    }
+  }
+
   function validate(set, c, input, data) {
     const raw = C.convert(String(input || '').replace(/\s+/g, ' ').trim());
     if (!raw) return { ok: false, code: 'empty', error: 'Enter an algorithm.' };
@@ -41,6 +51,9 @@
     const alg = raw.replace(TRAILING, '').trim().replace(/^U(2'|'2|2|')?(?=\s)/, (m) => `(${m})`);
     if (TRAILING.test(raw)) notes.push('stripped'); // 画面では i18n.js の myAlg.stripped
     if (!alg) return { ok: false, code: 'notSolved', params: { name: c.name }, error: `This algorithm does not solve ${c.name}.` };
+    // 既定の手順と同じ回し方なら保存しない（isDefault。画面では自分の手順を消して既定に戻す）
+    const defaultAlg = c.defaultAlg || c.alg;
+    if (sameMoves(alg, defaultAlg)) return { ok: true, isDefault: true, alg: defaultAlg, setup: c.defaultSetup || c.setup, notes: notes };
     const fit = C.fitSetup(set, alg, c.defaultSetup || c.setup); // 自分の手順を重ねた要素でも既定の setup を元にする
     if (fit) return { ok: true, alg: fit.a, setup: fit.s, notes: notes };
     const other = data ? C.findCase(set, alg, data) : null;
@@ -96,6 +109,7 @@
     return data.map((c) => {
       const v = mine[c.name];
       if (!v || typeof v.alg !== 'string' || typeof v.setup !== 'string') return c;
+      if (sameMoves(v.alg, c.alg)) return c; // 既定と同じ手順（この修正より前に保存されたもの）は既定として扱う
       // 合わない保存値は使わない（setup が確認を通り、しかもこのケースの手順であること）
       try {
         if (C.check(set, C.convert(v.alg), C.convert(v.setup)) || !C.fitSetup(set, v.alg, c.setup)) return c;

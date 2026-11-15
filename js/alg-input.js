@@ -219,6 +219,13 @@
       setMyAlgMessage('✗ ' + text, 'error');
       return;
     }
+    if (result.isDefault) {
+      // 既定の手順と同じなら自分の手順としては保存しない（自分の手順があれば消して既定に戻す）
+      CA.reset(sel.set.key, sel.c.name);
+      afterMyAlgChange(sel.set);
+      showMyAlg(I.t('myAlg.sameAsDefault'));
+      return;
+    }
     CA.save(sel.set.key, sel.c.name, result);
     afterMyAlgChange(sel.set);
     const notes = result.notes.map((n) => I.t('myAlg.' + n));
