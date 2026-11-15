@@ -81,7 +81,8 @@ test('記法：全角アポストロフィ・括弧・回数・区切りなし',
 });
 
 test('記法：不正な入力はエラー', () => {
-  ['R X', 'r', '(R U', 'R U)', "R2'2"].forEach((alg) => assert.throws(() => M.parseAlg(alg), SyntaxError, alg));
+  // 小文字は大文字と同じに読む（r = R）ので、読めない記号の例は x・z など
+  ['R X', 'x', 'z2', '(R U', 'R U)', "R2'2"].forEach((alg) => assert.throws(() => M.parseAlg(alg), SyntaxError, alg));
 });
 
 test("全体回転 y：y R y' = BR、y U y' = U", () => {
@@ -142,4 +143,17 @@ test('cancelRotation：手順中の持ち替え（y）の合計を打ち消す',
   assert.ok(same(M.applyAlg(alg, { inverse: true, cancelRotation: true }), M.applyAlg(alg + ' y', { inverse: true })));
   // 持ち替えが無ければ変わらない
   assert.ok(same(M.applyAlg("R U R'", { cancelRotation: true }), M.applyAlg("R U R'")));
+});
+
+test('記号の大文字・小文字は区別しない（br = BR、Y = y）。DFR・DFL は DR・DL の別名', () => {
+  const same = (a, b) => assert.deepEqual(M.parseAlg(a), M.parseAlg(b));
+  same("r u r' bR2 dbl' f2 b d", "R U R' BR2 DBL' F2 B D");
+  same("Y U y'", "y U y'");
+  same("Dfr dfl'", "DR DL'");
+  assert.deepEqual(M.applyAlg("bR u' Br"), M.applyAlg("BR U' BR"));
+});
+
+test('canonicalAlg：記号を正しい表記に書き直し、空白・括弧・回数はそのまま', () => {
+  assert.equal(M.canonicalAlg("(u') r u bR' Y dbr2 Dfr"), "(U') R U BR' y DBR2 DR");
+  assert.equal(M.canonicalAlg("(R U R' U')2 F’"), "(R U R' U')2 F'");
 });

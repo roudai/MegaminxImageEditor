@@ -6,7 +6,7 @@
  *                                 { ok: true, alg, setup, notes }（既定と同じ手順なら isDefault: true）または
  *                                 { ok: false, code, params, error } を返す
  *                                   （error は英語の文。画面では code・params を i18n.js で訳す。notes は 'stripped' など）
- *                                   - 記法を読み替え（Br → BR など）、最後の AUF・持ち替え y は外す（notes で知らせる）
+ *                                   - 記号を正しい表記に書き直し（br → BR、Y → y、Dfr → DR など）、最後の AUF・持ち替え y は外す（notes で知らせる）
  *                                   - setup は既定の setup の前後に AUF を付け直したもの（js/case-check.js の fitSetup）
  *                                   - 解けなければ、実際に解けるケースを data から探してエラーに添える
  *   get(set, name) / save(set, name, { alg, setup }) / reset(set, name)   localStorage の読み書き
@@ -39,7 +39,8 @@
   }
 
   function validate(set, c, input, data) {
-    const raw = C.convert(String(input || '').replace(/\s+/g, ' ').trim());
+    // 記号を正しい表記に書き直す（小文字の br → BR、Y → y、Dfr → DR など）
+    const raw = M.canonicalAlg(C.convert(String(input || ''))).replace(/\s+/g, ' ').trim();
     if (!raw) return { ok: false, code: 'empty', error: 'Enter an algorithm.' };
     try {
       M.parseAlg(raw);

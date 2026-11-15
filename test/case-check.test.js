@@ -85,3 +85,11 @@ test('merged：保存値が無ければ既定のまま。既定と同じ手順�
     delete global.localStorage;
   }
 });
+
+test('自分の手順：小文字で入力しても正しい表記にして保存する', () => {
+  const c = pll('J3+');
+  const r = CA.validate('pll', c, "r2 u r2' u' r2 u2' r2' u2 r2 u' r2' u2 r2 u2 r2'", PLL);
+  assert.ok(r.ok);
+  assert.equal(r.alg, "R2 U R2' U' R2 U2' R2' U2 R2 U' R2' U2 R2 U2 R2'");
+  assert.equal(CA.validate('pll', c, c.alg.toLowerCase(), PLL).isDefault, true);
+});

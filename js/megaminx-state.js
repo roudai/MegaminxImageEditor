@@ -12,6 +12,8 @@
  *   y   = 全体をU軸まわりに回転（Uと同じ向き）。y' y2 y2' も可
  *   ( ... )  = グループ。直後に回数（例: (R U R' U')2）や ' （逆手順）を付けられる
  *   全角アポストロフィ ’ や全角括弧（）も可
+ *   大文字・小文字は区別しない（br = BR、Y = y）。DFR・DFL は DR・DL の別名（Dfr のような表記も読める）
+ *   canonicalAlg(alg) で、記号を正しい表記（BR・DR・y など）に書き直した文字列にできる
  *
  * 面の配置（上から見て反時計回り）:
  *   上段: F, R, BR, BL, L    下段: DR, DBR, B, DBL, DL    底: D
@@ -112,7 +114,20 @@
   MOVES.y = makeMove('U', false);
 
   // ---- 記号の解析 ----
-  const FACE_RE = /DBR|DBL|BR|BL|DR|DL|U|F|R|L|B|D|y/y;
+  // 大文字・小文字は区別しない。長い記号から先に試す（DBR を D・B・R と読まないように）
+  const FACE_PATTERN = 'DFR|DFL|DBR|DBL|BR|BL|DR|DL|U|F|R|L|B|D|Y';
+  const FACE_RE = new RegExp(FACE_PATTERN, 'iy');
+  const ALIASES = { DFR: 'DR', DFL: 'DL', Y: 'y' };
+  // 読んだ記号 → 正しい表記（BR・DR・y など）
+  const canonicalFace = (text) => {
+    const upper = text.toUpperCase();
+    return ALIASES[upper] || upper;
+  };
+
+  /** 記号を正しい表記に書き直した手順（空白・括弧・回数などはそのまま）。例: "r u bR' Y" → "R U BR' y" */
+  function canonicalAlg(alg) {
+    return normalize(alg).replace(new RegExp(FACE_PATTERN, 'gi'), canonicalFace);
+  }
   const AMOUNT_RE = /(\d*)(')?(\d*)/y;
 
   function normalize(alg) {
@@ -178,7 +193,7 @@
         const a = readAmount(src, pos + fm[0].length, pos);
         pos = a.end;
         const n = a.prime ? -a.n : a.n;
-        out.push({ face: fm[0], turns: ((n % 5) + 5) % 5 });
+        out.push({ face: canonicalFace(fm[0]), turns: ((n % 5) + 5) % 5 });
       }
     }
 
@@ -307,6 +322,7 @@
     DEFAULT_SCHEME: DEFAULT_SCHEME,
     solved: solved,
     parseAlg: parseAlg,
+    canonicalAlg: canonicalAlg,
     invertMoves: invertMoves,
     applyMoves: applyMoves,
     applyAlg: applyAlg,
