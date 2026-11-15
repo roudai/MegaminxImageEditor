@@ -1,4 +1,4 @@
-// ログイン（Google / GitHub）とクラウド保存（Firebase Authentication + Firestore）。
+// ログイン（Google / GitHub / Facebook）とクラウド保存（Firebase Authentication + Firestore）。
 // 3ページ共通。<script type="module"> で、ほかのスクリプトのあとに読み込む。仕様: reference/CLOUD_SYNC_SPEC.md
 //   - js/firebase-config.js の window.FIREBASE_CONFIG が null なら何もしない（ログインのボタンも出さない）
 //   - Firestore の users/{uid}/apps/megaminx-image-editor の1文書に、store.js の snapshot を JSON 文字列で保存する（{ json, savedAt }）
@@ -11,6 +11,10 @@
 //   - ログイン中は store-change を受けて、少しまとめてからクラウドに書く。ページを離れるときはすぐ書く
 //   - ログアウトしても手元のデータは消さない
 //   - ログイン中はアイコンの右上に、ログインに使ったサービス（Google / GitHub）のロゴを小さく出す
+//   - window.CloudSync：ほかのページ（privacy.html のデータ削除）から使う
+//       CloudSync.state()        { available, known, signedIn, name }
+//       CloudSync.deleteAccount() アカウントのデータ（users/{uid}/apps の全アプリの文書）とログインのアカウントを削除する
+//       ログイン状態が変わると window に 'cloud-sync-change' を通知する
 const CONFIG = window.FIREBASE_CONFIG;
 const Store = window.Store;
 const I = window.I18N;
@@ -52,6 +56,7 @@ async function main() {
   const providers = {
     google: () => new authSdk.GoogleAuthProvider(),
     github: () => new authSdk.GithubAuthProvider(),
+    facebook: () => new authSdk.FacebookAuthProvider(),
   };
 
   // 前回ログインしていたアカウントの表示用の情報（ページを切り替えたときにボタンがちらつかないように、
@@ -136,7 +141,10 @@ async function main() {
       writeLocal(SYNCED_KEY, user.uid);
       ready = true;
       setStatus('synced');
-      if (localChanged) location.reload(); // クラウドの内容を画面に反映する
+      if (localChanged) {
+        if (signInDone) await signInDone; // ログインの処理（Facebook の写真の保存）が終わってから
+        location.reload(); // クラウドの内容を画面に反映する
+      }
     } catch (e) {
       fail(e);
     }
@@ -157,15 +165,51 @@ async function main() {
     await authSdk.signOut(auth);
   }
 
+  // ログインの処理（Facebook の写真の取得まで）が終わるまでの Promise。
+  // ログインの直後にクラウドの内容でページを読み直すときは、これを待つ（途中で読み直すと写真が保存されないため）
+  let signInDone = null;
+
   async function signIn(key) {
     message = '';
+    let finish;
+    signInDone = new Promise((resolve) => {
+      finish = resolve;
+    });
     try {
-      await authSdk.signInWithPopup(auth, providers[key]());
+      const result = await authSdk.signInWithPopup(auth, providers[key]());
+      if (key === 'facebook') await refreshFacebookPhoto(result);
     } catch (e) {
       if (e && e.code === 'auth/popup-closed-by-user') return;
       message = e && e.code === 'auth/account-exists-with-different-credential' ? 'account.otherProvider' : 'account.signInFailed';
       menuOpen = true; // メニューの中にエラーを出す
       render();
+    } finally {
+      finish();
+      signInDone = null;
+    }
+  }
+
+  // Facebook のプロフィール写真：Firebase が受け取る写真の URL（graph.facebook.com/<id>/picture）は、
+  // アクセストークンが無いと Facebook の既定の人型の画像になる。ログインした直後だけ手に入るトークンで
+  // 本人の写真の URL を Graph API から受け取り、Firebase のプロフィールに保存しておく（トークンは保存しない）。
+  // この URL は Facebook 側でいずれ期限が切れるので、読めなくなったら頭文字の丸にする（次に Facebook でログインしたときに更新）
+  async function refreshFacebookPhoto(result) {
+    try {
+      const credential = authSdk.FacebookAuthProvider.credentialFromResult(result);
+      const token = credential && credential.accessToken;
+      if (!token) return;
+      const res = await fetch(
+        'https://graph.facebook.com/me/picture?type=large&redirect=false&access_token=' + encodeURIComponent(token)
+      );
+      const json = await res.json();
+      const picture = json && json.data;
+      if (!picture || !picture.url || picture.is_silhouette) return;
+      await authSdk.updateProfile(result.user, { photoURL: picture.url });
+      user = auth.currentUser;
+      saveHint(user);
+      render();
+    } catch (e) {
+      // 写真が取れなくてもログインはそのまま
     }
   }
 
@@ -194,11 +238,15 @@ async function main() {
     '<path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/></svg>';
   const ICON_GITHUB =
     '<svg viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>';
+  const ICON_FACEBOOK =
+    '<svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="12" fill="#1877F2"/>' +
+    '<path fill="#fff" d="M16.67 15.47 17.2 12h-3.33V9.75c0-.95.47-1.88 1.95-1.88h1.51V4.92s-1.37-.23-2.68-.23c-2.74 0-4.53 1.66-4.53 4.66V12H7.08v3.47h3.04V24a12.1 12.1 0 0 0 3.75 0v-8.53h2.8z"/></svg>';
 
   // ログインに使ったサービス（Google / GitHub）
   const PROVIDERS = {
     'google.com': { name: 'Google', icon: ICON_GOOGLE },
     'github.com': { name: 'GitHub', icon: ICON_GITHUB },
+    'facebook.com': { name: 'Facebook', icon: ICON_FACEBOOK },
   };
   function providerOf(u) {
     const p = (u.providerData || []).find((d) => PROVIDERS[d.providerId]);
@@ -209,15 +257,22 @@ async function main() {
   function avatar(size) {
     const wrap = el('span', 'account-avatar');
     wrap.style.width = wrap.style.height = size + 'px';
-    if (user.photoURL) {
-      const img = el('img');
-      img.src = user.photoURL;
-      img.alt = '';
-      img.referrerPolicy = 'no-referrer';
-      wrap.append(img);
-    } else {
+    const initial = () => {
+      wrap.replaceChildren();
       wrap.textContent = (user.displayName || user.email || '?').trim().charAt(0).toUpperCase();
       wrap.style.fontSize = Math.round(size * 0.45) + 'px';
+    };
+    // Facebook の graph.facebook.com の URL はトークン無しでは既定の人型になるので使わない（refreshFacebookPhoto）
+    const usable = user.photoURL && !/^https:\/\/graph\.facebook\.com\//.test(user.photoURL);
+    if (usable) {
+      const img = el('img');
+      img.alt = '';
+      img.referrerPolicy = 'no-referrer';
+      img.addEventListener('error', initial); // 期限切れなどで読めなければ頭文字
+      img.src = user.photoURL;
+      wrap.append(img);
+    } else {
+      initial();
     }
     return wrap;
   }
@@ -245,6 +300,7 @@ async function main() {
   }
 
   function render() {
+    window.dispatchEvent(new CustomEvent('cloud-sync-change'));
     box.replaceChildren();
     box.className = 'account-box';
     if (!user && !authKnown) return; // ログイン状態が分かるまでは何も出さない（ログインボタンが一瞬出ないように）
@@ -262,7 +318,13 @@ async function main() {
       button.addEventListener('click', toggle);
       menu.append(
         menuItem(ICON_GOOGLE, 'account.withGoogle', () => signIn('google')),
-        menuItem(ICON_GITHUB, 'account.withGithub', () => signIn('github'))
+        // よく使われる順（GitHub は主に開発者向けなので最後）
+        menuItem(ICON_FACEBOOK, 'account.withFacebook', () => signIn('facebook')),
+        menuItem(ICON_GITHUB, 'account.withGithub', () => signIn('github')),
+        el('div', 'account-menu-divider'),
+        menuItem(null, 'account.privacyPolicy', () => {
+          location.href = 'privacy.html';
+        }, 'muted')
       );
       if (message) {
         const m = el('div', 'account-menu-message');
@@ -314,7 +376,15 @@ async function main() {
       code.textContent = errorCode.replace(/^firestore\//, '');
       state.append(code);
     }
-    menu.append(head, state, el('div', 'account-menu-divider'), menuItem(null, 'account.signOut', signOutNow, 'signout'));
+    menu.append(
+      head,
+      state,
+      el('div', 'account-menu-divider'),
+      menuItem(null, 'account.privacyPolicy', () => {
+        location.href = 'privacy.html';
+      }, 'muted'),
+      menuItem(null, 'account.signOut', signOutNow, 'signout')
+    );
     box.append(button, menu);
   }
   document.addEventListener('click', (e) => {
@@ -330,6 +400,43 @@ async function main() {
       render();
     }
   });
+
+  // ---- アカウントのデータの削除（privacy.html から使う）----
+  const PROVIDER_KEYS = { 'google.com': 'google', 'github.com': 'github', 'facebook.com': 'facebook' };
+  async function deleteAccount() {
+    const current = auth && auth.currentUser;
+    if (!current) throw new Error('not signed in');
+    ready = false; // 削除中・削除後にクラウドへ書き戻さない
+    clearTimeout(timer);
+    timer = null;
+    // 同じアカウントで使っているアプリの保存先（users/{uid}/apps の下）をすべて消す
+    const docs = await dbSdk.getDocs(dbSdk.collection(db, 'users', current.uid, 'apps'));
+    await Promise.all(docs.docs.map((d) => dbSdk.deleteDoc(d.ref)));
+    // ログインのアカウントを消す（しばらく前にログインした場合は、もう一度ログインしてもらってから）
+    try {
+      await authSdk.deleteUser(current);
+    } catch (e) {
+      if (!e || e.code !== 'auth/requires-recent-login') throw e;
+      const p = (current.providerData || []).map((d) => PROVIDER_KEYS[d.providerId]).find(Boolean);
+      await authSdk.reauthenticateWithPopup(current, providers[p || 'google']());
+      await authSdk.deleteUser(current);
+    }
+    try {
+      localStorage.removeItem(SYNCED_KEY);
+    } catch (e) {
+      // 消せなくても続ける
+    }
+    saveHint(null);
+  }
+  window.CloudSync = {
+    state: () => ({
+      available: true,
+      known: authKnown,
+      signedIn: !!(user && !user.pending),
+      name: user ? user.displayName || user.email || '' : '',
+    }),
+    deleteAccount: deleteAccount,
+  };
 
   render(); // 前回ログインしていたならアイコンを先に出す
 

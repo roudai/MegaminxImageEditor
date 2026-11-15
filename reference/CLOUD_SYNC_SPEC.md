@@ -6,7 +6,7 @@
 
 ## 構成
 - サイトは GitHub Pages（静的ページ）のまま。Firebase（Authentication + Firestore）をブラウザの JS から直接使う（SDK は gstatic の CDN から ES モジュールで読み込む。バージョン固定）
-- ログイン：Google / GitHub（ポップアップ）
+- ログイン：Google / Facebook / GitHub（ポップアップ。メニューもこの順）
 - 保存先：Firestore の `users/{uid}/apps/megaminx-image-editor` の1文書 `{ json, savedAt }`。`json` は下の snapshot を JSON にした文字列
 - 同じ Firebase プロジェクトで、ほかのアプリ（別リポジトリの VisualCube Editor など）も同じアカウントで使う。各アプリは `users/{uid}/apps/<アプリ名>` に保存し、互いの保存先はぶつからない
   - ほかのアプリも同じ形（`{ json, savedAt }`）で保存すれば、`firestore.rules` は変えなくてよい
@@ -38,13 +38,22 @@
 - ログアウトしても手元のデータは消さない
 
 ## 画面（3ページ共通のナビバー）
-- ログイン前：言語の切り替えの右に、人のアイコン付きの濃い色のボタン **ログイン / Sign in**（角の丸い四角。マウスを乗せると少し浮く）。押すと Google・GitHub のロゴ付きの「Google でログイン」「GitHub でログイン」のメニュー
+- ログイン前：言語の切り替えの右に、人のアイコン付きの濃い色のボタン **ログイン / Sign in**（角の丸い四角。マウスを乗せると少し浮く）。押すと Google・Facebook・GitHub のロゴ付きの「Google でログイン」「Facebook でログイン」「GitHub でログイン」のメニュー（よく使われる順）
 - ログイン中：ナビバーにはアイコン（写真、無ければ名前の頭文字の丸）だけを出し、右下の小さな点で保存の状態を示す（緑＝保存済み、琥珀＝保存中で点滅、赤＝エラー。マウスを乗せると文で出る）
-  - アイコンの右上に、ログインに使ったサービス（Google / GitHub）のロゴを小さく出す。マウスを乗せると「Google でログイン中 · アカウントに保存済み」のように出る
+  - アイコンの右上に、ログインに使ったサービス（Google / GitHub / Facebook）のロゴを小さく出す。マウスを乗せると「Google でログイン中 · アカウントに保存済み」のように出る
   - アイコンを押すとメニュー：大きめのアイコン・名前・メールアドレス・「（ロゴ）GitHub でログイン中」、保存の状態（失敗したときはエラーの種類も）、**ログアウト**
+- Facebook のプロフィール写真：Firebase が受け取る写真の URL はアクセストークンが無いと Facebook の既定の人型になるので、そのままは使わない。Facebook でログインした直後に、そのときのトークンで Graph API（`/me/picture`）から本人の写真の URL を受け取り、Firebase のプロフィールに保存する（トークンは保存しない）。写真の URL は Facebook 側で期限が切れるので、読めなくなったら頭文字の丸にする（次に Facebook でログインしたときに更新される）
 - ページを開いたときのちらつきを防ぐ：ログイン状態が分かるまでは「ログイン」ボタンを出さない。前回ログインしていたときは、そのアカウントのアイコン・名前・ログイン方法を `megaminx-image-editor:account-hint` に覚えておき、ログイン状態が分かる前からアイコンを出しておく（分かるまではメニューは開かない。ログアウトしたら消す）
 - メニューはメニューの外を押すか Esc で閉じる。ログインできなかったときはメニューの中にエラーを出す（同じメールアドレスを別のログイン方法で使っている場合はその旨）
 - 文は `js/i18n.js`（`account.*`）、見た目は `css/common.css`
+
+## プライバシーポリシーとデータの削除（`privacy.html`・`js/privacy.js`）
+- 本文は日本語・英語の両方を HTML に書き、言語の切り替えに合わせて片方を出す（ログインで受け取る情報・保存する情報・使い方・保存先・削除の方法・問い合わせ先＝GitHub の Issues。運営は roudai.net）
+- ナビバーのログインのメニューからリンクする：ログイン前は「ログイン」ボタンのメニュー、ログイン中はアイコンのメニューの「プライバシーポリシー」（データの削除はページの一番下）。Facebook のアプリの「プライバシーポリシーの URL」「データ削除の手順の URL」にこのページを登録する
+- 「アカウントのデータを削除」（ログイン中だけ押せる）：押すと確認の文と「削除する」「キャンセル」を出し、「削除する」で削除する（ブラウザの確認ダイアログは使わない）
+  - `CloudSync.deleteAccount()`：`users/{uid}/apps` の下の全アプリの文書を消し、ログインのアカウントも消す。しばらく前にログインした場合は Firebase が再ログインを求めるので、ログインしたときと同じサービスでもう一度ログインしてもらってから消す
+  - ブラウザに保存された設定は残す（この端末とアカウントの結び付き `synced-uid`・アイコンの情報 `account-hint` は消す）
+- `firestore.rules`：本人は自分の文書を削除できる（`allow delete`）
 
 ## Firebase の設定手順（サイトの管理者がやる）
 1. https://console.firebase.google.com/ でプロジェクトを作成（無料の Spark プランでよい）。ほかのアプリと共通にするので、名前・ID はアプリ名ではなく全体の名前にする（ID はログインのポップアップに出て、あとから変えられない）
@@ -52,5 +61,19 @@
 3. Authentication → ログイン方法
    - Google を有効にする
    - GitHub を有効にする：GitHub の Settings → Developer settings → OAuth Apps で新しいアプリを作り、Authorization callback URL に Firebase の画面に出る URL（`https://<project-id>.firebaseapp.com/__/auth/handler`）を入れる。発行された Client ID / Client Secret を Firebase に登録する
+   - Facebook を有効にする：https://developers.facebook.com/ でアプリを作り（ユースケースは「Facebook ログインでユーザーを認証」）、アプリ ID / app secret を Firebase に登録する。Facebook ログインの設定の「有効な OAuth リダイレクト URI」に Firebase の画面に出る URL（`https://<project-id>.firebaseapp.com/__/auth/handler`）を入れる。一般の人がログインできるようにするにはアプリを「ライブ」にする（プライバシーポリシーの URL などが必要）
 4. Authentication → 設定 → 承認済みドメインに `roudai.github.io` を追加（`localhost` は最初から入っている）
 5. Firestore Database を作成し、「ルール」にリポジトリの `firestore.rules` の内容を貼って公開する
+
+## 公開するときにやること（未対応）
+GitHub Pages（master）に公開するときに、あわせて次を行う。Facebook のアプリは今は開発モードなので、このままでは管理者・テスター以外は Facebook でログインできない。
+1. Facebook アプリ → 「アプリの設定」→「ベーシック」
+   - アプリドメイン：`roudai.github.io`
+   - プライバシーポリシーの URL：`https://roudai.github.io/MegaminxImageEditor/privacy.html`
+   - ユーザーデータの削除：「データ削除の手順の URL」に `https://roudai.github.io/MegaminxImageEditor/privacy.html#delete`
+   - アプリアイコン（1024×1024）・カテゴリ・連絡先メールアドレス
+   - 「プラットフォームを追加」→ ウェブサイト：`https://roudai.github.io/MegaminxImageEditor/`
+2. 左のメニューの「公開」から、アプリをライブにする（`public_profile`・`email` だけなので、ふつうはアプリレビューは不要）
+3. 管理者ではない Facebook アカウントで、公開中のサイトからログインできるか確かめる
+4. Firebase の承認済みドメインに `roudai.github.io` があるか、Firestore のルールが最新か確かめる
+

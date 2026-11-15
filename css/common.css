@@ -223,6 +223,10 @@
   outline: none;
   background-color: #f1f3f5;
 }
+.account-menu-item.muted {
+  color: #6c757d;
+  font-size: .8rem;
+}
 .account-menu-item.signout {
   color: #6c757d;
 }
