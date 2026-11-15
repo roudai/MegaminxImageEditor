@@ -2,11 +2,13 @@
 // - 色は hidden input（uface0..10 / sface1..15）に持つ。imageChange()（megaminx.js）がこの値を読む
 // - 色は既定14色のカラーパレットから選ぶ
 // - 初期値は canvas の ucolor / scolor 属性
+// - 見出し・ラベルは i18n.js で日本語・英語を切り替える（ステッカーの def は key と params を持つ）
 // megaminx-state.js と megaminx.js（color_convert）の後、alg-input.js の前に読み込む。
 (function () {
   'use strict';
   const M = window.MegaminxState;
   const $ = (id) => document.getElementById(id);
+  const I = window.I18N;
 
   // 既定14色（megaminx.js の color_convert が扱う色コード）
   const COLORS = [
@@ -25,14 +27,14 @@
   const U_STICKERS = [];
   ORDER.forEach((k) => {
     const next = (k + 1) % 5;
-    U_STICKERS.push({ id: 'uface' + (2 + 2 * k), label: faceOf(k) + ' edge' });
-    U_STICKERS.push({ id: 'uface' + (1 + 2 * next), label: faceOf(k) + '-' + faceOf(next) + ' corner' });
+    U_STICKERS.push({ id: 'uface' + (2 + 2 * k), key: 'state.edge', params: { face: faceOf(k) } });
+    U_STICKERS.push({ id: 'uface' + (1 + 2 * next), key: 'state.corner', params: { a: faceOf(k), b: faceOf(next) } });
   });
 
   const SIDE_STICKERS = [];
   ORDER.forEach((k) => {
-    ['left', 'center', 'right'].forEach((pos, j) => {
-      SIDE_STICKERS.push({ id: 'sface' + (3 * k + j + 1), label: faceOf(k) + ' ' + pos });
+    ['state.left', 'state.middle', 'state.right'].forEach((key, j) => {
+      SIDE_STICKERS.push({ id: 'sface' + (3 * k + j + 1), key: key, params: { face: faceOf(k) } });
     });
   });
 
@@ -53,14 +55,14 @@
     const label = document.createElement('label');
     label.className = 'form-label';
     label.htmlFor = def.id + '-swatch';
-    label.textContent = def.label;
+    I.set(label, def.key, def.params);
 
     const swatch = document.createElement('button');
     swatch.type = 'button';
     swatch.id = def.id + '-swatch';
     swatch.className = 'sticker-swatch';
 
-    const item = { input: input, swatch: swatch, label: def.label };
+    const item = { input: input, swatch: swatch, label: label };
     swatch.addEventListener('click', (e) => {
       e.stopPropagation();
       open(item);
@@ -71,7 +73,7 @@
 
   function section(title, defs, perRow) {
     const heading = document.createElement('div');
-    heading.textContent = title;
+    I.set(heading, title);
     const nodes = [heading];
     for (let i = 0; i < defs.length; i += perRow) {
       const row = document.createElement('div');
@@ -88,8 +90,8 @@
   }
 
   const editor = $('stateEditor');
-  const center = sticker({ id: 'uface0', label: 'Center Color' });
-  editor.append(...center, ...section('U Face Color', U_STICKERS, 5), ...section('Side Face Color', SIDE_STICKERS, 6));
+  const center = sticker({ id: 'uface0', key: 'state.center' });
+  editor.append(...center, ...section('state.uFace', U_STICKERS, 5), ...section('state.sideFace', SIDE_STICKERS, 6));
 
   // ---- パレット（全ステッカーで1つを共有）----
   let current = null; // 開いているステッカー
@@ -149,11 +151,12 @@
     const name = colorName(item.input.value);
     item.swatch.style.background = color_convert(item.input.value);
     item.swatch.title = name;
-    item.swatch.setAttribute('aria-label', item.label + ': ' + name);
+    item.swatch.setAttribute('aria-label', item.label.textContent + ': ' + name);
   }
 
   const paintAll = () => items.forEach(paint);
   paintAll();
+  I.onChange(paintAll); // ラベルの言語が変わったら読み上げ用の名前も作り直す
 
   // 手順から計算した色は表示を切り替えたときに反映する
   document.querySelectorAll('input[name="algType"]').forEach((r) => r.addEventListener('change', paintAll));

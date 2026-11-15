@@ -18,6 +18,7 @@
   const M = window.MegaminxState;
   const D = window.MegaminxDraw;
   const $ = (id) => document.getElementById(id);
+  const I = window.I18N; // 日本語・英語の切り替え（i18n.js）
 
   const SET = document.body.dataset.set;
   const BASE = { pll: window.PLL_DATA, oll: window.OLL_DATA }[SET] || [];
@@ -79,7 +80,7 @@
   const FILTER_KEY = 'megaminx-image-editor:list-filter';
   const STATUSES = ['new', 'learning', 'learned'];
   // 表示名（保存する値は new / learning / learned のまま）
-  const STATUS_LABEL = { new: 'To learn', learning: 'Learning', learned: 'Learned' };
+  const statusLabel = (status) => I.t('status.' + status);
 
   const readJSON = (key) => {
     try {
@@ -127,7 +128,7 @@
     const card = el('div', 'card h-100 case-card');
     const link = el('a', 'case-link d-block h-100');
     link.href = `index.html?${SET}=${encodeURIComponent(c.name)}`;
-    link.title = `Open ${c.name} in the editor`;
+    I.set(link, 'list.openTitle', { name: c.name }, 'title');
 
     const canvas = el('canvas', 'mx-auto mt-2 d-block');
     const ratio = window.devicePixelRatio || 1;
@@ -141,8 +142,9 @@
     const body = el('div', 'card-body p-2 text-center');
     const name = el('div', 'fw-bold', c.name);
     if (c.custom) {
-      const tag = el('span', 'custom-tag', 'custom');
-      tag.title = 'Your own algorithm (saved in the editor)';
+      const tag = el('span', 'custom-tag');
+      I.set(tag, 'list.customTag');
+      I.set(tag, 'list.customTitle', null, 'title');
       name.append(tag);
     }
     body.append(name, el('div', 'small font-monospace text-break', c.alg));
@@ -155,10 +157,11 @@
       card.dataset.status = status;
       badge.dataset.status = status;
       col.dataset.status = status;
-      badge.title = `${STATUS_LABEL[status]} (click to change)`;
-      badge.setAttribute('aria-label', `${c.name}: ${STATUS_LABEL[status]}. Click to change`);
+      badge.title = I.t('status.badgeTitle', { status: statusLabel(status) });
+      badge.setAttribute('aria-label', I.t('status.badgeAria', { name: c.name, status: statusLabel(status) }));
     };
     show(statusOf(c));
+    badge.addEventListener('relabel', () => show(statusOf(c)));
     badge.addEventListener('click', () => {
       const next = STATUSES[(STATUSES.indexOf(statusOf(c)) + 1) % STATUSES.length];
       setStatus(c, next);
@@ -178,11 +181,11 @@
   const SCOPES =
     SET === 'oll'
       ? [
-          { key: 'nd', label: 'No Dot', title: 'Groups 1-37 (no dot)', test: (c) => c.algset === 'ND' },
-          { key: 'd', label: 'Dot', title: 'Groups 1C and 38-53 (dot)', test: (c) => c.algset === 'D' },
-          { key: 'all', label: 'All', title: 'All OLL cases', test: () => true },
+          { key: 'nd', label: 'list.scopeNd', title: 'list.scopeNdTitle', test: (c) => c.algset === 'ND' },
+          { key: 'd', label: 'list.scopeD', title: 'list.scopeDTitle', test: (c) => c.algset === 'D' },
+          { key: 'all', label: 'list.scopeAll', title: 'list.scopeAllTitle', test: () => true },
         ]
-      : [{ key: 'all', label: 'All', test: () => true }];
+      : [{ key: 'all', label: 'list.scopeAll', test: () => true }];
   let scope = SCOPES[0];
   const inScope = (c) => scope.test(c);
   const scoped = () => DATA.filter(inScope);
@@ -202,13 +205,15 @@
     if (SCOPES.length > 1) {
       const sw = el('div', 'scope-switch mb-2');
       sw.setAttribute('role', 'group');
-      sw.setAttribute('aria-label', 'Cases to show');
+      I.set(sw, 'list.scopeAria', null, 'aria-label');
       SCOPES.forEach((sc) => {
         const b = el('button', 'scope-option');
         b.type = 'button';
         b.dataset.scope = sc.key;
-        b.title = sc.title;
-        b.append(document.createTextNode(sc.label), el('span', 'scope-count', String(DATA.filter(sc.test).length)));
+        const label = el('span');
+        I.set(label, sc.label);
+        I.set(b, sc.title, null, 'title');
+        b.append(label, el('span', 'scope-count', String(DATA.filter(sc.test).length)));
         b.addEventListener('click', () => {
           scope = sc;
           writeJSON(FILTER_KEY, Object.assign(readJSON(FILTER_KEY), { [SET + 'Scope']: sc.key }));
@@ -220,7 +225,7 @@
       box.append(sw);
     }
     const bar = el('div', 'progress-stacked mb-1');
-    bar.setAttribute('aria-label', 'Learning progress');
+    I.set(bar, 'list.progressAria', null, 'aria-label');
     ['learned', 'learning'].forEach((s) => {
       const seg = el('div', 'progress');
       seg.setAttribute('role', 'progressbar');
@@ -232,12 +237,14 @@
     legend.id = 'progressLegend';
     const chips = el('div', 'filter-chips d-flex flex-wrap gap-1');
     chips.setAttribute('role', 'group');
-    chips.setAttribute('aria-label', 'Filter by status');
+    I.set(chips, 'list.filterAria', null, 'aria-label');
     ['all'].concat(STATUSES).forEach((f) => {
       const b = el('button', 'btn btn-sm btn-outline-secondary');
       b.type = 'button';
       b.dataset.filter = f;
-      b.append(document.createTextNode(f === 'all' ? 'All' : STATUS_LABEL[f]), el('span', 'chip-count'));
+      const label = el('span');
+      I.set(label, f === 'all' ? 'list.filterAll' : 'status.' + f);
+      b.append(label, el('span', 'chip-count'));
       b.addEventListener('click', () => {
         filter = f;
         writeJSON(FILTER_KEY, Object.assign(readJSON(FILTER_KEY), { [SET]: f }));
@@ -259,13 +266,13 @@
       seg.setAttribute('aria-valuenow', String(n[s]));
       seg.setAttribute('aria-valuemin', '0');
       seg.setAttribute('aria-valuemax', String(n.all));
-      seg.setAttribute('aria-label', `${STATUS_LABEL[s]}: ${n[s]}`);
+      seg.setAttribute('aria-label', `${statusLabel(s)}: ${n[s]}`);
     });
     const legend = $('progressLegend');
     legend.innerHTML = '';
     STATUSES.slice().reverse().forEach((s, i) => {
       if (i) legend.append(document.createTextNode('  ·  '));
-      legend.append(el('span', `legend-dot ${s}`), document.createTextNode(`${n[s]} ${STATUS_LABEL[s].toLowerCase()}`));
+      legend.append(el('span', `legend-dot ${s}`), document.createTextNode(I.t('status.legend.' + s, { n: n[s] })));
     });
     document.querySelectorAll('#progressBox [data-filter]').forEach((b) => {
       b.querySelector('.chip-count').textContent = n[b.dataset.filter];
@@ -288,10 +295,13 @@
       b.setAttribute('aria-pressed', String(on));
     });
     const total = scoped().length;
-    $('caseCount').textContent = `${total} cases`;
+    I.set($('caseCount'), 'list.count', { n: total });
     const zip = $('downloadZip');
-    zip.textContent = scope.key === 'all' ? `Download all ${SET.toUpperCase()} (.zip)` : `Download ${scope.label} ${SET.toUpperCase()} (.zip)`;
-    zip.title = `${total} cases as PNG, with the colors shown here and the image settings saved in the editor`;
+    if (!zip.disabled) {
+      if (scope.key === 'all') I.set(zip, 'list.downloadAll', { set: SET.toUpperCase() });
+      else I.set(zip, 'list.downloadScope', { scope: I.t(scope.label), set: SET.toUpperCase() });
+    }
+    zip.title = I.t('list.downloadTitle', { n: total });
     document.querySelectorAll('#progressBox [data-filter]').forEach((b) => {
       const on = b.dataset.filter === filter;
       b.classList.toggle('btn-secondary', on);
@@ -345,7 +355,8 @@
       section.append(row);
       list.append(section);
     });
-    const empty = el('p', 'text-muted text-center py-5', 'No cases with this status.');
+    const empty = el('p', 'text-muted text-center py-5');
+    I.set(empty, 'list.empty');
     empty.id = 'emptyMessage';
     empty.hidden = true;
     list.append(empty);
@@ -360,7 +371,6 @@
 
   // 全ケースを PNG にして zip にまとめ、ダウンロードする。ファイル名は <pll|oll>-<名前>.png
   async function downloadAll(button) {
-    const label = button.textContent;
     button.disabled = true;
     try {
       const settings = savedSettings(); // ダウンロードの時点の設定を読み直す
@@ -368,7 +378,7 @@
       const files = [];
       for (let i = 0; i < list.length; i++) {
         const c = list[i];
-        button.textContent = `Creating... ${i + 1}/${list.length}`;
+        button.textContent = I.t('list.creating', { i: i + 1, n: list.length });
         const canvas = document.createElement('canvas');
         canvas.width = settings.size;
         canvas.height = settings.size;
@@ -384,11 +394,17 @@
       link.click();
       setTimeout(() => URL.revokeObjectURL(link.href), 10000);
     } finally {
-      button.textContent = label;
       button.disabled = false;
+      applyFilter(); // ボタンの文を（今の言語・範囲で）戻す
     }
   }
 
   render();
+  // 言語を切り替えたら、その場で作る文（件数・バッジの説明など）を作り直す
+  I.onChange(() => {
+    document.querySelectorAll('.status-badge').forEach((b) => b.dispatchEvent(new CustomEvent('relabel')));
+    updateSummary();
+    applyFilter();
+  });
   $('downloadZip').addEventListener('click', (e) => downloadAll(e.currentTarget));
 })();

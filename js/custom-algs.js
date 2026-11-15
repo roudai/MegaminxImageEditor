@@ -3,7 +3,8 @@
  * 仕様: reference/PLL_SPEC.md「自分の手順」
  *
  *   validate(set, c, input, data) 入力した手順がケース c（既定データの要素）を解けるか確かめ、
- *                                 { ok: true, alg, setup, notes } または { ok: false, error } を返す
+ *                                 { ok: true, alg, setup, notes } または { ok: false, code, params, error } を返す
+ *                                   （error は英語の文。画面では code・params を i18n.js で訳す。notes は 'stripped' など）
  *                                   - 記法を読み替え（Br → BR など）、最後の AUF・持ち替え y は外す（notes で知らせる）
  *                                   - setup は既定の setup の前後に AUF を付け直したもの（js/case-check.js の fitSetup）
  *                                   - 解けなければ、実際に解けるケースを data から探してエラーに添える
@@ -29,24 +30,29 @@
 
   function validate(set, c, input, data) {
     const raw = C.convert(String(input || '').replace(/\s+/g, ' ').trim());
-    if (!raw) return { ok: false, error: 'Enter an algorithm.' };
+    if (!raw) return { ok: false, code: 'empty', error: 'Enter an algorithm.' };
     try {
       M.parseAlg(raw);
     } catch (e) {
-      return { ok: false, error: e.message };
+      return { ok: false, code: 'parse', error: e.message };
     }
     const notes = [];
     // 先頭の括弧の無い U は前の AUF なので、既定データと同じく括弧で書く（例：U2 R U … → (U2) R U …）
     const alg = raw.replace(TRAILING, '').trim().replace(/^U(2'|'2|2|')?(?=\s)/, (m) => `(${m})`);
-    if (TRAILING.test(raw)) notes.push('Removed the final AUF / rotation.');
-    if (!alg) return { ok: false, error: `This algorithm does not solve ${c.name}.` };
+    if (TRAILING.test(raw)) notes.push('stripped'); // 画面では i18n.js の myAlg.stripped
+    if (!alg) return { ok: false, code: 'notSolved', params: { name: c.name }, error: `This algorithm does not solve ${c.name}.` };
     const fit = C.fitSetup(set, alg, c.defaultSetup || c.setup); // 自分の手順を重ねた要素でも既定の setup を元にする
     if (fit) return { ok: true, alg: fit.a, setup: fit.s, notes: notes };
     const other = data ? C.findCase(set, alg, data) : null;
-    return {
-      ok: false,
-      error: `This algorithm does not solve ${c.name}` + (other && other.name !== c.name ? ` (it solves ${other.name}).` : '.'),
-    };
+    if (other && other.name !== c.name) {
+      return {
+        ok: false,
+        code: 'solvesOther',
+        params: { name: c.name, other: other.name },
+        error: `This algorithm does not solve ${c.name} (it solves ${other.name}).`,
+      };
+    }
+    return { ok: false, code: 'notSolved', params: { name: c.name }, error: `This algorithm does not solve ${c.name}.` };
   }
 
   // ---- 保存 ----

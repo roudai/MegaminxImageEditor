@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-i18n-title-page="title.editor">
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.9/dist/css/bootstrap.min.css" integrity="sha384-yEPZ7jP9S0QKiUQ0m3jjsO4ProIW7wvR9gXkI7JOGa2XVsw53Yke2bsdkBbjmmiX" crossorigin="anonymous">
   <title>Megaminx Image Editor 2.0</title>
+  <link rel="stylesheet" href="css/common.css">
   <style>
     .sticker-swatch {
       display: block;
@@ -52,8 +53,9 @@
       <div class="container-fluid">
         <a class="navbar-brand">Megaminx Image Editor 2.0</a>
         <span class="navbar-text">
-          <a href="pll.html" class="me-3">PLL List</a>
-          <a href="oll.html" class="me-3">OLL List</a>
+          <span id="langSwitch"></span>
+          <a href="pll.html" class="me-3" data-i18n="nav.pllList">PLL List</a>
+          <a href="oll.html" class="me-3" data-i18n="nav.ollList">OLL List</a>
           <a href="https://github.com/roudai/MegaminxImageEditor" aria-label="GitHub">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-github" viewBox="0 0 16 16">
               <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
@@ -69,29 +71,29 @@
     </div>
     <br>
     <div class="text-center">
-      <button type="button" class="btn btn-outline-secondary" onclick="downloadImage();">Download</button>
+      <button type="button" class="btn btn-outline-secondary" onclick="downloadImage();" data-i18n="editor.download">Download</button>
     </div>
 
-    <label class="form-label" for="fname">File Name</label>
+    <label class="form-label" for="fname" data-i18n="editor.fileName">File Name</label>
     <input id="fname" class="form-control" type="text" value="megaminx.png">
 
-    <label class="form-label" for="imageSize">Image Size (px)</label>
+    <label class="form-label" for="imageSize" data-i18n="editor.imageSize">Image Size (px)</label>
     <input onchange="imageChange();" id="imageSize" class="form-control" name="size" type="number" value="200" min="1" max="1024" step="1">
 
     <hr>
-    <label class="form-label" for="alg">Algorithm</label>
+    <label class="form-label" for="alg" data-i18n="editor.algorithm">Algorithm</label>
     <div>
       <div class="form-check form-check-inline">
         <input class="form-check-input" type="radio" name="algType" id="algTypeAlg" value="alg" checked>
-        <label class="form-check-label" for="algTypeAlg">Algorithm to apply</label>
+        <label class="form-check-label" for="algTypeAlg" data-i18n="editor.typeAlg">Algorithm to apply</label>
       </div>
       <div class="form-check form-check-inline">
         <input class="form-check-input" type="radio" name="algType" id="algTypeCase" value="case">
-        <label class="form-check-label" for="algTypeCase">Algorithm to solve case</label>
+        <label class="form-check-label" for="algTypeCase" data-i18n="editor.typeCase">Algorithm to solve case</label>
       </div>
       <div class="form-check form-check-inline">
         <input class="form-check-input" type="radio" name="algType" id="algTypeState" value="state">
-        <label class="form-check-label" for="algTypeState">Defines the puzzle state</label>
+        <label class="form-check-label" for="algTypeState" data-i18n="editor.typeState">Defines the puzzle state</label>
       </div>
     </div>
 
@@ -101,15 +103,15 @@
           <label class="col-form-label" for="pllGroup">PLL</label>
         </div>
         <div class="col-12 col-md-4">
-          <select id="pllGroup" class="form-select" aria-label="PLL group"></select>
+          <select id="pllGroup" class="form-select" aria-label="PLL group" data-i18n-aria-label="editor.groupAria" data-i18n-params='{"set":"PLL"}'></select>
         </div>
         <div class="col-12 col-md-3">
-          <select id="pllCase" class="form-select" aria-label="PLL case" disabled></select>
+          <select id="pllCase" class="form-select" aria-label="PLL case" data-i18n-aria-label="editor.caseAria" data-i18n-params='{"set":"PLL"}' disabled></select>
         </div>
         <div class="col-12 col-md-auto">
-          <div class="btn-group" role="group" aria-label="PLL navigation">
-            <button id="pllPrev" class="btn btn-outline-secondary" type="button">&lsaquo; Prev</button>
-            <button id="pllNext" class="btn btn-outline-secondary" type="button">Next &rsaquo;</button>
+          <div class="btn-group" role="group" aria-label="PLL navigation" data-i18n-aria-label="editor.navAria" data-i18n-params='{"set":"PLL"}'>
+            <button id="pllPrev" class="btn btn-outline-secondary" type="button" data-i18n="common.prev">&lsaquo; Prev</button>
+            <button id="pllNext" class="btn btn-outline-secondary" type="button" data-i18n="common.next">Next &rsaquo;</button>
           </div>
         </div>
       </div>
@@ -118,49 +120,49 @@
           <label class="col-form-label" for="ollGroup">OLL</label>
         </div>
         <div class="col-12 col-md-4">
-          <select id="ollGroup" class="form-select" aria-label="OLL group"></select>
+          <select id="ollGroup" class="form-select" aria-label="OLL group" data-i18n-aria-label="editor.groupAria" data-i18n-params='{"set":"OLL"}'></select>
         </div>
         <div class="col-12 col-md-3">
-          <select id="ollCase" class="form-select" aria-label="OLL case" disabled></select>
+          <select id="ollCase" class="form-select" aria-label="OLL case" data-i18n-aria-label="editor.caseAria" data-i18n-params='{"set":"OLL"}' disabled></select>
         </div>
         <div class="col-12 col-md-auto">
-          <div class="btn-group" role="group" aria-label="OLL navigation">
-            <button id="ollPrev" class="btn btn-outline-secondary" type="button">&lsaquo; Prev</button>
-            <button id="ollNext" class="btn btn-outline-secondary" type="button">Next &rsaquo;</button>
+          <div class="btn-group" role="group" aria-label="OLL navigation" data-i18n-aria-label="editor.navAria" data-i18n-params='{"set":"OLL"}'>
+            <button id="ollPrev" class="btn btn-outline-secondary" type="button" data-i18n="common.prev">&lsaquo; Prev</button>
+            <button id="ollNext" class="btn btn-outline-secondary" type="button" data-i18n="common.next">Next &rsaquo;</button>
           </div>
         </div>
       </div>
       <div id="myAlgBox" class="mt-2 p-2 border rounded bg-body-tertiary">
         <div class="d-flex justify-content-between align-items-center mb-1">
-          <label class="form-label small fw-semibold mb-0" for="myAlg" id="myAlgTitle">My algorithm</label>
+          <label class="form-label small fw-semibold mb-0" for="myAlg" id="myAlgTitle" data-i18n="myAlg.title">My algorithm</label>
           <span id="myAlgBadge" class="badge rounded-pill text-bg-secondary fw-normal">default</span>
         </div>
         <div class="input-group input-group-sm has-validation">
-          <input id="myAlg" class="form-control font-monospace" type="text" placeholder="Select a PLL or OLL case to save your own algorithm" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="myAlgMessage">
-          <button id="myAlgSave" class="btn btn-outline-primary" type="button">Save</button>
-          <button id="myAlgReset" class="btn btn-outline-secondary" type="button">Reset</button>
+          <input id="myAlg" class="form-control font-monospace" type="text" placeholder="Select a PLL or OLL case to save your own algorithm" data-i18n-placeholder="myAlg.placeholder" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="myAlgMessage">
+          <button id="myAlgSave" class="btn btn-outline-primary" type="button" data-i18n="myAlg.save">Save</button>
+          <button id="myAlgReset" class="btn btn-outline-secondary" type="button" data-i18n="common.reset">Reset</button>
         </div>
         <div id="myAlgMessage" class="small mt-1 text-truncate" style="min-height: 1.5em" aria-live="polite"></div>
       </div>
       <div id="algButtons" class="mt-2"></div>
       <div class="input-group has-validation mt-2">
         <input id="alg" class="form-control" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">
-        <button id="algClear" class="btn btn-outline-secondary" type="button">Clear</button>
+        <button id="algClear" class="btn btn-outline-secondary" type="button" data-i18n="editor.clear">Clear</button>
         <div id="algError" class="invalid-feedback"></div>
       </div>
 
-      <label class="form-label mt-2" for="algPreset">Color Preset</label>
+      <label class="form-label mt-2" for="algPreset" data-i18n="editor.colorPreset">Color Preset</label>
       <SELECT id="algPreset" class="form-select">
-        <OPTION value="standard" selected>Standard</OPTION>
-        <OPTION value="oll">OLL (U color only)</OPTION>
-        <OPTION value="custom">Custom</OPTION>
+        <OPTION value="standard" selected data-i18n="editor.presetStandard">Standard</OPTION>
+        <OPTION value="oll" data-i18n="editor.presetOll">OLL (U color only)</OPTION>
+        <OPTION value="custom" data-i18n="editor.presetCustom">Custom</OPTION>
       </SELECT>
 
       <div class="mt-2">
-        <label class="form-label">Face Colors</label>
-        <button id="faceColorsReset" class="btn btn-outline-secondary btn-sm ms-2" type="button">Reset</button>
-        <button id="faceColorsRotate" class="btn btn-outline-secondary btn-sm ms-1" type="button" title="Rotate face colors like U (y)">U &#8635;</button>
-        <button id="faceColorsFlip" class="btn btn-outline-secondary btn-sm ms-1" type="button" title="Flip the puzzle upside down (U and D swap places)">Flip</button>
+        <label class="form-label" data-i18n="editor.faceColors">Face Colors</label>
+        <button id="faceColorsReset" class="btn btn-outline-secondary btn-sm ms-2" type="button" data-i18n="common.reset">Reset</button>
+        <button id="faceColorsRotate" class="btn btn-outline-secondary btn-sm ms-1" type="button" title="Rotate face colors like U (y)" data-i18n-title="editor.rotateTitle">U &#8635;</button>
+        <button id="faceColorsFlip" class="btn btn-outline-secondary btn-sm ms-1" type="button" title="Flip the puzzle upside down (U and D swap places)" data-i18n-title="editor.flipTitle" data-i18n="editor.flip">Flip</button>
       </div>
       <div id="faceColors" class="row"></div>
     </div>
@@ -171,27 +173,28 @@
 
     <div class="row">
       <div class="col-12 col-md-6">
-        <label class="form-label" for="border">Body Color</label>
+        <label class="form-label" for="border" data-i18n="editor.bodyColor">Body Color</label>
         <div class="input-group">
           <input id="border" class="form-control" type="color" value="#000000" oninput="imageChange();">
-          <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('border').value = '#000000'; imageChange();">Reset</button>
+          <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('border').value = '#000000'; imageChange();" data-i18n="common.reset">Reset</button>
         </div>
       </div>
       <div class="col-12 col-md-6">
-        <label class="form-label" for="bgColor">Background Color</label>
+        <label class="form-label" for="bgColor" data-i18n="editor.bgColor">Background Color</label>
         <div class="input-group">
           <input id="bgColor" class="form-control" type="color" value="#ffffff" oninput="document.getElementById('bg').value = 'n'; imageChange();">
-          <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('bgColor').value = '#ffffff'; imageChange();">Reset</button>
+          <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('bgColor').value = '#ffffff'; imageChange();" data-i18n="common.reset">Reset</button>
         </div>
       </div>
     </div>
 
-    <label class="form-label" for="bg">Background</label>
+    <label class="form-label" for="bg" data-i18n="editor.background">Background</label>
     <SELECT id="bg" class="form-select" onchange="imageChange();">
-      <OPTION value="y" selected>Transparent</OPTION>
-      <OPTION value="n">Opaque</OPTION>
+      <OPTION value="y" selected data-i18n="editor.transparent">Transparent</OPTION>
+      <OPTION value="n" data-i18n="editor.opaque">Opaque</OPTION>
     </SELECT>
   </div>
+  <script type="text/javascript" src="js/i18n.js"></script>
   <script type="text/javascript" src="js/megaminx-state.js"></script>
   <script type="text/javascript" src="js/megaminx-draw.js"></script>
   <script type="text/javascript" src="js/megaminx.js"></script>

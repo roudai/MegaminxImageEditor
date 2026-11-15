@@ -36,7 +36,7 @@ test('最後の AUF・持ち替えは外される', () => {
   const r = CA.validate('pll', c, `${c.alg} U'`, PLL);
   assert.ok(r.ok);
   assert.equal(r.alg, c.alg);
-  assert.deepEqual(r.notes, ['Removed the final AUF / rotation.']);
+  assert.deepEqual(r.notes, ['stripped']);
 });
 
 test('別のケースの手順はエラーになり、実際に解けるケースを示す', () => {

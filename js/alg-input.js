@@ -14,6 +14,7 @@
 (function () {
   'use strict';
   const M = window.MegaminxState;
+  const I = window.I18N; // 日本語・英語の切り替え（i18n.js）
   const $ = (id) => document.getElementById(id);
 
   const BUTTONS = ['U', 'F', 'R', 'L', 'BR', 'BL', 'DR', 'DL', 'DBR', 'DBL', 'B', 'D', 'y', "'", '2', '(', ')'];
@@ -180,7 +181,8 @@
     $('myAlgBox').hidden = !CA;
     if (!CA) return;
     const badge = $('myAlgBadge');
-    $('myAlgTitle').textContent = sel ? `My algorithm for ${sel.c.name}` : 'My algorithm';
+    if (sel) I.set($('myAlgTitle'), 'myAlg.titleFor', { name: sel.c.name });
+    else I.set($('myAlgTitle'), 'myAlg.title');
     badge.hidden = !sel;
     myAlg.disabled = !sel;
     $('myAlgSave').disabled = !sel;
@@ -188,7 +190,7 @@
     myAlg.value = sel ? sel.c.alg : '';
     myAlg.classList.toggle('is-invalid', !!sel && kind === 'error');
     if (sel) {
-      badge.textContent = sel.c.custom ? 'custom' : 'default';
+      I.set(badge, sel.c.custom ? 'myAlg.custom' : 'myAlg.default');
       badge.className = `badge rounded-pill fw-normal ${sel.c.custom ? 'text-bg-success' : 'text-bg-secondary'}`;
     }
     setMyAlgMessage(sel ? message : '', kind);
@@ -213,12 +215,14 @@
     const result = CA.validate(sel.set.key, sel.c, myAlg.value, sel.set.base);
     if (!result.ok) {
       myAlg.classList.add('is-invalid');
-      setMyAlgMessage('✗ ' + result.error, 'error');
+      const text = result.code === 'parse' ? I.error(result.error) : I.t('myAlg.err.' + result.code, result.params);
+      setMyAlgMessage('✗ ' + text, 'error');
       return;
     }
     CA.save(sel.set.key, sel.c.name, result);
     afterMyAlgChange(sel.set);
-    showMyAlg(['✓ Saved.'].concat(result.notes, [`Setup: ${result.setup}`]).join(' '));
+    const notes = result.notes.map((n) => I.t('myAlg.' + n));
+    showMyAlg([I.t('myAlg.saved')].concat(notes, [I.t('myAlg.setup', { setup: result.setup })]).join(' '));
   }
 
   function resetMyAlg() {
@@ -226,7 +230,7 @@
     if (!sel) return;
     CA.reset(sel.set.key, sel.c.name);
     afterMyAlgChange(sel.set);
-    showMyAlg('Reset to the default algorithm.');
+    showMyAlg(I.t('myAlg.resetDone'));
   }
 
   // URLでは + が空白になるので、見つからなければ空白を + に戻して探す
@@ -358,7 +362,7 @@
       // case は「この手順で揃う状態」。手順中の持ち替え（y）で完成後の向きが変わっても揃ったとみなす
       state = M.applyAlg(input.value, { inverse: type === 'case', cancelRotation: type === 'case' });
     } catch (e) {
-      error.textContent = e.message;
+      error.textContent = I.error(e.message);
       input.classList.add('is-invalid');
       return;
     }
@@ -506,6 +510,11 @@
   ['input', 'change', 'click'].forEach((type) => document.addEventListener(type, saveSettings));
 
   showMyAlg(); // ケース未選択の状態で表示しておく
+  // 言語を切り替えたら、その場で作る文（エラー・自分の手順の欄）を作り直す
+  I.onChange(() => {
+    showMyAlg();
+    update();
+  });
 
   const params = new URLSearchParams(location.search);
   const urlPll = params.has('pll') ? findCase(SETS.pll, params.get('pll')) : null;
