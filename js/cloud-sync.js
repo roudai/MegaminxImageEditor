@@ -43,22 +43,47 @@ const el = (tag, className) => {
 
 async function main() {
   if (!CONFIG || !box || !Store) return;
-  const [appSdk, authSdk, dbSdk] = await Promise.all([
-    import(`${SDK}/firebase-app.js`),
-    import(`${SDK}/firebase-auth.js`),
-    import(`${SDK}/firebase-firestore.js`),
-  ]);
-  const app = appSdk.initializeApp(CONFIG);
-  const auth = authSdk.getAuth(app);
-  const db = dbSdk.getFirestore(app);
+  // SDK は下で読み込む（その前に、前回ログインしていたアカウントのアイコンを先に出しておく）
+  let authSdk = null;
+  let dbSdk = null;
+  let auth = null;
+  let db = null;
+  let authKnown = false; // ログイン状態が分かったか（分かるまではログインボタンを出さない）
   const providers = {
     google: () => new authSdk.GoogleAuthProvider(),
     github: () => new authSdk.GithubAuthProvider(),
   };
 
-  let user = null;
+  // 前回ログインしていたアカウントの表示用の情報（ページを切り替えたときにボタンがちらつかないように、
+  // ログイン状態が分かる前からアイコンを出しておく。ログアウトしたら消す）
+  const HINT_KEY = 'megaminx-image-editor:account-hint';
+  function readHint() {
+    try {
+      const h = JSON.parse(readLocal(HINT_KEY));
+      return h && typeof h === 'object' ? h : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function saveHint(u) {
+    try {
+      if (!u) localStorage.removeItem(HINT_KEY);
+      else {
+        const p = (u.providerData || []).find((d) => d.providerId) || {};
+        writeLocal(HINT_KEY, JSON.stringify({ displayName: u.displayName, email: u.email, photoURL: u.photoURL, providerId: p.providerId }));
+      }
+    } catch (e) {
+      // 保存できなくても続ける
+    }
+  }
+  const hint = readHint();
+
+  // pending: 前回の情報で仮に出しているあいだ（メニューは開かない）
+  let user = hint
+    ? { pending: true, displayName: hint.displayName, email: hint.email, photoURL: hint.photoURL, providerData: [{ providerId: hint.providerId }] }
+    : null;
   let ready = false; // ログイン後の最初の合わせ込みが終わるまではクラウドに書かない
-  let status = 'synced'; // synced / syncing / error
+  let status = hint ? 'syncing' : 'synced'; // synced / syncing / error
   let message = '';
   let errorCode = ''; // 保存に失敗したときの Firebase のエラーコード（メニューとコンソールに出す）
   let timer = null;
@@ -199,6 +224,7 @@ async function main() {
 
   function toggle(e) {
     e.stopPropagation();
+    if (user && user.pending) return; // ログイン状態が分かるまではメニューを開かない
     menuOpen = !menuOpen;
     render();
   }
@@ -221,6 +247,7 @@ async function main() {
   function render() {
     box.replaceChildren();
     box.className = 'account-box';
+    if (!user && !authKnown) return; // ログイン状態が分かるまでは何も出さない（ログインボタンが一瞬出ないように）
     const menu = el('div', 'account-menu');
     menu.hidden = !menuOpen;
 
@@ -304,13 +331,27 @@ async function main() {
     }
   });
 
+  render(); // 前回ログインしていたならアイコンを先に出す
+
+  const [appSdk, authModule, dbModule] = await Promise.all([
+    import(`${SDK}/firebase-app.js`),
+    import(`${SDK}/firebase-auth.js`),
+    import(`${SDK}/firebase-firestore.js`),
+  ]);
+  authSdk = authModule;
+  dbSdk = dbModule;
+  const app = appSdk.initializeApp(CONFIG);
+  auth = authSdk.getAuth(app);
+  db = dbSdk.getFirestore(app);
+
   authSdk.onAuthStateChanged(auth, (next) => {
+    authKnown = true;
     user = next;
     ready = false;
+    saveHint(next);
     render();
     if (user) syncOnLogin();
   });
-  render();
 }
 
 main().catch(() => {
