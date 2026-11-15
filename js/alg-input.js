@@ -205,18 +205,42 @@
   }
 
   // メッセージは1行（長いときは省略し、全文はマウスを乗せると出る）。行の高さは空でも確保しておく
-  function setMyAlgMessage(text, kind) {
-    myAlgMessage.textContent = text || '';
-    myAlgMessage.title = text || '';
-    myAlgMessage.className = `small text-truncate ${kind === 'error' ? 'text-danger' : 'text-success'}`;
+  // undo を渡すと、メッセージの右に「元に戻す」を出す（押すと保存・既定に戻す前の状態に戻す）。
+  // メッセージが変わる（別のケースを選ぶ・書き換える・種類を切り替える など）と「元に戻す」も消える
+  function setMyAlgMessage(text, kind, undo) {
+    myAlgMessage.replaceChildren();
+    myAlgMessage.className = `small d-flex align-items-center gap-2 ${kind === 'error' ? 'text-danger' : 'text-success'}`;
+    const span = document.createElement('span');
+    span.className = 'text-truncate';
+    span.textContent = text || '';
+    span.title = text || '';
+    myAlgMessage.append(span);
+    if (undo) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'btn btn-link btn-sm p-0 flex-none my-alg-undo';
+      I.set(button, 'myAlg.undo');
+      button.addEventListener('click', undo);
+      myAlgMessage.append(button);
+    }
   }
 
   // 保存・既定に戻すのあと：データを作り直し、選択中のケースの手順で入力欄と画像を描き直す
-  function afterMyAlgChange(set, message) {
+  function afterMyAlgChange(set, message, undo) {
     mergeData(set);
     onTypeChange();
     showCaseBar();
-    setMyAlgMessage(message);
+    setMyAlgMessage(message, null, undo);
+  }
+
+  // 変える前の自分の手順を覚えておき、「元に戻す」で戻す関数を作る（前が既定なら自分の手順を消す）
+  function undoFor(set, name) {
+    const before = CA.get(set.key, name);
+    return () => {
+      if (before) CA.save(set.key, name, before);
+      else CA.reset(set.key, name);
+      afterMyAlgChange(set, I.t('myAlg.undone'));
+    };
   }
 
   function saveMyAlg() {
@@ -228,22 +252,25 @@
       setMyAlgMessage('✗ ' + text, 'error');
       return;
     }
+    const undo = undoFor(sel.set, sel.c.name);
     if (result.isDefault) {
       // 既定の手順と同じなら自分の手順としては保存しない（自分の手順があれば消して既定に戻す）
+      const hadCustom = !!sel.c.custom;
       CA.reset(sel.set.key, sel.c.name);
-      afterMyAlgChange(sel.set, I.t('myAlg.sameAsDefault'));
+      afterMyAlgChange(sel.set, I.t('myAlg.sameAsDefault'), hadCustom ? undo : null);
       return;
     }
     CA.save(sel.set.key, sel.c.name, result);
     const notes = result.notes.map((n) => I.t('myAlg.' + n));
-    afterMyAlgChange(sel.set, [I.t('myAlg.saved')].concat(notes, [I.t('myAlg.setup', { setup: result.setup })]).join(' '));
+    afterMyAlgChange(sel.set, [I.t('myAlg.saved')].concat(notes, [I.t('myAlg.setup', { setup: result.setup })]).join(' '), undo);
   }
 
   function resetMyAlg() {
     const sel = selected();
     if (!sel || !CA) return;
+    const undo = undoFor(sel.set, sel.c.name);
     CA.reset(sel.set.key, sel.c.name);
-    afterMyAlgChange(sel.set, I.t('myAlg.resetDone'));
+    afterMyAlgChange(sel.set, I.t('myAlg.resetDone'), undo);
   }
 
   // URLでは + が空白になるので、見つからなければ空白を + に戻して探す
