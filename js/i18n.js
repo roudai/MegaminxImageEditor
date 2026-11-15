@@ -11,13 +11,12 @@
  *   I18N.error(message)          megaminx-state.js の解析エラー（英語）を訳す
  *
  * HTML では <span data-i18n="key">English</span> のように書く（属性は data-i18n-title / -placeholder / -aria-label）。
- * 言語は localStorage 'megaminx-image-editor:lang' に保存する。無ければブラウザの言語（ja なら日本語、それ以外は英語）。
+ * 言語は store.js の 'lang'（localStorage 'megaminx-image-editor:lang'）に保存する。無ければブラウザの言語（ja なら日本語、それ以外は英語）。
  * ナビバーの #langSwitch に EN / 日本語 の切り替えを作る。
  */
 (function () {
   'use strict';
 
-  const KEY = 'megaminx-image-editor:lang';
 
   const DICT = {
     en: {
@@ -116,6 +115,18 @@
       'status.legend.learned': '{n} learned',
       'status.badgeTitle': '{status} (click to change)',
       'status.badgeAria': '{name}: {status}. Click to change',
+      // ログイン・クラウド保存（cloud-sync.js）
+      'account.signIn': 'Sign in',
+      'account.signOut': 'Sign out',
+      'account.menuLabel': 'Account: {name}',
+      'account.via': 'Signed in with {provider}',
+      'account.withGoogle': 'Sign in with Google',
+      'account.withGithub': 'Sign in with GitHub',
+      'account.synced': 'Saved to your account',
+      'account.syncing': 'Saving…',
+      'account.error': 'Could not save to your account',
+      'account.signInFailed': 'Could not sign in. Please try again.',
+      'account.otherProvider': 'This email is already used with another sign-in method. Sign in with that one.',
     },
     ja: {
       'nav.editor': 'エディタ',
@@ -203,16 +214,23 @@
       'status.legend.learned': '習得済み {n}',
       'status.badgeTitle': '{status}（押すと切り替え）',
       'status.badgeAria': '{name}: {status}。押すと切り替え',
+      'account.signIn': 'ログイン',
+      'account.signOut': 'ログアウト',
+      'account.menuLabel': 'アカウント: {name}',
+      'account.via': '{provider} でログイン中',
+      'account.withGoogle': 'Google でログイン',
+      'account.withGithub': 'GitHub でログイン',
+      'account.synced': 'アカウントに保存済み',
+      'account.syncing': '保存中…',
+      'account.error': 'アカウントに保存できませんでした',
+      'account.signInFailed': 'ログインできませんでした。もう一度お試しください。',
+      'account.otherProvider': 'このメールアドレスは別のログイン方法で使われています。そちらでログインしてください。',
     },
   };
 
   function initialLang() {
-    try {
-      const saved = localStorage.getItem(KEY);
-      if (saved === 'en' || saved === 'ja') return saved;
-    } catch (e) {
-      // 読めなければブラウザの言語
-    }
+    const saved = window.Store ? window.Store.get('lang') : null;
+    if (saved === 'en' || saved === 'ja') return saved;
     return /^ja\b/i.test(navigator.language || '') ? 'ja' : 'en';
   }
 
@@ -262,11 +280,7 @@
   function setLang(next) {
     if (next !== 'en' && next !== 'ja') return;
     lang = next;
-    try {
-      localStorage.setItem(KEY, next);
-    } catch (e) {
-      // 保存できなくても切り替えは続ける
-    }
+    if (window.Store) window.Store.set('lang', next);
     apply();
     listeners.forEach((fn) => fn(lang));
   }

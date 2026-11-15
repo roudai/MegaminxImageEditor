@@ -13,19 +13,19 @@
  *   merged(set, data)             既定データに自分の手順を重ねた配列（自分の手順のケースは custom: true）。
  *                                 保存値が壊れている・確認を通らない・既定と同じ手順の場合は既定を使う
  *
- * 保存: localStorage 'megaminx-image-editor:custom-algs' = { pll: { "J3+": { alg, setup } }, oll: { ... } }
+ * 保存: store.js の 'custom-algs'（localStorage 'megaminx-image-editor:custom-algs'）= { pll: { "J3+": { alg, setup } }, oll: { ... } }
  * ブラウザでは window.CustomAlgs、node では module.exports として公開する（node では保存しない）。
  */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) {
-    module.exports = factory(require('./megaminx-state.js'), require('./case-check.js'));
+    module.exports = factory(require('./megaminx-state.js'), require('./case-check.js'), require('./store.js'));
   } else {
-    root.CustomAlgs = factory(root.MegaminxState, root.CaseCheck);
+    root.CustomAlgs = factory(root.MegaminxState, root.CaseCheck, root.Store);
   }
-})(typeof self !== 'undefined' ? self : this, function (M, C) {
+})(typeof self !== 'undefined' ? self : this, function (M, C, S) {
   'use strict';
 
-  const KEY = 'megaminx-image-editor:custom-algs';
+  const KEY = 'custom-algs';
   // 最後の AUF・持ち替え（括弧の有無を問わない）。最後の U は PLL でも AUF なので外してよい
   const TRAILING = /(\s+\(?U[0-9']*\)?|\s+y[0-9']*)+\s*$/;
 
@@ -69,22 +69,12 @@
   }
 
   // ---- 保存 ----
-  const storage = () => (typeof localStorage !== 'undefined' ? localStorage : null);
+  // 保存は store.js 経由（ログイン中はクラウドにも）
   function readAll() {
-    try {
-      const value = JSON.parse(storage().getItem(KEY));
-      return value && typeof value === 'object' ? value : {};
-    } catch (e) {
-      return {};
-    }
+    const value = S.get(KEY);
+    return value && typeof value === 'object' ? value : {};
   }
-  function writeAll(all) {
-    try {
-      storage().setItem(KEY, JSON.stringify(all));
-    } catch (e) {
-      // 保存できなくても動作は続ける
-    }
-  }
+  const writeAll = (all) => S.set(KEY, all);
 
   function get(set, name) {
     const v = (readAll()[set] || {})[name];

@@ -28,15 +28,10 @@
   const IMAGE_SIZE = 120; // 表示サイズ（px）。高解像度の画面では devicePixelRatio 倍で描く
 
   // エディタ（alg-input.js）が保存した設定のうち、配色と Body Color を読む
-  const SETTINGS_KEY = 'megaminx-image-editor:settings';
   const HEX = /^#[0-9a-f]{6}$/i;
   function savedSettings() {
-    let settings = null;
-    try {
-      settings = JSON.parse(localStorage.getItem(SETTINGS_KEY));
-    } catch (e) {
-      // 読めなければ初期値
-    }
+    const saved = window.Store.get('settings');
+    const settings = saved && typeof saved === 'object' ? saved : null;
     // OLL 配色（U の色だけ）のままだと PLL が見分けられないので、そのときは OLL を選ぶ前の配色
     // （エディタが beforeOll に保存）を使い、それも無ければ Standard にする（エディタで PLL を選んだときと同じ）
     let faceColors = {};
@@ -74,29 +69,20 @@
     return M.toImageColors(state, settings.scheme);
   }
 
-  // ---- 覚えた度（localStorage）----
+  // ---- 覚えた度 ----
   // { pll: { 'A1+': 'learning', ... }, oll: { ... } }。未着手（new）は保存しない
-  const PROGRESS_KEY = 'megaminx-image-editor:progress';
-  const FILTER_KEY = 'megaminx-image-editor:list-filter';
+  // 保存は store.js 経由（ログイン中はクラウドにも）
+  const PROGRESS_KEY = 'progress';
+  const FILTER_KEY = 'list-filter';
   const STATUSES = ['new', 'learning', 'learned'];
   // 表示名（保存する値は new / learning / learned のまま）
   const statusLabel = (status) => I.t('status.' + status);
 
-  const readJSON = (key) => {
-    try {
-      const value = JSON.parse(localStorage.getItem(key));
-      return value && typeof value === 'object' ? value : {};
-    } catch (e) {
-      return {};
-    }
+  const readJSON = (name) => {
+    const value = window.Store.get(name);
+    return value && typeof value === 'object' ? value : {};
   };
-  const writeJSON = (key, value) => {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch (e) {
-      // 保存できなくても表示は続ける
-    }
-  };
+  const writeJSON = (name, value) => window.Store.set(name, value);
 
   const progress = readJSON(PROGRESS_KEY);
   const statusOf = (c) => {

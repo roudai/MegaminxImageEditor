@@ -31,3 +31,245 @@
   outline: none;
   box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .35);
 }
+
+/* ナビバーのログイン（cloud-sync.js） */
+.account-box {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-right: .75rem;
+  vertical-align: middle;
+}
+.account-box:empty {
+  display: none;
+}
+.account-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+/* ログイン前：角の丸い四角の、濃い色のボタン */
+.account-signin {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .28rem .8rem .28rem .65rem;
+  border: 1px solid #1f2328;
+  border-radius: .45rem;
+  background: linear-gradient(180deg, #343a40, #1f2328);
+  color: #fff;
+  font-size: .78rem;
+  font-weight: 500;
+  letter-spacing: .02em;
+  line-height: 1.4;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .18), inset 0 1px 0 rgba(255, 255, 255, .08);
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.account-signin:hover {
+  background: linear-gradient(180deg, #3d444b, #24292f);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, .2), inset 0 1px 0 rgba(255, 255, 255, .08);
+  transform: translateY(-1px);
+}
+.account-signin:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .18);
+}
+@media (prefers-reduced-motion: reduce) {
+  .account-signin,
+  .account-signin:hover {
+    transition: none;
+    transform: none;
+  }
+}
+.account-signin[aria-expanded="true"],
+.account-signin:focus-visible,
+.account-avatar-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .25);
+}
+
+/* ログイン中：アイコンと保存の状態の点 */
+.account-avatar-button {
+  position: relative;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  line-height: 0;
+}
+.account-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  overflow: hidden;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6c8cff, #9b6cff);
+  color: #fff;
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .08);
+}
+.account-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.account-avatar-button:hover .account-avatar {
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, .35);
+}
+/* ログインに使ったサービスのロゴ（アイコンの右上） */
+.account-provider-badge {
+  position: absolute;
+  top: -4px;
+  right: -5px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  color: #24292f;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .12);
+}
+.account-provider-badge svg {
+  width: 9px;
+  height: 9px;
+}
+.account-menu-via {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+  margin-top: .15rem;
+  color: #6c757d;
+  font-size: .72rem;
+}
+.account-menu-via .account-icon svg {
+  width: 11px;
+  height: 11px;
+}
+/* 状態の点：緑＝保存済み、琥珀＝保存中（点滅）、赤＝エラー */
+.sync-dot {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 2px solid #f8f9fa;
+  background: #198754;
+}
+.sync-dot.inline {
+  position: static;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border: 0;
+  margin-right: .45rem;
+}
+.sync-dot.syncing {
+  background: #f0ad00;
+  animation: sync-pulse 1s ease-in-out infinite;
+}
+.sync-dot.error {
+  background: #dc3545;
+}
+@keyframes sync-pulse {
+  50% { opacity: .35; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sync-dot.syncing { animation: none; }
+}
+
+/* メニュー */
+.account-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 1050;
+  min-width: 15rem;
+  padding: .4rem;
+  border: 1px solid rgba(0, 0, 0, .08);
+  border-radius: .75rem;
+  background: #fff;
+  box-shadow: 0 .75rem 2rem rgba(0, 0, 0, .14);
+  text-align: left;
+  animation: account-menu-in .14s ease-out;
+}
+.account-menu[hidden] {
+  display: none;
+}
+@keyframes account-menu-in {
+  from { opacity: 0; transform: translateY(-4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .account-menu { animation: none; }
+}
+.account-menu-item {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  width: 100%;
+  padding: .5rem .65rem;
+  border: 0;
+  border-radius: .5rem;
+  background: transparent;
+  color: #212529;
+  font-size: .85rem;
+  text-align: left;
+}
+.account-menu-item:hover,
+.account-menu-item:focus-visible {
+  outline: none;
+  background-color: #f1f3f5;
+}
+.account-menu-item.signout {
+  color: #6c757d;
+}
+.account-menu-head {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  padding: .45rem .55rem .35rem;
+}
+.account-menu-who {
+  min-width: 0;
+}
+.account-menu-name {
+  font-size: .875rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.account-menu-email {
+  color: #6c757d;
+  font-size: .75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.account-menu-status {
+  display: flex;
+  align-items: center;
+  padding: .15rem .6rem .4rem;
+  color: #6c757d;
+  font-size: .75rem;
+}
+.account-menu-code {
+  margin-left: .35rem;
+  font-family: var(--bs-font-monospace);
+  font-size: .7rem;
+  color: #dc3545;
+}
+.account-menu-divider {
+  height: 1px;
+  margin: .2rem .25rem;
+  background: #e9ecef;
+}
+.account-menu-message {
+  padding: .35rem .65rem .2rem;
+  color: #dc3545;
+  font-size: .75rem;
+  white-space: normal;
+}

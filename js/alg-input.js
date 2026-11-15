@@ -452,11 +452,10 @@
     update();
   });
 
-  // ---- 設定の保存（localStorage）----
+  // ---- 設定の保存（store.js 経由で localStorage。ログイン中はクラウドにも）----
   // 配色（Color Preset・Face Colors・OLL を選ぶ前の配色・最後のカスタム配色）、Image Size、Body Color、Background Color、Background を保存し、
   // 次に開いたときに戻す。手順・種類・PLL/OLLの選択・ファイル名は保存しない（URLパラメータで指定する）。
   // 保存できない環境（プライベートモードなど）では何もしない
-  const SETTINGS_KEY = 'megaminx-image-editor:settings';
   const HEX = /^#[0-9a-f]{6}$/i;
   const SETTING_IDS = ['imageSize', 'border', 'bgColor', 'bg'];
 
@@ -472,21 +471,12 @@
     SETTING_IDS.forEach((id) => {
       settings[id] = $(id).value;
     });
-    try {
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-    } catch (e) {
-      // 保存できなくても動作は続ける
-    }
+    window.Store.set('settings', settings); // store.js（前と同じ内容なら何もしない）
   }
 
   // 保存された値のうち、正しい形のものだけを入力欄に戻す
   function loadSettings() {
-    let settings;
-    try {
-      settings = JSON.parse(localStorage.getItem(SETTINGS_KEY));
-    } catch (e) {
-      return;
-    }
+    const settings = window.Store.get('settings');
     if (!settings || typeof settings !== 'object') return;
     const faceColors = settings.faceColors || {};
     M.FACES.forEach((face) => {
