@@ -127,14 +127,51 @@
 .legend-dot.learning { background: var(--status-learning); }
 .legend-dot.new { background: var(--status-new); }
 
+/* 表示する範囲の切り替え（OLL の No Dot / Dot / All）：セグメント型 */
+.scope-switch {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 50rem;
+  background-color: #eef0f3;
+}
+.scope-option {
+  border: 0;
+  border-radius: 50rem;
+  padding: .3rem .95rem;
+  background: transparent;
+  color: #495057;
+  font-size: .875rem;
+  font-weight: 500;
+  transition: background-color .2s ease, color .2s ease, box-shadow .2s ease;
+}
+.scope-option:hover {
+  color: #212529;
+}
+.scope-option.active {
+  background-color: #fff;
+  color: #212529;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .14);
+}
+.scope-option:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .35);
+}
+.scope-count {
+  margin-left: .4rem;
+  font-size: .75rem;
+  opacity: .55;
+  font-variant-numeric: tabular-nums;
+}
+
 /* 絞り込みチップ */
 .filter-chips .btn {
   border-radius: 50rem;
-  padding: .15rem .65rem;
-  font-size: .8rem;
+  padding: .15rem .45rem;
+  font-size: .78rem;
+  white-space: nowrap;
 }
 .filter-chips .chip-count {
-  margin-left: .35rem;
+  margin-left: .25rem;
   opacity: .65;
   font-variant-numeric: tabular-nums;
 }

@@ -8,6 +8,8 @@
 //   - ケースをクリックすると、そのケースを選んだ状態でエディタ（index.html?pll=… / ?oll=…）を開く
 //   - 覚えた度：各カード右上のバッジをタップで 未着手 → 練習中 → 覚えた と切り替え、localStorage に保存する。
 //     上部に進み具合（積み上げバー・件数）と絞り込みチップ、グループ見出しに「覚えた数 / 全体」を出す
+//   - OLL は No Dot（algset ND、1〜37）と Dot（algset D、1C・38〜53）を切り替えて表示する（All も選べる）。
+//     件数・進捗バー・絞り込み・一括ダウンロードは選んだ範囲だけで数える（覚えた度の保存はケースごとで共通）
 //   - Download all (.zip)：全ケースを一覧と同じ配色で PNG にし、zip（megaminx-<pll|oll>.zip）にまとめる。
 //     画像サイズ・Body Color・背景はエディタで保存した設定（zip-store.js で無圧縮の zip を作る）
 (function () {
@@ -73,7 +75,8 @@
   const PROGRESS_KEY = 'megaminx-image-editor:progress';
   const FILTER_KEY = 'megaminx-image-editor:list-filter';
   const STATUSES = ['new', 'learning', 'learned'];
-  const STATUS_LABEL = { new: 'New', learning: 'Learning', learned: 'Learned' };
+  // 表示名（保存する値は new / learning / learned のまま）
+  const STATUS_LABEL = { new: 'To learn', learning: 'Learning', learned: 'Learned' };
 
   const readJSON = (key) => {
     try {
@@ -107,8 +110,11 @@
   }
 
   const ICONS =
-    '<svg class="icon-learning" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5a5.5 5.5 0 0 1 0 11z" fill="currentColor"/>' +
-    '<circle cx="8" cy="8" r="4.9" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>' +
+    // 練習中：進捗リング（薄い円の上に 3/4 の弧）
+    '<svg class="icon-learning" viewBox="0 0 16 16" aria-hidden="true">' +
+    '<circle cx="8" cy="8" r="5" fill="none" stroke="currentColor" stroke-width="2" opacity=".28"/>' +
+    '<path d="M8 3a5 5 0 1 1-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' +
+    // 覚えた：チェック
     '<svg class="icon-learned" viewBox="0 0 16 16" aria-hidden="true" style="position:absolute">' +
     '<path d="M3.5 8.5l3 3 6-6.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
@@ -159,6 +165,19 @@
     return col;
   }
 
+  // ---- 表示する範囲（OLL の No Dot / Dot）----
+  const SCOPES =
+    SET === 'oll'
+      ? [
+          { key: 'nd', label: 'No Dot', title: 'Groups 1-37 (no dot)', test: (c) => c.algset === 'ND' },
+          { key: 'd', label: 'Dot', title: 'Groups 1C and 38-53 (dot)', test: (c) => c.algset === 'D' },
+          { key: 'all', label: 'All', title: 'All OLL cases', test: () => true },
+        ]
+      : [{ key: 'all', label: 'All', test: () => true }];
+  let scope = SCOPES[0];
+  const inScope = (c) => scope.test(c);
+  const scoped = () => DATA.filter(inScope);
+
   // ---- 進み具合・絞り込み ----
   let filter = 'all';
   const counts = (list) => {
@@ -171,6 +190,26 @@
     const box = $('progressBox');
     box.className = 'progress-summary mb-3';
     box.innerHTML = '';
+    if (SCOPES.length > 1) {
+      const sw = el('div', 'scope-switch mb-2');
+      sw.setAttribute('role', 'group');
+      sw.setAttribute('aria-label', 'Cases to show');
+      SCOPES.forEach((sc) => {
+        const b = el('button', 'scope-option');
+        b.type = 'button';
+        b.dataset.scope = sc.key;
+        b.title = sc.title;
+        b.append(document.createTextNode(sc.label), el('span', 'scope-count', String(DATA.filter(sc.test).length)));
+        b.addEventListener('click', () => {
+          scope = sc;
+          writeJSON(FILTER_KEY, Object.assign(readJSON(FILTER_KEY), { [SET + 'Scope']: sc.key }));
+          updateSummary();
+          applyFilter();
+        });
+        sw.append(b);
+      });
+      box.append(sw);
+    }
     const bar = el('div', 'progress-stacked mb-1');
     bar.setAttribute('aria-label', 'Learning progress');
     ['learned', 'learning'].forEach((s) => {
@@ -203,7 +242,7 @@
   // 件数・バー・グループの「覚えた数 / 全体」を今の状態に合わせる（絞り込みはやり直さない。
   // 絞り込み中に状態を変えたカードがすぐ消えると落ち着かないので、チップを押したときに反映する）
   function updateSummary() {
-    const n = counts(DATA);
+    const n = counts(scoped());
     ['learned', 'learning'].forEach((s) => {
       const seg = document.querySelector(`#progressBox [data-segment="${s}"]`);
       const pct = n.all ? (n[s] / n.all) * 100 : 0;
@@ -217,7 +256,7 @@
     legend.innerHTML = '';
     STATUSES.slice().reverse().forEach((s, i) => {
       if (i) legend.append(document.createTextNode('  ·  '));
-      legend.append(el('span', `legend-dot ${s}`), document.createTextNode(`${n[s]} ${s}`));
+      legend.append(el('span', `legend-dot ${s}`), document.createTextNode(`${n[s]} ${STATUS_LABEL[s].toLowerCase()}`));
     });
     document.querySelectorAll('#progressBox [data-filter]').forEach((b) => {
       b.querySelector('.chip-count').textContent = n[b.dataset.filter];
@@ -232,8 +271,18 @@
     });
   }
 
-  // 選んだ状態のカードだけを表示し、1枚も無いグループは見出しごと隠す
+  // 選んだ範囲・状態のカードだけを表示し、1枚も無いグループは見出しごと隠す
   function applyFilter() {
+    document.querySelectorAll('#progressBox [data-scope]').forEach((b) => {
+      const on = b.dataset.scope === scope.key;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-pressed', String(on));
+    });
+    const total = scoped().length;
+    $('caseCount').textContent = `${total} cases`;
+    const zip = $('downloadZip');
+    zip.textContent = scope.key === 'all' ? `Download all ${SET.toUpperCase()} (.zip)` : `Download ${scope.label} ${SET.toUpperCase()} (.zip)`;
+    zip.title = `${total} cases as PNG, with the colors shown here and the image settings saved in the editor`;
     document.querySelectorAll('#progressBox [data-filter]').forEach((b) => {
       const on = b.dataset.filter === filter;
       b.classList.toggle('btn-secondary', on);
@@ -243,7 +292,8 @@
     document.querySelectorAll('#caseList section').forEach((section) => {
       let visible = 0;
       section.querySelectorAll('.col[data-name]').forEach((col) => {
-        const show = filter === 'all' || col.dataset.status === filter;
+        col.dataset.inScope = String(inScope(BY_NAME[col.dataset.name]));
+        const show = col.dataset.inScope === 'true' && (filter === 'all' || col.dataset.status === filter);
         col.hidden = !show;
         if (show) visible++;
       });
@@ -254,6 +304,10 @@
     $('emptyMessage').hidden = !!document.querySelector('#caseList section:not([hidden])');
   }
 
+  const BY_NAME = {};
+  DATA.forEach((c) => {
+    BY_NAME[c.name] = c;
+  });
   const groups = () => DATA.map((c) => c.group).filter((g, i, all) => all.indexOf(g) === i);
 
   function render() {
@@ -286,12 +340,12 @@
     empty.id = 'emptyMessage';
     empty.hidden = true;
     list.append(empty);
-    $('caseCount').textContent = `${DATA.length} cases`;
 
+    const savedFilter = readJSON(FILTER_KEY);
+    scope = SCOPES.find((sc) => sc.key === savedFilter[SET + 'Scope']) || SCOPES[0];
+    filter = ['all'].concat(STATUSES).includes(savedFilter[SET]) ? savedFilter[SET] : 'all';
     buildSummary();
     updateSummary();
-    const saved = readJSON(FILTER_KEY)[SET];
-    filter = ['all'].concat(STATUSES).includes(saved) ? saved : 'all';
     applyFilter();
   }
 
@@ -301,10 +355,11 @@
     button.disabled = true;
     try {
       const settings = savedSettings(); // ダウンロードの時点の設定を読み直す
+      const list = scoped(); // 選んでいる範囲（OLL の No Dot / Dot / All）
       const files = [];
-      for (let i = 0; i < DATA.length; i++) {
-        const c = DATA[i];
-        button.textContent = `Creating... ${i + 1}/${DATA.length}`;
+      for (let i = 0; i < list.length; i++) {
+        const c = list[i];
+        button.textContent = `Creating... ${i + 1}/${list.length}`;
         const canvas = document.createElement('canvas');
         canvas.width = settings.size;
         canvas.height = settings.size;
@@ -316,7 +371,7 @@
       const zip = new Blob([window.ZipStore.create(files)], { type: 'application/zip' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(zip);
-      link.download = `megaminx-${SET}.zip`;
+      link.download = scope.key === 'all' ? `megaminx-${SET}.zip` : `megaminx-${SET}-${scope.key}.zip`;
       link.click();
       setTimeout(() => URL.revokeObjectURL(link.href), 10000);
     } finally {

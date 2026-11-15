@@ -10,14 +10,14 @@ PLL（`reference/PLL_SPEC.md`）と同じ仕組みで、OLL を選ぶと手順�
   ```
   - `a`：解く手順（solve case 用）。`[前AUF] 手順`。最後の AUF・持ち替え（y）は付けない
   - `s`：そのケースになる手順（apply 用）。`[AUF] setup [AUF]`
-  - `algset`（`ND` / `D`）は今は使わない
+  - `algset`（`ND` / `D`）は一覧ページの No Dot / Dot の切り替えに使う
 - 元のデータは1ケースに手順が1〜4個あった。最初の手順を `a` にし、前の AUF を `(U')` のように括弧で書く形に変換した
   - 先頭の手順が使えないケースは、使える次の手順にした。`28+`・`35A+` はどの手順も `x'` を含むので、`s` の逆手順を `a` にした（あとで見直す）
   - 元データの `s` には、上面の向きが `a` と合うように最後の AUF を足した
 - 記法の読み替え（生成時）：`Br` → `BR`、`Bl` → `BL`、`Dfr` → `DR`。`x`（持ち替え）と `LR` のような同時回しには対応しない
 
 ## 生成：`tools/build-oll-data.js`
-- `node tools/build-oll-data.js` で `js/oll-data.js`（`window.OLL_DATA` / node では `module.exports`）を作る。各要素は `{ name, group, alg, setup }`
+- `node tools/build-oll-data.js` で `js/oll-data.js`（`window.OLL_DATA` / node では `module.exports`）を作る。各要素は `{ name, group, algset, alg, setup }`
 - 次を確認し、合わないケースがあれば直し方の候補（`s` の最後の AUF）を表示してエラーで止める（`js/oll-data.js` は書き換えない）
   - `s` は最後の層（U層）だけを崩す
   - `a` は `s` のケースの上面の向きを揃え、F2L を崩さない（手順中の y による完成後の向きの違いは無視）
@@ -61,6 +61,12 @@ OLL  [Group ▼] [Case ▼] [‹ Prev][Next ›]
 - ケースをクリックすると、そのケースを選んだ状態でエディタ（`index.html?oll=<名前>`）を開く
 - ナビバー：エディタは `PLL List`・`OLL List`、一覧ページは `Editor` ともう一方の一覧へのリンク
 - 覚えた度の印・進み具合・絞り込みも PLL 一覧と同じ（`reference/PLL_SPEC.md`。保存は PLL と別）
+- **No Dot / Dot の切り替え**：上部のセグメント型の切り替え（`No Dot 178` / `Dot 81` / `All 259`）で表示する範囲を選ぶ（既定は No Dot）
+  - No Dot は `algset` が `ND` のケース（グループ 1〜37）、Dot は `D` のケース（`1C`・38〜53）
+  - 件数・進捗バー・状態の絞り込み・グループのジャンプボタン・一括ダウンロードは、選んだ範囲だけを対象にする
+    （ダウンロードのボタン名は `Download No Dot OLL (.zip)` などに変わり、ファイル名は `megaminx-oll-nd.zip` / `megaminx-oll-d.zip`。All は `megaminx-oll.zip`）
+  - 覚えた度の保存はケースごとなので、範囲を切り替えても印は共通。選んだ範囲は `megaminx-image-editor:list-filter` の `ollScope` に保存する
+  - そのため `js/oll-data.js` の各ケースに `algset` を含める
 
 ## テスト（`test/oll-data.test.js`）
 - `js/oll-data.js` が元データの全259ケースを順番どおり含み、名前が重複しない。生成し直しても変わらない

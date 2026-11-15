@@ -103,7 +103,7 @@ function build() {
       );
       return null;
     }
-    return { name: c.name, group: c.group, alg: alg, setup: setup };
+    return { name: c.name, group: c.group, algset: c.algset, alg: alg, setup: setup };
   });
   if (errors.length) throw new Error('oll/algs_info.json に問題があります:\n  ' + errors.join('\n  '));
 
