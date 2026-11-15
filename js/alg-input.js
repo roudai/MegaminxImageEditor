@@ -254,10 +254,11 @@
     }
     const undo = undoFor(sel.set, sel.c.name);
     if (result.isDefault) {
-      // 既定の手順と同じなら自分の手順としては保存しない（自分の手順があれば消して既定に戻す）
+      // 既定の手順と同じなら自分の手順としては保存しない。
+      // 自分の手順があったときは消して既定に戻し「既定の手順に戻しました」（元に戻せる）、無かったときは「既定の手順と同じです」
       const hadCustom = !!sel.c.custom;
       CA.reset(sel.set.key, sel.c.name);
-      afterMyAlgChange(sel.set, I.t('myAlg.sameAsDefault'), hadCustom ? undo : null);
+      afterMyAlgChange(sel.set, I.t(hadCustom ? 'myAlg.resetDone' : 'myAlg.sameAsDefault'), hadCustom ? undo : null);
       return;
     }
     CA.save(sel.set.key, sel.c.name, result);
