@@ -314,6 +314,10 @@
     if (practice) {
       const q = new URLSearchParams({ set: SET, filter: filter });
       if (SET === 'oll') q.set('scope', scope.key);
+      // 選んだグループ（覚える順なら段階の番号）も渡す。空ならすべて
+      if (HAS_STAGES) q.set('order', byStage ? 'learn' : 'group');
+      const picked = sections.filter((s) => chosen.has(s.key));
+      q.set('groups', picked.map((s) => (byStage ? s.stage : s.key)).join(','));
       practice.href = 'practice.html?' + q.toString();
     }
     const zip = $('downloadZip');

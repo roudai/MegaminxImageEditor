@@ -16,7 +16,8 @@
 //     結果の「取り消す」で直前の判定とタイムを戻す
 //   - 設定（種類・範囲・グループ・対象・しきい値）と各ケースの最近のタイム（最大10件）は store.js の 'practice' に保存
 //     （ログイン中はクラウドにも）。判定ごとに日時付きの記録 log（最大2000件）も足す（記録のページ stats.html で使う）。
-//     URL ?set=oll&scope=nd&filter=new で初期値を指定できる。?case=J3%2B なら最初の1問はそのケース
+//     URL ?set=oll&scope=nd&filter=new で初期値を指定できる。一覧ページの「練習する」からは
+//     &order=learn|group&groups=A,B（覚える順なら段階の番号 9,24。空ならすべて）で、一覧で選んだグループも引き継ぐ。?case=J3%2B なら最初の1問はそのケース
 //   - 通し（set: 'full'）：WCA 形式のスクランブル（wca-scramble.js）で通しで解く。15秒のインスペクション（オン・オフ）、
 //     +2 / DNF（インスペクションの超過で自動、結果からも変えられる）、ao5・ao12・ベスト（progress.js の average など）。
 //     記録は practice.full = { inspection, log: [{ at, sec, penalty, s }] }（s はスクランブルの短い形）。覚えた度は変えない。
@@ -104,6 +105,21 @@
     const stage = byStage(set);
     return inScope(set).filter((c) => !chosen || chosen.has(CS.keyOf(c, stage)));
   };
+  // 一覧ページから開いたとき（?order=…&groups=…）：並びと選んだグループを引き継いで保存する
+  if (params.has('order') && CS.hasStages(DATA[prefs.set]) && ['learn', 'group'].includes(params.get('order'))) {
+    const f = S.get('list-filter');
+    S.set('list-filter', Object.assign({}, f && typeof f === 'object' ? f : {}, { [prefs.set + 'Order']: params.get('order') }));
+  }
+  if (params.has('groups')) {
+    const stage = byStage(prefs.set);
+    const valid = new Set(CS.list(DATA[prefs.set], stage).map((s) => (stage ? String(s.stage) : s.key)));
+    const list = params
+      .get('groups')
+      .split(',')
+      .filter((g) => valid.has(g))
+      .map((g) => (stage ? Number(g) : g));
+    savePrefs({ groups: Object.assign({}, prefs.groups, { [groupsKey(prefs.set)]: list }) });
+  }
   const pool = () => inSelection(prefs.set).filter((c) => prefs.filter === 'all' || P.statusOf(prefs.set, c.name) === prefs.filter);
   let groupsOpen = false; // グループを選ぶ欄を開いているか
 
