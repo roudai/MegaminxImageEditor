@@ -56,6 +56,11 @@
   - ブラウザに保存された設定は残す（この端末とアカウントの結び付き `synced-uid`・アイコンの情報 `account-hint` は消す）
 - `firestore.rules`：本人は自分の文書を削除できる（`allow delete`）
 
+## 利用規約（`terms.html`）
+- 本文は日本語・英語（言語の切り替えは `js/legal.js`。プライバシーポリシーと共通）。制定日・運営（roudai.net）・問い合わせ（GitHub の Issues）はプライバシーポリシーと同じ
+- 内容：適用、無料、アカウント（各サービスの規約にも従う）、禁止事項、作った画像は自由に使える、無保証・免責（故意・重大な過失を除く。データの控えを CSV などで）、予告なしの変更・停止・終了、規約の変更、準拠法（日本法）、個人情報はプライバシーポリシー
+- ログインのメニュー（ログイン前・ログイン中とも）の「プライバシーポリシー」の下に「利用規約」。プライバシーポリシーの本文の最後からもリンク
+
 ## Firebase の設定手順（サイトの管理者がやる）
 1. https://console.firebase.google.com/ でプロジェクトを作成（無料の Spark プランでよい）。ほかのアプリと共通にするので、名前・ID はアプリ名ではなく全体の名前にする（ID はログインのポップアップに出て、あとから変えられない）
 2. 「プロジェクトの設定」→「マイアプリ」でウェブアプリを追加し（SDK は「script タグを使用する」、Firebase Hosting は使わない）、表示される `firebaseConfig` の中身を `js/firebase-config.js` の `window.FIREBASE_CONFIG` に貼る。ほかのアプリは同じプロジェクトにウェブアプリをもう1つ登録する
@@ -72,6 +77,7 @@ GitHub Pages（master）に公開するときに、あわせて次を行う。Fa
    - アプリドメイン：`roudai.github.io`
    - プライバシーポリシーの URL：`https://roudai.github.io/MegaminxImageEditor/privacy.html`
    - ユーザーデータの削除：「データ削除の手順の URL」に `https://roudai.github.io/MegaminxImageEditor/privacy.html#delete`
+   - 利用規約の URL（任意）：`https://roudai.github.io/MegaminxImageEditor/terms.html`
    - アプリアイコン（1024×1024）・カテゴリ・連絡先メールアドレス
    - 「プラットフォームを追加」→ ウェブサイト：`https://roudai.github.io/MegaminxImageEditor/`
 2. 左のメニューの「公開」から、アプリをライブにする（`public_profile`・`email` だけなので、ふつうはアプリレビューは不要）

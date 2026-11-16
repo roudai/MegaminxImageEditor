@@ -324,6 +324,9 @@ async function main() {
         el('div', 'account-menu-divider'),
         menuItem(null, 'account.privacyPolicy', () => {
           location.href = 'privacy.html';
+        }, 'muted'),
+        menuItem(null, 'account.terms', () => {
+          location.href = 'terms.html';
         }, 'muted')
       );
       if (message) {
@@ -382,6 +385,9 @@ async function main() {
       el('div', 'account-menu-divider'),
       menuItem(null, 'account.privacyPolicy', () => {
         location.href = 'privacy.html';
+      }, 'muted'),
+      menuItem(null, 'account.terms', () => {
+        location.href = 'terms.html';
       }, 'muted'),
       menuItem(null, 'account.signOut', signOutNow, 'signout')
     );

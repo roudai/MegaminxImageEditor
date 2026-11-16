@@ -122,6 +122,8 @@
       'account.signIn': 'Sign in',
       'account.signOut': 'Sign out',
       'account.privacyPolicy': 'Privacy policy',
+      'account.terms': 'Terms of use',
+      'title.terms': 'Terms of Use - Megaminx Image Editor 2.0',
       // 練習（practice.html・practice.js）
       'nav.practice': 'Practice',
       'title.practice': 'Practice - Megaminx Image Editor 2.0',
@@ -316,6 +318,8 @@
       'account.signIn': 'ログイン',
       'account.signOut': 'ログアウト',
       'account.privacyPolicy': 'プライバシーポリシー',
+      'account.terms': '利用規約',
+      'title.terms': '利用規約 - Megaminx Image Editor 2.0',
       'nav.practice': '練習',
       'title.practice': '練習 - Megaminx Image Editor 2.0',
       'practice.heading': '練習',

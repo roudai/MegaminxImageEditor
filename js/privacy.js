@@ -1,17 +1,10 @@
-// プライバシーポリシーのページ（privacy.html）：言語に合わせた本文の切り替えと、アカウントのデータの削除。
+// プライバシーポリシーのページ（privacy.html）：アカウントのデータの削除（本文の言語の切り替えは legal.js）。
 // 削除は js/cloud-sync.js の CloudSync.deleteAccount() を使う（ログイン中だけ）。
 // 押し間違えを防ぐため、1回目で確認を出し、「削除する」をもう一度押したときに削除する（ブラウザの確認ダイアログは使わない）。
 (function () {
   'use strict';
   const I = window.I18N;
   const $ = (id) => document.getElementById(id);
-
-  // 本文は日本語・英語の両方を HTML に書いておき、言語に合わせて片方を出す
-  function showArticle() {
-    document.querySelectorAll('[data-lang-block]').forEach((el) => {
-      el.hidden = el.dataset.langBlock !== I.lang;
-    });
-  }
 
   let confirming = false;
   let busy = false;
@@ -89,12 +82,8 @@
     }
   }
 
-  showArticle();
   renderDelete();
-  I.onChange(() => {
-    showArticle();
-    renderDelete();
-  });
+  I.onChange(renderDelete);
   window.addEventListener('cloud-sync-change', renderDelete);
   // Firebase を使わない設定（firebase-config.js が null）や読み込みに失敗した場合
   setTimeout(() => {
