@@ -51,7 +51,7 @@ OLL  [Group ▼] [Case ▼] [‹ Prev][Next ›]
 - その他（種類による入力欄の差し替え、手での書き換えで未選択に戻る、など）は PLL と同じ
 
 ## 一括ダウンロード
-- OLL の一覧ページ（`oll.html`）に **Download all OLL (.zip)** を置く（広い画面のときだけ表示。エディタには置かない）
+- OLL の一覧ページ（`oll.html`）に **ZIP でダウンロード**（Download ZIP） を置く（広い画面のときだけ表示。エディタには置かない）
 - 全259ケースを solve case の状態で描き、`megaminx-oll.zip` にまとめる。ファイル名は `oll-<名前>.png`
 - 配色は一覧と同じ（保存した U の色だけを残した OLL 配色、他の面は dimgray）。サイズ・Body Color・背景はエディタで保存した設定
 

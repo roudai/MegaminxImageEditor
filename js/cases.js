@@ -15,7 +15,7 @@
 //   - OLL は No Dot（algset ND、1〜37）と Dot（algset D、1C・38〜53）を切り替えて表示する（All も選べる）。
 //     件数・進捗バー・絞り込み・一括ダウンロードは選んだ範囲だけで数える（覚えた度の保存はケースごとで共通）
 //   - エディタで保存した自分の手順があれば、そのケースはその手順（と画像）で表示し、名前の横に「custom」を付ける
-//   - Download all (.zip)：全ケースを一覧と同じ配色で PNG にし、zip（megaminx-<pll|oll>.zip）にまとめる。
+//   - ZIP でダウンロード（Download ZIP）：全ケースを一覧と同じ配色で PNG にし、zip（megaminx-<pll|oll>.zip）にまとめる。
 //     画像サイズ・Body Color・背景はエディタで保存した設定（zip-store.js で無圧縮の zip を作る）
 (function () {
   'use strict';
@@ -322,8 +322,7 @@
     }
     const zip = $('downloadZip');
     if (!zip.disabled) {
-      if (scope.key === 'all') I.set(zip, 'list.downloadAll', { set: SET.toUpperCase() });
-      else I.set(zip, 'list.downloadScope', { scope: I.t(scope.label), set: SET.toUpperCase() });
+      I.set(zip, 'list.download');
     }
     zip.title = I.t('list.downloadTitle', { n: total });
     document.querySelectorAll('#progressBox [data-filter]').forEach((b) => {
@@ -399,16 +398,14 @@
     DATA.forEach((c) => {
       CARDS[c.name] = caseCard(c, settings);
     });
-    // グループのボタンの下：説明と「選択を解除」
+    // グループのボタンの下：「選択を解除」
     const foot = el('div', 'group-nav-foot d-flex align-items-center gap-2 mb-3');
-    const help = el('span', 'small text-muted');
-    I.set(help, 'list.groupsHelp');
     const clear = el('button', 'btn btn-link btn-sm p-0');
     clear.type = 'button';
     clear.id = 'groupClear';
     I.set(clear, 'practice.groupsClear');
     clear.addEventListener('click', () => setChosen(new Set()));
-    foot.append(help, clear);
+    foot.append(clear);
     $('groupNav').after(foot);
 
     const list = $('caseList');

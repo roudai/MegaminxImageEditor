@@ -312,15 +312,13 @@
       });
       chips.append(b);
     });
-    const help = el('div', 'practice-groups-help');
-    I.set(help, stage ? 'practice.stagesHelp' : 'practice.groupsHelp');
     const clear = el('button', 'btn btn-link btn-sm practice-groups-clear');
     clear.type = 'button';
     I.set(clear, 'practice.groupsClear');
     clear.disabled = !chosen.size;
     clear.addEventListener('click', () => setGroups(set, []));
     const foot = el('div', 'd-flex align-items-center gap-2 mt-1');
-    foot.append(help, clear);
+    foot.append(clear);
     box.append(chips, foot);
     return box;
   }
