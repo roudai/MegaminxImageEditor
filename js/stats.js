@@ -41,6 +41,11 @@
     sort: saved.sort || 'avg',
     desc: saved.desc !== false,
   };
+  // 練習ページの「すべての記録を見る」から開いたとき（?set=oll&scope=d など）は、その種類を出す（表示の設定として保存する）
+  const params = new URLSearchParams(location.search);
+  if (['pll', 'oll', 'full'].includes(params.get('set'))) view.set = params.get('set');
+  if (SCOPES[params.get('scope')]) view.scope = params.get('scope');
+  if (params.has('set')) saveView();
   function saveView() {
     S.set('practice', Object.assign({}, practice(), { stats: Object.assign({}, view) }));
   }

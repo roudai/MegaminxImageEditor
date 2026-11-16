@@ -42,7 +42,7 @@
 
 ## 記録（`stats.html`・`js/stats.js`・`css/stats.css`）
 - 判定のたびに `practice.log` に `{ at: 日時(ms), set, name, sec(null=解けなかった), status, hint }` を足す（新しい順、最大 2000 件。「取り消す」でその1件も消す）。集計は `js/progress.js` の `addLog`・`summarize`・`daily`・`perCase`
-- ナビバーの「記録 / Stats」、練習ページの「すべての記録を見る」から開く
+- ナビバーの「記録 / Stats」、練習ページの「すべての記録を見る」から開く。練習ページからは今の種類（OLL は範囲も）を URL（`stats.html?set=oll&scope=d`）で渡し、記録のページはその種類で開く（表示の設定として保存する）
 - 種類（PLL / OLL）・範囲（OLL の No Dot / Dot / All）・期間（7日 / 30日 / すべて）で絞る（`practice.stats` に保存）
 - 集計のカード：練習回数、平均（とベスト）、解けなかった回数、習得済みの数（今の覚えた度）
 - 日ごとの練習：棒＝回数、線＝平均タイム（練習した日だけを結ぶ）。期間が「すべて」のときは直近 90 日。棒にマウスを乗せると日付・回数・平均。ライブラリを使わず SVG で描く
