@@ -129,21 +129,21 @@
     "name": "C6+",
     "group": "C",
     "algset": "PLL",
-    "s": "R U R U R' U R U R' U2' R U' R2' U2' R U R'",
+    "s": "(U2') R U2 R U2' R' U' R' U' R' U R2' U2' R' U2 R2' U' R (U)",
     "a": "R U' R' U2 R2 U R' U2 R U' R' U' R U' R' U' R'"
   },
   "20": {
     "name": "C6-",
     "group": "C",
     "algset": "PLL",
-    "s": "R' U' R' U' R U' R' U' R U2 R' U R2 U2 R' U' R",
+    "s": "(U2) R' U2' R' U2 R U R U R U' R2 U2 R U2' R2 U R' (U')",
     "a": "R' U R U2' R2' U' R U2' R' U R U R' U R U R"
   },
   "21": {
     "name": "D+",
     "group": "D",
     "algset": "PLL",
-    "s": "R U2' R' U2' R U2 R' U' R U' R' U R U2' R'",
+    "s": "(U') R' U2' R U R' U' R U' R' U2 R U2' R' U2' R (U)",
     "a": "R U2 R' U' R U R' U R U2' R' U2 R U2 R'"
   },
   "22": {
@@ -185,77 +185,77 @@
     "name": "F1-",
     "group": "F",
     "algset": "PLL",
-    "s": "R2 U2 R2' U R2 U2 R2'",
+    "s": "R2' U2 R2 U R2' U2 R2",
     "a": "R2 U2' R2' U' R2 U2' R2'"
   },
   "28": {
     "name": "F2+",
     "group": "F",
     "algset": "PLL",
-    "s": "R' U2' R U' R U R2' U2 R U2' R U' R'",
+    "s": "(U2') R U R' U' R2 U R2 U2 R2' U2 R2 U R U2 R U2' R'",
     "a": "R U R' U2 R' U2' R2 U' R' U R' U2 R"
   },
   "29": {
     "name": "F2-",
     "group": "F",
     "algset": "PLL",
-    "s": "R U2 R' U R' U' R2 U2' R' U2 R' U R",
+    "s": "(U') R U R U2 R' U R' U' R2 U2' R' U2 R' U R U R' (U')",
     "a": "R' U' R U2' R U2 R2' U R U' R U2' R'"
   },
   "30": {
     "name": "F3+",
     "group": "F",
     "algset": "PLL",
-    "s": "R U R' U2 R' U2' R2 U' R' U R' U2 R",
+    "s": "(U') R U R U R' U2 R' U2' R2 U' R' U R' U2 R U R' (U')",
     "a": "R' U2' R U' R U R2' U2 R U2' R U' R'"
   },
   "31": {
     "name": "F3-",
     "group": "F",
     "algset": "PLL",
-    "s": "R' U' R U2' R U2 R2' U R U' R U2' R'",
+    "s": "(U) R U' R' U' R U2' R U2 R2' U R U' R U2' R' U' R' (U)",
     "a": "R U2 R' U R' U' R2 U2' R' U2 R' U R"
   },
   "32": {
     "name": "F4+",
     "group": "F",
     "algset": "PLL",
-    "s": "R U2 R U2' R' U2' R' U2 R2 U2 R2' U' R U' R'",
+    "s": "(U') R U2' R2 U2' R2' U' R2 U2' R2 U' R U2 R' U R U2 R' (U2)",
     "a": "R U R' U R2 U2' R2' U2' R U2 R U2 R' U2' R'"
   },
   "33": {
     "name": "F4-",
     "group": "F",
     "algset": "PLL",
-    "s": "R' U2' R' U2 R U2 R U2' R2' U2' R2 U R' U R",
+    "s": "(U) R' U2 R2 U2 R2' U R2 U2 R' U R' U2' R U' R' U2' R (U2')",
     "a": "R' U' R U' R2' U2 R2 U2 R' U2' R' U2' R U2 R"
   },
   "34": {
     "name": "F5+",
     "group": "F",
     "algset": "PLL",
-    "s": "R U R' U R2 U2' R2' U2' R U2 R U2 R' U2' R'",
+    "s": "(U') R U2 R' U R U2 R' U2 R' U2 R2 U R2' U2 R2 U2 R' (U)",
     "a": "R U2 R U2' R' U2' R' U2 R2 U2 R2' U' R U' R'"
   },
   "35": {
     "name": "F5-",
     "group": "F",
     "algset": "PLL",
-    "s": "R' U' R U' R2' U2 R2 U2 R' U2' R' U2' R U2 R",
+    "s": "(U2) R' U2 R U R' U2 R U' R U2' R2' U' R2 U2' R2' U2' R (U')",
     "a": "R' U2' R' U2 R U2 R U2' R2' U2' R2 U R' U R"
   },
   "36": {
     "name": "G1+",
     "group": "G",
     "algset": "PLL",
-    "s": "R' U2 R2 U2' R' U2 R' U R U2 R' U R2 U2 R2' U2' R",
+    "s": "R2' U2 R2' U2' R2 U' R U2' R' U' R U2' R2 U2 R2 U2' R2",
     "a": "R' U2 R2 U2' R' U2 R' U R U2 R' U R2 U2 R2' U2' R"
   },
   "37": {
     "name": "G1-",
     "group": "G",
     "algset": "PLL",
-    "s": "R U2' R2' U2 R U2' R U' R' U2' R U' R2' U2' R2 U2 R'",
+    "s": "R2 U2' R2 U2 R2 U2' R U' R' U2' R U' R2 U2' R2' U2 R2'",
     "a": "R U2' R2' U2 R U2' R U' R' U2' R U' R2' U2' R2 U2 R'"
   },
   "38": {
@@ -353,7 +353,7 @@
     "name": "I4-",
     "group": "I",
     "algset": "PLL",
-    "s": "R' U2' R U R2' U' R U' R' U2 R U' R U' R' U2' R (U2')",
+    "s": "(U') R U' R' U R U2 R U2' R2' U2' R' U' R2 U2' R2' U2' R2' U2 R2' (U')",
     "a": "(U2) R' U2 R U R' U R' U2' R U R' U R2 U' R' U2 R"
   },
   "52": {
@@ -367,7 +367,7 @@
     "name": "I5-",
     "group": "I",
     "algset": "PLL",
-    "s": "R' U2 R U R' U R' U2' R U R' U R2 U' R' U2 R (U')",
+    "s": "R U' R2' U' R' U' R' U' R2' U R U R2 U2' R' U2' R2 U R' (U')",
     "a": "(U) R' U2' R U R2' U' R U' R' U2 R U' R U' R' U2' R"
   },
   "54": {
@@ -437,7 +437,7 @@
     "name": "K1-",
     "group": "K",
     "algset": "PLL",
-    "s": "R2 U2 R2' U R2 U' R2' U R2 U' R2' U R2 U2 R2'",
+    "s": "R2' U2 R2 U R2' U' R2 U R2' U' R2 U R2' U2 R2",
     "a": "R2 U2' R2' U' R2 U R2' U' R2 U R2' U' R2 U2' R2'"
   },
   "64": {
@@ -500,28 +500,28 @@
     "name": "L5+",
     "group": "L",
     "algset": "PLL",
-    "s": "R U R' U2 R U' R' U R U2 R2' U' R U' R' U2 R (U)",
+    "s": "(U2) R U' R U2' R2 U2' R2' U' R2' U R' U2 R2' U R' U2 R U2 R2' (U2')",
     "a": "(U') R' U2' R U R' U R2 U2' R' U' R U R' U2' R U' R'"
   },
   "73": {
     "name": "L5-",
     "group": "L",
     "algset": "PLL",
-    "s": "R' U' R U2' R' U R U' R' U2' R2 U R' U R U2' R' (U2)",
+    "s": "R U R2' U2 R2 U2 R2' U R2 U2 R' U' R U R' U R U2 R' (U)",
     "a": "(U2') R U2 R' U' R U' R2' U2 R U R' U' R U2 R' U R"
   },
   "74": {
     "name": "L6+",
     "group": "L",
     "algset": "PLL",
-    "s": "R' U2' R U R' U R2 U2' R' U' R U R' U2' R U' R' (U2)",
+    "s": "(U2') R U R' U2 R U2' R2' U2 R2 U2 R' U' R' U' R U R' U2 R (U)",
     "a": "(U2') R U R' U2 R U' R' U R U2 R2' U' R U' R' U2 R"
   },
   "75": {
     "name": "L6-",
     "group": "L",
     "algset": "PLL",
-    "s": "R U2 R' U' R U' R2' U2 R U R' U' R U2 R' U R (U)",
+    "s": "(U) R U2' R' U' R U' R' U R U2' R2' U' R2 U2' R2' U2' R2 U' R' (U)",
     "a": "(U') R' U' R U2' R' U R U' R' U2' R2 U R' U R U2' R'"
   },
   "76": {
@@ -633,14 +633,14 @@
     "name": "Q2+",
     "group": "Q",
     "algset": "PLL",
-    "s": "R U2 R' U R U2 R2' U2 R U R' U2 R",
+    "s": "R U2 R' U R U2 R' U' R' U2' R U' R' U2' R (U')",
     "a": "R' U2' R U' R' U2' R2 U2' R' U' R U2' R'"
   },
   "92": {
     "name": "Q2-",
     "group": "Q",
     "algset": "PLL",
-    "s": "R' U2' R U' R' U2' R2 U2' R' U' R U2' R'",
+    "s": "(U) R' U2 R U R' U2 R U R U2' R' U' R U2' R'",
     "a": "R U2 R' U R U2 R2' U2 R U R' U2 R"
   },
   "93": {
@@ -654,21 +654,21 @@
     "name": "R1-",
     "group": "R",
     "algset": "PLL",
-    "s": "R U' R U2' R' U' R' U R2 U2 R2' U' R U2 R' (U2)",
+    "s": "(U') R' U' R U R2 U2' R2' U' R' U R U' R2 U2' R2' (U2)",
     "a": "(U2') R U2' R' U R2 U2' R2' U' R U R U2 R' U R'"
   },
   "95": {
     "name": "R2+",
     "group": "R",
     "algset": "PLL",
-    "s": "R' U2 R U' R2' U2 R2 U R' U' R' U2' R U' R",
+    "s": "R2 U R2' U' R2 U2' R2' U2' R2 U' R2' U' R2 U' R2'",
     "a": "R' U R' U2 R U R U' R2' U2' R2 U R' U2' R"
   },
   "96": {
     "name": "R2-",
     "group": "R",
     "algset": "PLL",
-    "s": "R U2' R' U R2 U2' R2' U' R U R U2 R' U R' (U2)",
+    "s": "R2 U' R2' U R2 U2 R2' U2 R2 U R2' U R2 U R2' (U2)",
     "a": "(U2') R U' R U2' R' U' R' U R2 U2 R2' U' R U2 R'"
   },
   "97": {
@@ -703,28 +703,28 @@
     "name": "S1+",
     "group": "S",
     "algset": "PLL",
-    "s": "R U R' U2 R U2 R' U' R' U' R U' R' U2 R",
+    "s": "R2 U R2' U R2 U' R2' U R2 U R2' U2' R2 U' R2'",
     "a": "R' U2' R U R' U R U R U2' R' U2' R U' R'"
   },
   "102": {
     "name": "S1-",
     "group": "S",
     "algset": "PLL",
-    "s": "R U2 R' U' R U' R' U' R' U2 R U2 R' U R",
+    "s": "(U') R2 U' R2' U R2 U R2' U2' R2 U' R2' U2 R2 U R2'",
     "a": "R' U' R U2' R' U2' R U R U R' U R U2' R'"
   },
   "103": {
     "name": "S2+",
     "group": "S",
     "algset": "PLL",
-    "s": "R' U' R2 U' R2' U2 R U R U2' R U R2' U2 R2 U2 R2'",
+    "s": "(U) R2 U2' R2' U2' R2' U R' U' R2' U R2 U R U' R' U2' R2' (U)",
     "a": "R2 U2' R2' U2' R2 U' R' U2 R' U' R' U2' R2 U R2' U R"
   },
   "104": {
     "name": "S2-",
     "group": "S",
     "algset": "PLL",
-    "s": "R U R2' U R2 U2' R' U' R' U2 R' U' R2 U2' R2' U2' R2",
+    "s": "(U') R2 U2 R2' U R' U' R U R2 U R2' U' R' U R2' U R2' (U')",
     "a": "R2' U2 R2 U2 R2' U R U2' R U R U2 R2' U' R2 U' R'"
   },
   "105": {
@@ -815,7 +815,7 @@
     "name": "T3-",
     "group": "T",
     "algset": "PLL",
-    "s": "R2 U2 R2' U R2 U' R2' U R2 U2 R2'",
+    "s": "R2' U2 R2 U R2' U' R2 U R2' U2 R2",
     "a": "R2 U2' R2' U' R2 U R2' U' R2 U2' R2'"
   },
   "118": {
@@ -836,14 +836,14 @@
     "name": "U1+",
     "group": "U",
     "algset": "PLL",
-    "s": "R U R' U R' U' R2 U' R' U R' U R",
+    "s": "(U') R U R U R' U R' U' R2 U' R' U R' U R U2 R' (U2')",
     "a": "R' U' R U' R U R2' U R U' R U' R'"
   },
   "121": {
     "name": "U1-",
     "group": "U",
     "algset": "PLL",
-    "s": "R' U' R U' R U R2' U R U' R U' R' (U2)",
+    "s": "R U' R' U R U2' R U R' U R' U' R2 U' R' U2 R'",
     "a": "(U2') R U R' U R' U' R2 U' R' U R' U R"
   },
   "122": {
@@ -976,7 +976,7 @@
     "name": "X6-",
     "group": "X",
     "algset": "PLL",
-    "s": "(U) R U2' R U R2' U R U R' U' R U' R U' R2' U R U2 R' (U)",
+    "s": "(U2) R' U' R U2' R' U R U' R' U2' R U' R' U2 R U2 R' U R (U')",
     "a": "R U2' R U R2' U R U R' U' R U' R U' R2' U R U2 R'"
   },
   "141": {
