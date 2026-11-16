@@ -12,6 +12,11 @@
  *                                     PLL：保存した配色（OLL 配色のときは OLL を選ぶ前の配色、無ければ Standard）
  *                                     OLL：保存した U の色だけを残した OLL 配色
  *   caseColors(c, scheme)           solve case（alg の逆手順を適用、持ち替え y は打ち消す）の状態の画像の色
+ *   addLog(log, entry, max)         練習の記録（日時付き）の配列に足した新しい配列（新しい順、最大 max 件。既定 2000）
+ *                                     entry = { at: 日時(ms), set, name, sec(null=解けなかった), status, hint }
+ *   summarize(log, { set, from })   期間（from 以降。無ければすべて）の集計 { count, solved, dnf, avg, best }
+ *   daily(log, { set, days, now })  直近 days 日の日ごとの { day: 'YYYY-MM-DD', count, avg }（古い順。練習していない日も 0 で入る）
+ *   perCase(log, { set, from })     ケースごとの { name: { count, solved, dnf, best, avg, last } }
  *   wrapAuf(scramble, pre, post)    スクランブルの前後に U を pre・post 回（72°単位 0〜4）足す。もともと前後にある U とはまとめる
  *                                     （例：wrapAuf("U R U'", 1, 1) → "U2 R"）。前後の AUF を足しても同じケースのまま（練習の出題用）
  *
@@ -87,6 +92,87 @@
     return M.toImageColors(state, scheme);
   }
 
+  // ---- 練習の記録（日時付き） ----
+  function addLog(log, entry, max) {
+    const prev = Array.isArray(log) ? log : [];
+    return [entry].concat(prev).slice(0, max || 2000);
+  }
+
+  // 記録を種類・期間で絞る（壊れた記録は除く）
+  function pick(log, opts) {
+    const o = opts || {};
+    return (Array.isArray(log) ? log : []).filter(
+      (e) =>
+        e &&
+        typeof e.at === 'number' &&
+        typeof e.name === 'string' &&
+        (!o.set || e.set === o.set) &&
+        (!o.from || e.at >= o.from)
+    );
+  }
+  const solvedTimes = (list) => list.map((e) => e.sec).filter((t) => typeof t === 'number');
+  const mean = (xs) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
+
+  function summarize(log, opts) {
+    const list = pick(log, opts);
+    const times = solvedTimes(list);
+    return {
+      count: list.length,
+      solved: times.length,
+      dnf: list.length - times.length,
+      avg: mean(times),
+      best: times.length ? Math.min(...times) : null,
+    };
+  }
+
+  // 日付のキー（その端末の時刻で 'YYYY-MM-DD'）
+  const pad = (n) => String(n).padStart(2, '0');
+  const dayKey = (ms) => {
+    const d = new Date(ms);
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  };
+
+  function daily(log, opts) {
+    const o = opts || {};
+    const days = o.days || 30;
+    const now = o.now || Date.now();
+    const out = [];
+    const index = {};
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(now);
+      d.setHours(12, 0, 0, 0); // 夏時間などで日付がずれないよう昼で数える
+      d.setDate(d.getDate() - i);
+      const key = dayKey(d.getTime());
+      index[key] = out.length;
+      out.push({ day: key, count: 0, avg: null, times: [] });
+    }
+    pick(log, { set: o.set }).forEach((e) => {
+      const i = index[dayKey(e.at)];
+      if (i === undefined) return;
+      out[i].count++;
+      if (typeof e.sec === 'number') out[i].times.push(e.sec);
+    });
+    return out.map((d) => ({ day: d.day, count: d.count, avg: mean(d.times) }));
+  }
+
+  function perCase(log, opts) {
+    const out = {};
+    pick(log, opts).forEach((e) => {
+      const c = out[e.name] || (out[e.name] = { count: 0, solved: 0, dnf: 0, best: null, avg: null, last: 0, times: [] });
+      c.count++;
+      if (typeof e.sec === 'number') c.times.push(e.sec);
+      if (e.at > c.last) c.last = e.at;
+    });
+    Object.values(out).forEach((c) => {
+      c.solved = c.times.length;
+      c.dnf = c.count - c.solved;
+      c.best = c.times.length ? Math.min(...c.times) : null;
+      c.avg = mean(c.times);
+      delete c.times;
+    });
+    return out;
+  }
+
   // ---- 練習の出題 ----
   const U_AMOUNT = { U: 1, U2: 2, "U2'": 3, "U'": 4, "U'2": 3 };
   const U_TEXT = ['', 'U', 'U2', "U2'", "U'"];
@@ -103,6 +189,11 @@
   return {
     STATUSES: STATUSES,
     wrapAuf: wrapAuf,
+    addLog: addLog,
+    summarize: summarize,
+    daily: daily,
+    perCase: perCase,
+    dayKey: dayKey,
     statuses: statuses,
     statusOf: statusOf,
     setStatus: setStatus,

@@ -81,3 +81,46 @@ test('wrapAuf：全スクランブルで、前後に AUF を足しても同じ�
     });
   }
 });
+
+test('addLog：新しい順に足し、最大件数（既定 2000）を超えた古いものは捨てる', () => {
+  const e = (i) => ({ at: i, set: 'pll', name: 'A1+', sec: 1, status: 'learned' });
+  assert.deepEqual(P.addLog(undefined, e(1)), [e(1)]);
+  assert.deepEqual(P.addLog([e(2), e(1)], e(3), 2), [e(3), e(2)]);
+  let log = [];
+  for (let i = 0; i < 2005; i++) log = P.addLog(log, e(i));
+  assert.equal(log.length, 2000);
+  assert.equal(log[0].at, 2004);
+});
+
+test('summarize / perCase：種類・期間で絞って集計し、解けなかった（null）は平均に入れない', () => {
+  const log = [
+    { at: 300, set: 'pll', name: 'A1+', sec: 4, status: 'learned' },
+    { at: 200, set: 'pll', name: 'A1+', sec: null, status: 'learning' },
+    { at: 150, set: 'pll', name: 'J3+', sec: 10, status: 'learning' },
+    { at: 100, set: 'oll', name: '1A', sec: 2, status: 'learned' },
+    { broken: true },
+  ];
+  assert.deepEqual(P.summarize(log, { set: 'pll' }), { count: 3, solved: 2, dnf: 1, avg: 7, best: 4 });
+  assert.deepEqual(P.summarize(log, { set: 'pll', from: 160 }), { count: 2, solved: 1, dnf: 1, avg: 4, best: 4 });
+  assert.deepEqual(P.summarize([], {}), { count: 0, solved: 0, dnf: 0, avg: null, best: null });
+  assert.deepEqual(P.perCase(log, { set: 'pll' }), {
+    'A1+': { count: 2, solved: 1, dnf: 1, best: 4, avg: 4, last: 300 },
+    'J3+': { count: 1, solved: 1, dnf: 0, best: 10, avg: 10, last: 150 },
+  });
+});
+
+test('daily：直近の日ごとの回数と平均（練習していない日は 0）', () => {
+  const now = new Date(2026, 10, 16, 15).getTime();
+  const at = (d, h) => new Date(2026, 10, d, h).getTime();
+  const log = [
+    { at: at(16, 9), set: 'pll', name: 'A1+', sec: 4 },
+    { at: at(16, 10), set: 'pll', name: 'A1+', sec: 6 },
+    { at: at(14, 23), set: 'pll', name: 'A1+', sec: null },
+    { at: at(1, 9), set: 'pll', name: 'A1+', sec: 1 }, // 範囲外
+  ];
+  assert.deepEqual(P.daily(log, { set: 'pll', days: 3, now }), [
+    { day: '2026-11-14', count: 1, avg: null },
+    { day: '2026-11-15', count: 0, avg: null },
+    { day: '2026-11-16', count: 2, avg: 5 },
+  ]);
+});

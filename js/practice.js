@@ -12,7 +12,8 @@
 //   - 判定（progress.js の judge）：しきい値以内 → 習得済み、超えた・「解けなかった」→ 練習中。「スキップ」は記録しない。
 //     結果の「取り消す」で直前の判定とタイムを戻す
 //   - 設定（種類・範囲・グループ・対象・しきい値）と各ケースの最近のタイム（最大10件）は store.js の 'practice' に保存
-//     （ログイン中はクラウドにも）。URL ?set=oll&scope=nd&filter=new で初期値を指定できる
+//     （ログイン中はクラウドにも）。判定ごとに日時付きの記録 log（最大2000件）も足す（記録のページ stats.html で使う）。
+//     URL ?set=oll&scope=nd&filter=new で初期値を指定できる。?case=J3%2B なら最初の1問はそのケース
 (function () {
   'use strict';
   const S = window.Store;
@@ -249,9 +250,14 @@
   let hintUsed = false; // この問題でヒントを見たか（見たら習得済みにはしない）
   let lastName = null;
 
+  // ?case=J3%2B で開いたときは、最初の1問だけそのケースを出す（記録のページから「このケースを練習」）
+  let forcedName = params.get('case');
+
   function next() {
     resetTimer();
-    const list = pool();
+    const forced = forcedName ? DATA[prefs.set].find((x) => x.name === forcedName) : null;
+    forcedName = null;
+    const list = forced ? [forced] : pool();
     $('practiceEmpty').hidden = list.length > 0;
     $('timer').disabled = !list.length;
     $('dnfButton').disabled = !list.length;
@@ -340,6 +346,9 @@
       allTimes[set] = Object.assign({}, allTimes[set], { [c.name]: P.addTime(beforeTimes, sec, MAX_TIMES) });
       savePrefs({ times: allTimes });
     }
+    // 日時付きの記録（記録のページ stats.html で使う）。ヒントを見たものも残す（hint: true）
+    const logEntry = { at: Date.now(), set: set, name: c.name, sec: sec, status: status, hint: hinted };
+    savePrefs({ log: P.addLog((S.get('practice') || {}).log, logEntry) });
     const entry = { set, c, sec, status, threshold: prefs.threshold, hinted };
     sessionHistory.unshift(entry);
     sessionHistory.length = Math.min(sessionHistory.length, HISTORY);
@@ -349,7 +358,8 @@
       allTimes[set] = Object.assign({}, allTimes[set]);
       if (beforeTimes) allTimes[set][c.name] = beforeTimes;
       else delete allTimes[set][c.name];
-      savePrefs({ times: allTimes });
+      const log = ((S.get('practice') || {}).log || []).filter((e) => e.at !== logEntry.at || e.name !== logEntry.name);
+      savePrefs({ times: allTimes, log: log });
       sessionHistory.splice(sessionHistory.indexOf(entry), 1);
       renderHistory();
       renderSettings();

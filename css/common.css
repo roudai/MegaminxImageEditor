@@ -1,5 +1,117 @@
 /* エディタ・一覧ページ共通の見た目 */
 
+/* ---- ナビバー（js/navbar.js）----
+   広い画面：言語・アカウント・ページへのリンク・GitHub を1行に並べる（.nav-menu の中身も同じ行に出す）
+   スマホ（md 未満）：タイトル・アカウント・メニューのボタンだけを1行に出し、言語とリンクはメニューの中 */
+.site-nav .container-fluid {
+  flex-wrap: nowrap;
+}
+.site-nav .navbar-brand {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nav-right {
+  display: flex;
+  align-items: center;
+  flex: none;
+}
+.nav-menu {
+  display: flex;
+  align-items: center;
+}
+.nav-link-item {
+  margin-right: 1rem;
+  color: var(--bs-navbar-color, rgba(0, 0, 0, .65));
+  font-size: .95rem;
+  white-space: nowrap;
+}
+.nav-link-item:hover {
+  color: #212529;
+}
+.nav-link-item[aria-current="page"] {
+  color: #212529;
+  font-weight: 600;
+  text-decoration: none;
+}
+.nav-link-item.nav-github {
+  margin-right: 0;
+  color: #212529;
+}
+.nav-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid #d0d5db;
+  border-radius: .5rem;
+  background: #fff;
+  color: #343a40;
+}
+.nav-toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .3);
+}
+/* 広い画面では .nav-menu の中身をそのまま同じ行に並べ、言語 → アカウント → リンク の順に見せる */
+@media (min-width: 768px) {
+  .nav-menu {
+    display: contents;
+  }
+  #langSwitch {
+    order: -1;
+  }
+  .nav-link-item {
+    order: 1;
+  }
+}
+@media (max-width: 767.98px) {
+  .site-nav .navbar-brand {
+    font-size: 1.05rem;
+  }
+  .nav-right {
+    position: relative;
+  }
+  .nav-right > #accountBox {
+    margin-right: .5rem;
+  }
+  .nav-toggle {
+    display: inline-flex;
+  }
+  .nav-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 1060;
+    flex-direction: column;
+    align-items: stretch;
+    min-width: 12rem;
+    padding: .5rem;
+    border: 1px solid rgba(0, 0, 0, .08);
+    border-radius: .75rem;
+    background: #fff;
+    box-shadow: 0 .75rem 2rem rgba(0, 0, 0, .14);
+  }
+  .nav-menu.open {
+    display: flex;
+  }
+  .nav-menu #langSwitch {
+    align-self: flex-start;
+    margin: .25rem .4rem .5rem;
+  }
+  .nav-link-item {
+    margin: 0;
+    padding: .45rem .6rem;
+    border-radius: .45rem;
+    text-decoration: none;
+  }
+  .nav-link-item:hover {
+    background: #f1f3f5;
+  }
+}
+
 /* ナビバーの言語の切り替え（EN / 日本語）：セグメント型 */
 .lang-switch {
   display: inline-flex;

@@ -32,10 +32,21 @@
 
 ## 保存（`js/store.js` 経由。ログイン中はクラウドにも）
 - 覚えた度：一覧と同じ `progress` を書き換える（`js/progress.js`。一覧と練習で共通）
-- `practice`：`{ set, scope, filter, threshold, groups: { pll: ["A", "B"], oll: [] }, times: { pll: { "A1+": [最近のタイム(秒) 新しい順 最大10件] }, oll: {…} } }`
+- `practice`：`{ set, scope, filter, threshold, groups: { pll: ["A", "B"], oll: [] }, stats: { 記録のページの表示 }, log: [日時付きの記録], times: { pll: { "A1+": [最近のタイム(秒) 新しい順 最大10件] }, oll: {…} } }`
 - URL `?set=oll&scope=nd&filter=new` で設定の初期値を指定できる（その値で保存し直す）
 
 ## ほかのページ
 - 3ページ（エディタ・PLL一覧・OLL一覧）とプライバシーポリシーのナビバーに「練習 / Practice」
 - PLL・OLL 一覧の上部に **練習する** ボタン：今の範囲・絞り込みのまま `practice.html?set=…&scope=…&filter=…` を開く
 - 画像の配色は一覧と同じ（`Progress.displaySettings`）
+
+## 記録（`stats.html`・`js/stats.js`・`css/stats.css`）
+- 判定のたびに `practice.log` に `{ at: 日時(ms), set, name, sec(null=解けなかった), status, hint }` を足す（新しい順、最大 2000 件。「取り消す」でその1件も消す）。集計は `js/progress.js` の `addLog`・`summarize`・`daily`・`perCase`
+- ナビバーの「記録 / Stats」、練習ページの「すべての記録を見る」から開く
+- 種類（PLL / OLL）・範囲（OLL の No Dot / Dot / All）・期間（7日 / 30日 / すべて）で絞る（`practice.stats` に保存）
+- 集計のカード：練習回数、平均（とベスト）、解けなかった回数、習得済みの数（今の覚えた度）
+- 日ごとの練習：棒＝回数、線＝平均タイム（練習した日だけを結ぶ）。期間が「すべて」のときは直近 90 日。棒にマウスを乗せると日付・回数・平均。ライブラリを使わず SVG で描く
+- ケースごとの表：画像・ケース・グループ・覚えた度・回数（解けなかった回数）・ベスト・平均・最後に練習した日。既定は平均の遅い順（苦手なケースが上）。見出しを押すと並べ替え。ケースを押すと、そのケースを最初に出題する練習ページ（`practice.html?set=…&case=…`）を開く
+- 「CSV で書き出す」：期間内の記録（date, set, case, time（DNF）, status, hint）
+- 別のタブで練習したら、記録のページにも反映する（storage イベント）
+
