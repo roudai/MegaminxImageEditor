@@ -27,33 +27,9 @@
   const NOTES = (window.CASE_GROUP_NOTES || {})[SET] || {};
   const IMAGE_SIZE = 120; // 表示サイズ（px）。高解像度の画面では devicePixelRatio 倍で描く
 
-  // エディタ（alg-input.js）が保存した設定のうち、配色と Body Color を読む
-  const HEX = /^#[0-9a-f]{6}$/i;
-  function savedSettings() {
-    const saved = window.Store.get('settings');
-    const settings = saved && typeof saved === 'object' ? saved : null;
-    // OLL 配色（U の色だけ）のままだと PLL が見分けられないので、そのときは OLL を選ぶ前の配色
-    // （エディタが beforeOll に保存）を使い、それも無ければ Standard にする（エディタで PLL を選んだときと同じ）
-    let faceColors = {};
-    if (settings && settings.preset !== 'oll') faceColors = settings.faceColors || {};
-    else if (settings && settings.beforeOll && settings.beforeOll.scheme) faceColors = settings.beforeOll.scheme;
-    const scheme = {};
-    M.FACES.forEach((face) => {
-      scheme[face] = HEX.test(faceColors[face]) ? faceColors[face] : M.DEFAULT_SCHEME[face];
-    });
-    const size = settings && /^\d+$/.test(settings.imageSize) ? Math.min(1000, Math.max(100, Number(settings.imageSize))) : 200;
-    const common = {
-      border: settings && HEX.test(settings.border) ? settings.border : '#000000',
-      background: settings && settings.bg === 'n' && HEX.test(settings.bgColor) ? settings.bgColor : null,
-      size: size,
-    };
-    if (SET === 'oll') {
-      // U の色は OLL 配色のときも保存されている
-      const u = settings && settings.faceColors && settings.faceColors.U;
-      return Object.assign(common, { scheme: M.ollMask({ U: HEX.test(u) ? u : M.DEFAULT_SCHEME.U }, 'd') });
-    }
-    return Object.assign(common, { scheme: scheme });
-  }
+  const P = window.Progress; // 覚えた度・画像の色（progress.js。練習ページと共通）
+  // エディタで保存した設定から、画像の配色・線の色・背景・サイズを決める
+  const savedSettings = () => P.displaySettings(SET);
 
   const groupLabel = (g) => (NOTES[g] ? `${g} (${NOTES[g]})` : g);
   const el = (tag, className, text) => {
@@ -64,17 +40,13 @@
   };
 
   // solve case（alg の逆手順を適用、持ち替え y は打ち消す）の状態の画像の色
-  function caseColors(c, settings) {
-    const state = M.applyAlg(c.alg, { inverse: true, cancelRotation: true });
-    return M.toImageColors(state, settings.scheme);
-  }
+  const caseColors = (c, settings) => P.caseColors(c, settings.scheme);
 
   // ---- 覚えた度 ----
   // { pll: { 'A1+': 'learning', ... }, oll: { ... } }。未着手（new）は保存しない
   // 保存は store.js 経由（ログイン中はクラウドにも）
-  const PROGRESS_KEY = 'progress';
   const FILTER_KEY = 'list-filter';
-  const STATUSES = ['new', 'learning', 'learned'];
+  const STATUSES = P.STATUSES;
   // 表示名（保存する値は new / learning / learned のまま）
   const statusLabel = (status) => I.t('status.' + status);
 
@@ -84,19 +56,12 @@
   };
   const writeJSON = (name, value) => window.Store.set(name, value);
 
-  const progress = readJSON(PROGRESS_KEY);
-  const statusOf = (c) => {
-    const s = (progress[SET] || {})[c.name];
-    return STATUSES.includes(s) ? s : 'new';
-  };
+  // 表示中は覚えた度を手元に持っておき（件数を数えるたびに読み直さないように）、変えるときは progress.js で保存する
+  let progress = P.statuses(SET);
+  const statusOf = (c) => (STATUSES.includes(progress[c.name]) ? progress[c.name] : 'new');
   function setStatus(c, status) {
-    const all = readJSON(PROGRESS_KEY); // 別タブの変更を消さないように読み直してから書く
-    const mine = all[SET] && typeof all[SET] === 'object' ? all[SET] : {};
-    if (status === 'new') delete mine[c.name];
-    else mine[c.name] = status;
-    all[SET] = mine;
-    progress[SET] = mine;
-    writeJSON(PROGRESS_KEY, all);
+    P.setStatus(SET, c.name, status);
+    progress = P.statuses(SET);
   }
 
   const ICONS =
@@ -282,6 +247,13 @@
     });
     const total = scoped().length;
     I.set($('caseCount'), 'list.count', { n: total });
+    // 今の範囲・絞り込みのまま練習ページを開くボタン
+    const practice = $('practiceLink');
+    if (practice) {
+      const q = new URLSearchParams({ set: SET, filter: filter });
+      if (SET === 'oll') q.set('scope', scope.key);
+      practice.href = 'practice.html?' + q.toString();
+    }
     const zip = $('downloadZip');
     if (!zip.disabled) {
       if (scope.key === 'all') I.set(zip, 'list.downloadAll', { set: SET.toUpperCase() });

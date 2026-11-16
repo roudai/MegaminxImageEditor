@@ -35,7 +35,8 @@
 
   const PREFIX = 'megaminx-image-editor:';
   // settings: 配色・画像の設定 / progress: 覚えた度 / list-filter: 一覧の絞り込み / custom-algs: 自分の手順 / lang: 言語
-  const NAMES = ['settings', 'progress', 'list-filter', 'custom-algs', 'lang'];
+  // practice: 練習の設定と最近のタイム（practice.js）
+  const NAMES = ['settings', 'progress', 'list-filter', 'custom-algs', 'lang', 'practice'];
   const PER_CASE = ['progress', 'custom-algs']; // { pll: { name: … }, oll: { … } } の形で、ケースごとに合わせられるもの
   const UPDATED = PREFIX + 'updated';
 
