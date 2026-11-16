@@ -518,7 +518,9 @@
         const details = el('details', 'stats-scramble');
         const summary = el('summary');
         I.set(summary, 'stats.show');
-        details.append(summary, el('div', 'stats-scramble-text', window.WcaScramble.textOf(r)));
+        const scrambleText = el('div', 'stats-scramble-text');
+        window.WcaScramble.render(scrambleText, window.WcaScramble.textOf(r));
+        details.append(summary, scrambleText);
         const scrambleTd = el('td');
         scrambleTd.append(details);
         // 個別の削除（すぐに削除し、元に戻すを出す）

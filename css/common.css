@@ -389,3 +389,13 @@
   font-size: .75rem;
   white-space: normal;
 }
+
+/* 通しのスクランブル：1行ずつ、1行おきにうっすら色を付けて見やすくする（js/wca-scramble.js の render） */
+.scramble-line {
+  padding: 0 .5rem;
+  border-radius: .3rem;
+  white-space: nowrap;
+}
+.scramble-line:nth-child(odd) {
+  background-color: #eef1f5;
+}

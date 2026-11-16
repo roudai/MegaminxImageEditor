@@ -10,6 +10,7 @@
  *     77 か所（各行 R/D の10手の ++/-- と最後の U/U'）をそれぞれ 1 ビットにし、6 ビットずつ base64url の文字にする
  *   WcaScramble.decode(code)      encode した文字列を元のスクランブル（7行）に戻す。形式が違えば null
  *   WcaScramble.textOf(rec)       通しの記録のスクランブル（rec.s を戻したもの。古い記録の rec.scramble もそのまま）
+ *   WcaScramble.render(el, text)  （ブラウザ）el の中にスクランブルを1行ずつ div.scramble-line で入れる（1行おきのストライプ用）
  *
  * ブラウザでは window.WcaScramble、node では module.exports として公開する。
  */
@@ -97,5 +98,19 @@
 
   const textOf = (rec) => (rec && typeof rec.s === 'string' ? decode(rec.s) || '' : (rec && rec.scramble) || '');
 
-  return { megaminx: megaminx, encode: encode, decode: decode, textOf: textOf, LINES: LINES, MOVES_PER_LINE: MOVES_PER_LINE };
+  function render(el, text) {
+    el.replaceChildren(
+      ...String(text || '')
+        .split('\n')
+        .filter(Boolean)
+        .map((line) => {
+          const d = el.ownerDocument.createElement('div');
+          d.className = 'scramble-line';
+          d.textContent = line;
+          return d;
+        })
+    );
+  }
+
+  return { megaminx: megaminx, encode: encode, decode: decode, textOf: textOf, render: render, LINES: LINES, MOVES_PER_LINE: MOVES_PER_LINE };
 });

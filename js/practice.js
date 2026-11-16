@@ -303,7 +303,7 @@
       hintUsed = false;
       showHint(false);
       current = { set: 'full', scramble: window.WcaScramble.megaminx() };
-      $('scramble').textContent = current.scramble;
+      window.WcaScramble.render($('scramble'), current.scramble); // 1行ずつ（1行おきのストライプ）
       $('scramble').classList.add('full');
       return;
     }
@@ -606,7 +606,8 @@
       renderHistory();
     });
     head.append(seg, del);
-    const scramble = el('div', 'practice-case-alg practice-full-scramble mt-1', window.WcaScramble.textOf(rec));
+    const scramble = el('div', 'practice-case-alg practice-full-scramble mt-1');
+    window.WcaScramble.render(scramble, window.WcaScramble.textOf(rec));
     body.append(head, scramble);
     result.append(body);
   }

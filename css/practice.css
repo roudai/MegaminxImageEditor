@@ -227,19 +227,23 @@
   width: fit-content; /* 行の頭をそろえる（左寄せのまま中央に置く） */
   text-align: left;
   max-width: 34rem;
-  font-size: clamp(.82rem, 2.2vw, 1.05rem);
+  /* 1行（約41文字）がスマホの幅にも収まるよう、画面の幅に合わせて小さくする */
+  font-size: clamp(.55rem, 2.95vw, 1.05rem);
   line-height: 1.7;
   white-space: pre-line;
   word-spacing: .1em;
 }
+/* 通しでは「解けなかった」「スキップ」「ヒント」は出さない（DNF は結果の OK / +2 / DNF で付ける） */
 .practice-full #hintButton,
+.practice-full #dnfButton,
+.practice-full #skipButton,
 .practice-full #practiceHintText {
   display: none;
 }
 .practice-full-scramble {
   white-space: pre-line;
   color: #6c757d;
-  font-size: .75rem;
+  font-size: min(.75rem, 2.7vw);
 }
 .practice-full-stats {
   display: flex;
