@@ -97,20 +97,20 @@
   padding-top: .5rem;
   border-top: 1px dashed #e3e6ea;
 }
+/* PLL の覚える順の 27 個が PC の幅で1行に収まるよう小さめにする（設定の枠の内側は一覧ページより狭いので、一覧ページの .group-nav-btn より少し小さい） */
 .practice-group-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: .3rem;
+  gap: .2rem .15rem;
 }
 .practice-group-chip {
-  min-width: 2.2rem;
-  padding: .15rem .5rem;
+  min-width: 1.6rem;
+  padding: .15rem .28rem;
   border: 1px solid #dee2e6;
   border-radius: .45rem;
   background: #fff;
   color: #495057;
-  font-size: .8rem;
-  font-variant-numeric: tabular-nums;
+  font-size: .75rem;
   transition: background-color .15s ease, border-color .15s ease, color .15s ease;
 }
 .practice-group-chip:hover {

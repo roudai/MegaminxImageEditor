@@ -200,6 +200,12 @@
   color: var(--status-learned);
 }
 /* 全部覚えたグループのジャンプボタン */
+/* グループ（覚える順なら段階）のボタン：PLL の覚える順の 27 個が PC の幅で1行に収まるよう小さめにする */
+.group-nav-btn {
+  margin: 0 .15rem .2rem 0;
+  padding: .15rem .35rem;
+  font-size: .78rem;
+}
 .group-nav-complete {
   border-color: var(--status-learned-soft);
   color: var(--status-learned);

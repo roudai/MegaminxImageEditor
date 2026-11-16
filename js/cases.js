@@ -10,6 +10,8 @@
 //     上部に進み具合（積み上げバー・件数）と絞り込みチップ、グループ見出しに「覚えた数 / 全体」を出す
 //   - PLL は「グループ順 / 覚える順」を切り替えられる。覚える順は pll/learn_order.json の段階（27）ごとの見出しで、
 //     段階の中も覚える順（区切りは case-sections.js。選んだ並びは 'list-filter' の pllOrder に保存し、練習ページと共通）
+//   - 上のグループ（覚える順なら段階）のボタンは、押すとそのグループだけを表示する（複数選べる。もう一度押すと外す。
+//     1つも選んでいなければすべて。「選択を解除」で戻す）。選んだものは 'list-filter' の <set>Groups（覚える順は <set>Stages）に保存
 //   - OLL は No Dot（algset ND、1〜37）と Dot（algset D、1C・38〜53）を切り替えて表示する（All も選べる）。
 //     件数・進捗バー・絞り込み・一括ダウンロードは選んだ範囲だけで数える（覚えた度の保存はケースごとで共通）
 //   - エディタで保存した自分の手順があれば、そのケースはその手順（と画像）で表示し、名前の横に「custom」を付ける
@@ -149,6 +151,21 @@
   let byStage = false;
   let sections = []; // 今の並びの区切り（CaseSections.list）
 
+  // ---- 表示するグループ（覚える順なら段階）の選択 ----
+  let chosen = new Set(); // 区切りの key。空ならすべて
+  const chosenKey = () => SET + (byStage ? 'Stages' : 'Groups');
+  const loadChosen = () => {
+    const list = readJSON(FILTER_KEY)[chosenKey()];
+    const keys = new Set(sections.map((s) => s.key));
+    chosen = new Set(Array.isArray(list) ? list.filter((k) => keys.has(k)) : []);
+  };
+  function setChosen(next) {
+    chosen = next;
+    // 並びの順で保存する
+    writeJSON(FILTER_KEY, Object.assign(readJSON(FILTER_KEY), { [chosenKey()]: sections.map((s) => s.key).filter((k) => chosen.has(k)) }));
+    applyFilter();
+  }
+
   // ---- 進み具合・絞り込み ----
   let filter = 'all';
   const counts = (list) => {
@@ -201,6 +218,7 @@
           byStage = o.value;
           writeJSON(FILTER_KEY, Object.assign(readJSON(FILTER_KEY), { [SET + 'Order']: byStage ? 'learn' : 'group' }));
           buildSections();
+          loadChosen();
           updateSummary();
           applyFilter();
         });
@@ -283,6 +301,12 @@
       b.classList.toggle('active', on);
       b.setAttribute('aria-pressed', String(on));
     });
+    document.querySelectorAll('#groupNav [data-group]').forEach((b) => {
+      const on = chosen.has(b.dataset.group);
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-pressed', String(on));
+    });
+    $('groupClear').disabled = !chosen.size;
     const total = scoped().length;
     I.set($('caseCount'), 'list.count', { n: total });
     // 今の範囲・絞り込みのまま練習ページを開くボタン
@@ -312,9 +336,10 @@
         col.hidden = !show;
         if (show) visible++;
       });
-      section.hidden = visible === 0;
       const g = section.dataset.group;
-      document.querySelector(`#groupNav [data-group="${CSS.escape(g)}"]`).hidden = visible === 0;
+      section.hidden = visible === 0 || (chosen.size > 0 && !chosen.has(g));
+      // ボタンは選んでいれば（外せるように）カードが無くても出す
+      document.querySelector(`#groupNav [data-group="${CSS.escape(g)}"]`).hidden = visible === 0 && !chosen.has(g);
     });
     $('emptyMessage').hidden = !!document.querySelector('#caseList section:not([hidden])');
   }
@@ -335,11 +360,17 @@
     const nav = $('groupNav');
     nav.replaceChildren();
     sections.forEach((s) => {
-      const a = el('a', 'btn btn-outline-secondary btn-sm me-1 mb-1', s.label);
-      a.dataset.group = s.key;
-      a.href = '#group-' + s.key;
-      a.title = sectionTitle(s);
-      nav.append(a);
+      const b = el('button', 'btn btn-outline-secondary btn-sm group-nav-btn', s.label);
+      b.type = 'button';
+      b.dataset.group = s.key;
+      b.title = sectionTitle(s);
+      b.addEventListener('click', () => {
+        const next = new Set(chosen);
+        if (next.has(s.key)) next.delete(s.key);
+        else next.add(s.key);
+        setChosen(next);
+      });
+      nav.append(b);
     });
 
     const list = $('caseList');
@@ -364,6 +395,18 @@
     DATA.forEach((c) => {
       CARDS[c.name] = caseCard(c, settings);
     });
+    // グループのボタンの下：説明と「選択を解除」
+    const foot = el('div', 'group-nav-foot d-flex align-items-center gap-2 mb-3');
+    const help = el('span', 'small text-muted');
+    I.set(help, 'list.groupsHelp');
+    const clear = el('button', 'btn btn-link btn-sm p-0');
+    clear.type = 'button';
+    clear.id = 'groupClear';
+    I.set(clear, 'practice.groupsClear');
+    clear.addEventListener('click', () => setChosen(new Set()));
+    foot.append(help, clear);
+    $('groupNav').after(foot);
+
     const list = $('caseList');
     const empty = el('p', 'text-muted text-center py-5');
     I.set(empty, 'list.empty');
@@ -376,6 +419,7 @@
     filter = ['all'].concat(STATUSES).includes(savedFilter[SET]) ? savedFilter[SET] : 'all';
     byStage = HAS_STAGES && savedFilter[SET + 'Order'] === 'learn';
     buildSections();
+    loadChosen();
     buildSummary();
     updateSummary();
     applyFilter();
