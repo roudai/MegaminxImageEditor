@@ -6,7 +6,8 @@
 //     前後にランダムな AUF を足す（progress.js の wrapAuf）。
 //     ケースの名前と画像は解き終わるまで出さない
 //   - タイマー：スペースを押す（画面ではタイマーをタップする）とスタート。何かのキー（タップ）でストップ。
-//     計測中の Esc は中止（記録しない）。押しっぱなしの繰り返しは無視する
+//     計測中の Esc は中止（記録しない）。計測中に「スキップ」「解けなかった」を押してもタイムは記録しない。
+//     押しっぱなしの繰り返しは無視する
 //   - ヒント：ケースの名前と解く手順の最初の3手を出す（もう一度押すと消す）。ヒントを見た問題は目安以内でも練習中にし、タイムを最近の記録に入れない
 //   - 判定（progress.js の judge）：しきい値以内 → 習得済み、超えた・「解けなかった」→ 練習中。「スキップ」は記録しない。
 //     結果の「取り消す」で直前の判定とタイムを戻す
@@ -446,7 +447,14 @@
     if (e.key === 'Enter') e.preventDefault(); // ボタンの Enter で押した扱いにしない
   });
   document.addEventListener('pointerdown', (e) => {
-    if (state === 'running' && e.target !== timerEl) stop();
+    if (state !== 'running' || e.target === timerEl) return;
+    // 計測中に「スキップ」「解けなかった」を押したときは、タイムを記録せずに止める
+    // （そのあとのクリックで、スキップ＝記録せず次へ、解けなかった＝練習中、になる）
+    if (e.target.closest('#skipButton, #dnfButton')) {
+      resetTimer();
+      return;
+    }
+    stop();
   });
 
   $('dnfButton').addEventListener('click', () => {
