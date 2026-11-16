@@ -242,7 +242,10 @@
       'account.syncing': 'Saving…',
       'account.error': 'Could not save to your account',
       'account.signInFailed': 'Could not sign in. Please try again.',
-      'account.otherProvider': 'This email is already used with another sign-in method. Sign in with that one.',
+      'account.linkPrompt': '{email} is already registered with another sign-in method. Sign in with that method to link {provider} to it.',
+      'account.linked': 'Linked {provider}. You can now sign in with it too.',
+      'account.linkFailed': 'Signed in, but could not link {provider}.',
+      'account.linkOtherEmail': 'Signed in with an account of a different email, so nothing was linked.',
     },
     ja: {
       'nav.editor': 'エディタ',
@@ -453,7 +456,10 @@
       'account.syncing': '保存中…',
       'account.error': 'アカウントに保存できませんでした',
       'account.signInFailed': 'ログインできませんでした。もう一度お試しください。',
-      'account.otherProvider': 'このメールアドレスは別のログイン方法で使われています。そちらでログインしてください。',
+      'account.linkPrompt': '{email} は別のログイン方法で登録されています。前に使った方法でログインすると、{provider} でもログインできるようにつなげます。',
+      'account.linked': '{provider} をつなげました。これからは {provider} でもログインできます。',
+      'account.linkFailed': 'ログインしましたが、{provider} をつなげられませんでした。',
+      'account.linkOtherEmail': '別のメールアドレスのアカウントでログインしたので、つなげませんでした。',
     },
   };
 

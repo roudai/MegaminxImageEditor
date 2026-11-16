@@ -44,7 +44,11 @@
   - アイコンを押すとメニュー：大きめのアイコン・名前・メールアドレス・「（ロゴ）GitHub でログイン中」、保存の状態（失敗したときはエラーの種類も）、**ログアウト**
 - Facebook のプロフィール写真：Firebase が受け取る写真の URL はアクセストークンが無いと Facebook の既定の人型になるので、そのままは使わない。Facebook でログインした直後に、そのときのトークンで Graph API（`/me/picture`）から本人の写真の URL を受け取り、Firebase のプロフィールに保存する（トークンは保存しない）。写真の URL は Facebook 側で期限が切れるので、読めなくなったら頭文字の丸にする（次に Facebook でログインしたときに更新される）
 - ページを開いたときのちらつきを防ぐ：ログイン状態が分かるまでは「ログイン」ボタンを出さない。前回ログインしていたときは、そのアカウントのアイコン・名前・ログイン方法を `megaminx-image-editor:account-hint` に覚えておき、ログイン状態が分かる前からアイコンを出しておく（分かるまではメニューは開かない。ログアウトしたら消す）
-- メニューはメニューの外を押すか Esc で閉じる。ログインできなかったときはメニューの中にエラーを出す（同じメールアドレスを別のログイン方法で使っている場合はその旨）
+- メニューはメニューの外を押すか Esc で閉じる。ログインできなかったときはメニューの中にエラーを出す
+- 同じメールアドレスのログイン方法をつなげる（アカウントのリンク）：Firebase の「同じメールアドレスを使用するアカウントをリンク」では、同じメールで別の方法を使うと `auth/account-exists-with-different-credential` になる（自動ではつながない）。このとき
+  - 新しい方法の資格情報（`credentialFromError`）とメールアドレスをメモリに覚え、メニューに「{email} は別のログイン方法で登録されています。前に使った方法でログインすると、{provider} でもログインできるようにつなげます。」と、新しい方法以外のログインのボタンを出す（メールの列挙対策で、どの方法で登録したかは調べられないので本人に選んでもらう）
+  - 前の方法でログインできて、メールアドレスが同じなら `linkWithCredential` で新しい方法をつなげ、「{provider} をつなげました」と出す。以後はどちらの方法でも同じアカウント（同じ uid・同じデータ）に入れる。メールアドレスが違えばつながずにそのままログインし、その旨を出す
+  - ポップアップを閉じたときは覚えたまま。メニューを閉じる・ページを離れると捨てる（保存しない）
 - 文は `js/i18n.js`（`account.*`）、見た目は `css/common.css`
 
 ## プライバシーポリシーとデータの削除（`privacy.html`・`js/privacy.js`）
@@ -67,6 +71,7 @@
 3. Authentication → ログイン方法
    - Google を有効にする
    - GitHub を有効にする：GitHub の Settings → Developer settings → OAuth Apps で新しいアプリを作り、Authorization callback URL に Firebase の画面に出る URL（`https://<project-id>.firebaseapp.com/__/auth/handler`）を入れる。発行された Client ID / Client Secret を Firebase に登録する
+   - 「設定」→「ユーザー アカウントのリンク」は **同じメールアドレスを使用するアカウントをリンク**（既定）のままにする（上の「ログイン方法をつなげる」はこの設定が前提）
    - Facebook を有効にする：https://developers.facebook.com/ でアプリを作り（ユースケースは「Facebook ログインでユーザーを認証」）、アプリ ID / app secret を Firebase に登録する。Facebook ログインの設定の「有効な OAuth リダイレクト URI」に Firebase の画面に出る URL（`https://<project-id>.firebaseapp.com/__/auth/handler`）を入れる。一般の人がログインできるようにするにはアプリを「ライブ」にする（プライバシーポリシーの URL などが必要）
 4. Authentication → 設定 → 承認済みドメインに `roudai.github.io` を追加（`localhost` は最初から入っている）
 5. Firestore Database を作成し、「ルール」にリポジトリの `firestore.rules` の内容を貼って公開する

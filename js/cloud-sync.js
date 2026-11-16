@@ -89,7 +89,10 @@ async function main() {
     : null;
   let ready = false; // ログイン後の最初の合わせ込みが終わるまではクラウドに書かない
   let status = hint ? 'syncing' : 'synced'; // synced / syncing / error
-  let message = '';
+  let message = null; // メニューに出す文 { key, params, ok }（ok: 成功の知らせ。無ければエラー）
+  // 同じメールアドレスが別のログイン方法で登録済みだったときの、つなげる待ちの情報（メモリだけ。保存しない）
+  //   { key: 新しい方法, credential: その資格情報, email }
+  let linkPending = null;
   let errorCode = ''; // 保存に失敗したときの Firebase のエラーコード（メニューとコンソールに出す）
   let timer = null;
 
@@ -158,6 +161,7 @@ async function main() {
 
   // ログアウトの前に、まだクラウドに書いていない変更を書いておく
   async function signOutNow() {
+    message = null;
     if (timer) {
       clearTimeout(timer);
       await push();
@@ -169,24 +173,60 @@ async function main() {
   // ログインの直後にクラウドの内容でページを読み直すときは、これを待つ（途中で読み直すと写真が保存されないため）
   let signInDone = null;
 
+  // 新しい方法で入ろうとして、同じメールアドレスが別の方法で登録済みだったら（Firebase の「同じメールアドレスを使用する
+  // アカウントをリンク」）、新しい方法の資格情報を覚えておき、前に使った方法を本人に選んでもらう
+  // （メールの列挙対策で、どの方法で登録したかは調べられない）。前の方法でログインできたら、新しい方法をつなげる
   async function signIn(key) {
-    message = '';
+    message = null;
+    const linking = linkPending && linkPending.key !== key ? linkPending : null;
     let finish;
     signInDone = new Promise((resolve) => {
       finish = resolve;
     });
     try {
       const result = await authSdk.signInWithPopup(auth, providers[key]());
+      if (linking) {
+        linkPending = null;
+        await linkTo(result.user, linking);
+      } else {
+        linkPending = null;
+      }
       if (key === 'facebook') await refreshFacebookPhoto(result);
     } catch (e) {
-      if (e && e.code === 'auth/popup-closed-by-user') return;
-      message = e && e.code === 'auth/account-exists-with-different-credential' ? 'account.otherProvider' : 'account.signInFailed';
-      menuOpen = true; // メニューの中にエラーを出す
+      if (e && (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request')) return;
+      if (e && e.code === 'auth/account-exists-with-different-credential') {
+        const credential = PROVIDER_CLASS[key]().credentialFromError(e);
+        const email = e.customData && e.customData.email;
+        linkPending = credential && email ? { key: key, credential: credential, email: email } : null;
+        message = linkPending ? null : { key: 'account.signInFailed' };
+      } else {
+        message = { key: 'account.signInFailed' };
+      }
+      menuOpen = true; // メニューの中に案内・エラーを出す
       render();
     } finally {
       finish();
       signInDone = null;
     }
+  }
+
+  // 前の方法でログインした user に、覚えておいた新しい方法をつなげる。メールアドレスが違えばつなげない
+  async function linkTo(current, linking) {
+    const name = PROVIDER_NAMES[linking.key];
+    if ((current.email || '').toLowerCase() !== linking.email.toLowerCase()) {
+      message = { key: 'account.linkOtherEmail' };
+    } else {
+      try {
+        await authSdk.linkWithCredential(current, linking.credential);
+        user = auth.currentUser;
+        message = { key: 'account.linked', params: { provider: name }, ok: true };
+      } catch (e) {
+        console.warn('[cloud-sync] could not link the sign-in method:', e);
+        message = { key: 'account.linkFailed', params: { provider: name } };
+      }
+    }
+    menuOpen = true;
+    render();
   }
 
   // Facebook のプロフィール写真：Firebase が受け取る写真の URL（graph.facebook.com/<id>/picture）は、
@@ -248,6 +288,12 @@ async function main() {
     'github.com': { name: 'GitHub', icon: ICON_GITHUB },
     'facebook.com': { name: 'Facebook', icon: ICON_FACEBOOK },
   };
+  const PROVIDER_NAMES = { google: 'Google', github: 'GitHub', facebook: 'Facebook' };
+  const PROVIDER_CLASS = {
+    google: () => authSdk.GoogleAuthProvider,
+    github: () => authSdk.GithubAuthProvider,
+    facebook: () => authSdk.FacebookAuthProvider,
+  };
   function providerOf(u) {
     const p = (u.providerData || []).find((d) => PROVIDERS[d.providerId]);
     return p ? PROVIDERS[p.providerId] : null;
@@ -280,8 +326,25 @@ async function main() {
   function toggle(e) {
     e.stopPropagation();
     if (user && user.pending) return; // ログイン状態が分かるまではメニューを開かない
-    menuOpen = !menuOpen;
+    if (menuOpen) closeMenu();
+    else {
+      menuOpen = true;
+      render();
+    }
+  }
+
+  // メニューを閉じたら、案内・エラーとつなげる待ちも捨てる
+  function closeMenu() {
+    menuOpen = false;
+    message = null;
+    linkPending = null;
     render();
+  }
+
+  function messageBox() {
+    const m = el('div', 'account-menu-message' + (message.ok ? ' ok' : ''));
+    I.set(m, message.key, message.params);
+    return m;
   }
 
   function menuItem(icon, labelKey, onClick, className) {
@@ -316,11 +379,21 @@ async function main() {
       I.set(label, 'account.signIn');
       button.append(svg(ICON_PERSON), label);
       button.addEventListener('click', toggle);
+      if (linkPending) {
+        // 前に使った方法を選んでもらう（新しい方法のボタンは出さない）
+        const note = el('div', 'account-menu-note');
+        I.set(note, 'account.linkPrompt', { email: linkPending.email, provider: PROVIDER_NAMES[linkPending.key] });
+        menu.append(note);
+      }
+      // よく使われる順（GitHub は主に開発者向けなので最後）
+      [
+        ['google', ICON_GOOGLE, 'account.withGoogle'],
+        ['facebook', ICON_FACEBOOK, 'account.withFacebook'],
+        ['github', ICON_GITHUB, 'account.withGithub'],
+      ]
+        .filter(([key]) => !linkPending || key !== linkPending.key)
+        .forEach(([key, icon, label]) => menu.append(menuItem(icon, label, () => signIn(key))));
       menu.append(
-        menuItem(ICON_GOOGLE, 'account.withGoogle', () => signIn('google')),
-        // よく使われる順（GitHub は主に開発者向けなので最後）
-        menuItem(ICON_FACEBOOK, 'account.withFacebook', () => signIn('facebook')),
-        menuItem(ICON_GITHUB, 'account.withGithub', () => signIn('github')),
         el('div', 'account-menu-divider'),
         menuItem(null, 'account.privacyPolicy', () => {
           location.href = 'privacy.html';
@@ -329,11 +402,7 @@ async function main() {
           location.href = 'terms.html';
         }, 'muted')
       );
-      if (message) {
-        const m = el('div', 'account-menu-message');
-        I.set(m, message);
-        menu.append(m);
-      }
+      if (message) menu.append(messageBox());
       box.append(button, menu);
       return;
     }
@@ -379,9 +448,9 @@ async function main() {
       code.textContent = errorCode.replace(/^firestore\//, '');
       state.append(code);
     }
+    menu.append(head, state);
+    if (message) menu.append(messageBox());
     menu.append(
-      head,
-      state,
       el('div', 'account-menu-divider'),
       menuItem(null, 'account.privacyPolicy', () => {
         location.href = 'privacy.html';
@@ -394,17 +463,11 @@ async function main() {
     box.append(button, menu);
   }
   document.addEventListener('click', (e) => {
-    if (menuOpen && !box.contains(e.target)) {
-      menuOpen = false;
-      render();
-    }
+    if (menuOpen && !box.contains(e.target)) closeMenu();
   });
   I.onChange(() => render()); // 言語を切り替えたらツールチップなども作り直す
   document.addEventListener('keydown', (e) => {
-    if (menuOpen && e.key === 'Escape') {
-      menuOpen = false;
-      render();
-    }
+    if (menuOpen && e.key === 'Escape') closeMenu();
   });
 
   // ---- アカウントのデータの削除（privacy.html から使う）----
