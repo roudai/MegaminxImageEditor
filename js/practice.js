@@ -16,7 +16,7 @@
 //     URL ?set=oll&scope=nd&filter=new で初期値を指定できる。?case=J3%2B なら最初の1問はそのケース
 //   - 通し（set: 'full'）：WCA 形式のスクランブル（wca-scramble.js）で通しで解く。15秒のインスペクション（オン・オフ）、
 //     +2 / DNF（インスペクションの超過で自動、結果からも変えられる）、ao5・ao12・ベスト（progress.js の average など）。
-//     記録は practice.full = { inspection, log: [{ at, sec, penalty, scramble }] }。覚えた度は変えない。
+//     記録は practice.full = { inspection, log: [{ at, sec, penalty, s }] }（s はスクランブルの短い形）。覚えた度は変えない。
 //     通しのタイマーは長押し（0.3 秒で準備完了）して離したときにスタートする
 (function () {
   'use strict';
@@ -554,7 +554,11 @@
   const showAvg = (a) => (a === undefined ? '–' : a === null ? 'DNF' : format(a));
 
   function recordFull(sec, pen) {
-    const rec = { at: Date.now(), sec: sec, penalty: pen || '', scramble: current.scramble };
+    // スクランブルは短い形（wca-scramble.js の encode。13 文字）で記録する。形式が違うときだけ全文
+    const code = window.WcaScramble.encode(current.scramble);
+    const rec = code
+      ? { at: Date.now(), sec: sec, penalty: pen || '', s: code }
+      : { at: Date.now(), sec: sec, penalty: pen || '', scramble: current.scramble };
     saveFull({ log: P.addLog(fullLog(), rec) });
     showFullResult(rec);
     renderHistory();
@@ -602,7 +606,7 @@
       renderHistory();
     });
     head.append(seg, del);
-    const scramble = el('div', 'practice-case-alg practice-full-scramble mt-1', rec.scramble || '');
+    const scramble = el('div', 'practice-case-alg practice-full-scramble mt-1', window.WcaScramble.textOf(rec));
     body.append(head, scramble);
     result.append(body);
   }
@@ -750,6 +754,22 @@
   });
 
   savePrefs({ set: prefs.set, scope: prefs.scope, filter: prefs.filter, threshold: prefs.threshold });
+  // 以前の形（スクランブルの全文 rec.scramble）の通しの記録は、短い形（rec.s）に直して保存し直す（アカウントの容量を節約）
+  (function shrinkFullLog() {
+    const log = fullLog();
+    if (!log.some((r) => typeof r.scramble === 'string')) return;
+    saveFull({
+      log: log.map((r) => {
+        if (typeof r.scramble !== 'string') return r;
+        const code = window.WcaScramble.encode(r.scramble);
+        if (!code) return r;
+        const out = Object.assign({}, r, { s: code });
+        delete out.scramble;
+        return out;
+      }),
+    });
+  })();
+
   renderSettings();
   next();
   renderHistory();

@@ -318,7 +318,7 @@
       const recs = fullLog().filter((r) => r.at >= f);
       const q = (v) => `"${String(v).replace(/"/g, '""')}"`;
       const out = [['date', 'time', 'penalty', 'result', 'scramble'].join(',')].concat(
-        recs.map((r) => [new Date(r.at).toISOString(), r.sec.toFixed(2), r.penalty || 'OK', showTime(r), q((r.scramble || '').replace(/\n/g, ' / '))].join(','))
+        recs.map((r) => [new Date(r.at).toISOString(), r.sec.toFixed(2), r.penalty || 'OK', showTime(r), q(window.WcaScramble.textOf(r).replace(/\n/g, ' / '))].join(','))
       );
       download(out, 'megaminx-full-solves.csv');
       return;
@@ -396,7 +396,7 @@
         const details = el('details', 'stats-scramble');
         const summary = el('summary');
         I.set(summary, 'stats.show');
-        details.append(summary, el('div', 'stats-scramble-text', r.scramble || ''));
+        details.append(summary, el('div', 'stats-scramble-text', window.WcaScramble.textOf(r)));
         const scrambleTd = el('td');
         scrambleTd.append(details);
         tr.append(

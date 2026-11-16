@@ -61,6 +61,9 @@
 - 結果：タイム（+2 なら `52.10+`）、**OK / +2 / DNF** の切り替え（あとから変えられる）、**削除**、スクランブル
 - 直近の記録の上に、今の ao5・ao12、ベスト（単発・ao5・ao12）。直近の記録は保存してある最新 12 件
 - 平均（`js/progress.js`）：`average(recs, n)` は直近 n 回から最速と最遅を除いた平均。DNF は最遅とみなし、DNF が2つ以上なら DNF。足りなければ「–」。`bestAverage`・`bestSingle`・`effectiveTime`（+2 込みのタイム）
-- 保存：`practice.full = { inspection, log: [{ at, sec, penalty: '' | '+2' | 'DNF', scramble }] }`（新しい順、最大 2000 件。ログイン中はアカウントにも）。覚えた度は変えない
+- 保存：`practice.full = { inspection, log: [{ at, sec, penalty: '' | '+2' | 'DNF', s }] }`（新しい順、最大 2000 件。ログイン中はアカウントにも）。覚えた度は変えない
+  - `s` はスクランブルの短い形：77 か所（各行の ++/-- と U/U'）を 1 ビットずつにし、6 ビットずつ base64url にした 13 文字（`WcaScramble.encode`・`decode`）。1件 約 70 文字で、2000 件でも約 14 万文字（アカウントの保存の上限 50 万文字に、PLL・OLL の記録 2000 件（約 18 万文字）と合わせて収まる）
+  - 以前の形（全文の `scramble`）の記録は、練習ページを開いたときに短い形に直して保存し直す。表示は `WcaScramble.textOf`（どちらの形も読める）
+  - PLL・OLL の記録（`practice.log`）は PLL と OLL を合わせて最新 2000 件
 - 記録のページ（通し）：カード（回数と DNF の数、ベスト、ベスト ao5（今の ao5）、ベスト ao12（今の ao12））、日ごとのグラフ（平均は DNF を除く）、記録の一覧（日時・タイム・その時点の ao5・ao12・スクランブルは「見る」で開く）、CSV（date, time, penalty, result, scramble）
 - タイムの表示：60 秒以上は分表記（例：`1:05.23`。`js/progress.js` の `formatTime`）。練習ページのタイマー・結果・直近の記録・ao5/ao12、記録のページのカード・表・グラフの目盛りで使う（CSV の秒の列は秒のまま）

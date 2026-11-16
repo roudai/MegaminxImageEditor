@@ -39,3 +39,25 @@ test('++ と -- はおおよそ半々（偏っていない）', () => {
   const ratio = plus / total;
   assert.ok(ratio > 0.45 && ratio < 0.55, String(ratio));
 });
+
+test('encode / decode：13 文字にして、元のスクランブルに戻せる', () => {
+  for (let k = 0; k < 200; k++) {
+    const text = W.megaminx();
+    const code = W.encode(text);
+    assert.equal(code.length, 13);
+    assert.match(code, /^[A-Za-z0-9_-]{13}$/);
+    assert.equal(W.decode(code), text);
+  }
+  assert.equal(W.encode(W.megaminx(() => 0.1)), 'AAAAAAAAAAAAA');
+});
+
+test('encode / decode：形式が違えば null。textOf は短い形も古い全文の形も読める', () => {
+  assert.equal(W.encode('R++ D--'), null);
+  assert.equal(W.encode(W.megaminx().replace('R++', 'R+')), null);
+  assert.equal(W.decode('short'), null);
+  assert.equal(W.decode('!!!!!!!!!!!!!'), null);
+  const text = W.megaminx();
+  assert.equal(W.textOf({ s: W.encode(text) }), text);
+  assert.equal(W.textOf({ scramble: text }), text);
+  assert.equal(W.textOf({}), '');
+});
