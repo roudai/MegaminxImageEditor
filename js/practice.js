@@ -345,8 +345,13 @@
   // ?case=J3%2B で開いたときは、最初の1問だけそのケースを出す（記録のページから「このケースを練習」）
   let forcedName = params.get('case');
 
-  function next() {
-    resetTimer();
+  // keepTime: 通しで解き終わったとき。タイムを 0.00 に戻さず、次のインスペクション・計測が始まるまで出したままにする
+  function next(keepTime) {
+    if (keepTime) {
+      cancelAnimationFrame(frame);
+      clearHold();
+      setState('idle');
+    } else resetTimer();
     if (isFull()) {
       // 通し：毎回 WCA 形式のスクランブルを作る
       $('practiceEmpty').hidden = true;
@@ -395,6 +400,7 @@
   let penalty = ''; // インスペクションの超過によるペナルティ（'' / '+2' / 'DNF'）
   let startAt = 0;
   let frame = null;
+  let shownRecAt = null; // 通し：タイマーに出したままにしている記録（ペナルティを変えたら表示も直す）
   const timerEl = $('timer');
   const format = (sec) => P.formatTime(sec); // 60 秒以上は分表記（1:05.23）
 
@@ -410,6 +416,7 @@
     clearHold();
     setState('idle');
     timerEl.textContent = format(0);
+    shownRecAt = null;
   }
 
   // スペース・タップ：止まっていればスタート、計測中ならストップ
@@ -471,6 +478,7 @@
   // インスペクション：15 秒のカウントダウン（WCA：8 秒・12 秒で知らせる。15 秒を超えて 17 秒までに始めたら +2、超えたら DNF）
   function inspect() {
     setState('inspecting');
+    shownRecAt = null;
     inspectAt = performance.now();
     const tick = () => {
       const t = (performance.now() - inspectAt) / 1000;
@@ -492,6 +500,7 @@
       penalty = '';
     }
     setState('running');
+    shownRecAt = null;
     startAt = performance.now();
     const tick = () => {
       timerEl.textContent = format((performance.now() - startAt) / 1000);
@@ -615,7 +624,14 @@
     saveFull({ log: P.addLog(fullLog(), rec) });
     showFullResult(rec);
     renderHistory();
-    next();
+    next(true);
+    showFullTime(rec);
+  }
+
+  // 解き終わったタイム（+2 は「+」付き、DNF）を、次のインスペクション・計測が始まるまでタイマーに出しておく
+  function showFullTime(rec) {
+    timerEl.textContent = showTime(rec);
+    shownRecAt = rec.at;
   }
 
   function updateFull(rec, change) {
@@ -646,6 +662,7 @@
       b.addEventListener('click', () => {
         const updated = updateFull(rec, { penalty: value });
         if (updated) showFullResult(updated);
+        if (updated && state === 'idle' && shownRecAt === rec.at) showFullTime(updated);
         renderHistory();
       });
       seg.append(b);
@@ -655,6 +672,7 @@
     I.set(del, 'practice.delete');
     del.addEventListener('click', () => {
       saveFull({ log: fullLog().filter((r) => r.at !== rec.at) });
+      if (state === 'idle' && shownRecAt === rec.at) resetTimer();
       result.replaceChildren(el('div', 'text-muted small', I.t('practice.deleted')));
       renderHistory();
     });
