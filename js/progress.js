@@ -17,6 +17,13 @@
  *   summarize(log, { set, from })   期間（from 以降。無ければすべて）の集計 { count, solved, dnf, avg, best }
  *   daily(log, { set, days, now })  直近 days 日の日ごとの { day: 'YYYY-MM-DD', count, avg }（古い順。練習していない日も 0 で入る）
  *   perCase(log, { set, from })     ケースごとの { name: { count, solved, dnf, best, avg, last } }
+ *   通しの練習（WCA と同じ扱い）。rec = { at, sec, penalty: '' | '+2' | 'DNF' }
+ *   effectiveTime(rec)              ペナルティを含めたタイム（+2 なら sec + 2、DNF なら null）
+ *   average(recs, n)                直近 n 回（recs は新しい順）の WCA 式の平均：最速と最遅を除いた平均。
+ *                                     DNF は最遅とみなし、DNF が2つ以上なら null（DNF）。n 回に足りなければ undefined
+ *   bestAverage(recs, n)            これまでで最も速い n 回平均（DNF・足りなければ null / undefined）
+ *   bestSingle(recs)                最速の1回（DNF を除く。無ければ null）
+ *   formatTime(sec, digits)         タイムの表示。60 秒以上は分表記（例：65.234 → "1:05.23"、5.2 → "5.20"）。digits は小数の桁数（既定 2）
  *   wrapAuf(scramble, pre, post)    スクランブルの前後に U を pre・post 回（72°単位 0〜4）足す。もともと前後にある U とはまとめる
  *                                     （例：wrapAuf("U R U'", 1, 1) → "U2 R"）。前後の AUF を足しても同じケースのまま（練習の出題用）
  *
@@ -173,6 +180,51 @@
     return out;
   }
 
+  // ---- タイムの表示 ----
+  function formatTime(sec, digits) {
+    const d = digits == null ? 2 : digits;
+    const unit = Math.pow(10, d);
+    const total = Math.round(sec * unit); // 丸めてから分と秒に分ける（59.999 → 1:00.00 になるように）
+    const whole = Math.floor(total / unit);
+    const frac = d ? '.' + String(total % unit).padStart(d, '0') : '';
+    if (whole < 60) return whole + frac;
+    return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}${frac}`;
+  }
+
+  // ---- 通しの練習（WCA と同じ扱い） ----
+  function effectiveTime(rec) {
+    if (!rec || typeof rec.sec !== 'number' || rec.penalty === 'DNF') return null;
+    return rec.penalty === '+2' ? Math.round((rec.sec + 2) * 100) / 100 : rec.sec;
+  }
+
+  function average(recs, n) {
+    const list = Array.isArray(recs) ? recs.slice(0, n) : [];
+    if (list.length < n) return undefined;
+    const times = list.map(effectiveTime);
+    const dnf = times.filter((t) => t === null).length;
+    if (dnf >= 2) return null;
+    // DNF は最遅とみなすので、DNF が1つなら最遅として除かれる
+    const sorted = times.map((t) => (t === null ? Infinity : t)).sort((a, b) => a - b);
+    const kept = sorted.slice(1, -1);
+    return Math.round((kept.reduce((a, b) => a + b, 0) / kept.length) * 100) / 100;
+  }
+
+  function bestAverage(recs, n) {
+    const list = Array.isArray(recs) ? recs : [];
+    if (list.length < n) return undefined;
+    let best = null;
+    for (let i = 0; i + n <= list.length; i++) {
+      const a = average(list.slice(i), n);
+      if (typeof a === 'number' && (best === null || a < best)) best = a;
+    }
+    return best;
+  }
+
+  function bestSingle(recs) {
+    const times = (Array.isArray(recs) ? recs : []).map(effectiveTime).filter((t) => typeof t === 'number');
+    return times.length ? Math.min(...times) : null;
+  }
+
   // ---- 練習の出題 ----
   const U_AMOUNT = { U: 1, U2: 2, "U2'": 3, "U'": 4, "U'2": 3 };
   const U_TEXT = ['', 'U', 'U2', "U2'", "U'"];
@@ -189,6 +241,11 @@
   return {
     STATUSES: STATUSES,
     wrapAuf: wrapAuf,
+    formatTime: formatTime,
+    effectiveTime: effectiveTime,
+    average: average,
+    bestAverage: bestAverage,
+    bestSingle: bestSingle,
     addLog: addLog,
     summarize: summarize,
     daily: daily,

@@ -14,6 +14,10 @@
 //   - 設定（種類・範囲・グループ・対象・しきい値）と各ケースの最近のタイム（最大10件）は store.js の 'practice' に保存
 //     （ログイン中はクラウドにも）。判定ごとに日時付きの記録 log（最大2000件）も足す（記録のページ stats.html で使う）。
 //     URL ?set=oll&scope=nd&filter=new で初期値を指定できる。?case=J3%2B なら最初の1問はそのケース
+//   - 通し（set: 'full'）：WCA 形式のスクランブル（wca-scramble.js）で通しで解く。15秒のインスペクション（オン・オフ）、
+//     +2 / DNF（インスペクションの超過で自動、結果からも変えられる）、ao5・ao12・ベスト（progress.js の average など）。
+//     記録は practice.full = { inspection, log: [{ at, sec, penalty, scramble }] }。覚えた度は変えない。
+//     通しのタイマーは長押し（0.3 秒で準備完了）して離したときにスタートする
 (function () {
   'use strict';
   const S = window.Store;
@@ -48,10 +52,18 @@
   const saved = S.get('practice');
   const prefs = Object.assign({ set: 'pll', scope: 'nd', filter: 'new', threshold: 8, times: {} }, saved && typeof saved === 'object' ? saved : {});
   const params = new URLSearchParams(location.search);
-  if (['pll', 'oll'].includes(params.get('set'))) prefs.set = params.get('set');
+  const SETS = ['pll', 'oll', 'full'];
+  if (SETS.includes(params.get('set'))) prefs.set = params.get('set');
   if (SCOPES[params.get('scope')]) prefs.scope = params.get('scope');
   if (FILTERS.includes(params.get('filter'))) prefs.filter = params.get('filter');
-  if (!['pll', 'oll'].includes(prefs.set)) prefs.set = 'pll';
+  if (!SETS.includes(prefs.set)) prefs.set = 'pll';
+  const isFull = () => prefs.set === 'full';
+  // 通しの練習の設定と記録
+  const fullPrefs = () => {
+    const f = (S.get('practice') || {}).full;
+    return Object.assign({ inspection: true, log: [] }, f && typeof f === 'object' ? f : {});
+  };
+  const saveFull = (change) => savePrefs({ full: Object.assign(fullPrefs(), change) });
   if (!SCOPES[prefs.scope]) prefs.scope = 'nd';
   if (!FILTERS.includes(prefs.filter)) prefs.filter = 'new';
   if (!(prefs.threshold > 0 && prefs.threshold <= 120)) prefs.threshold = 8;
@@ -116,6 +128,7 @@
         [
           { value: 'pll', text: 'PLL' },
           { value: 'oll', text: 'OLL' },
+          { value: 'full', key: 'practice.full' },
         ],
         prefs.set,
         (v) => changeSettings({ set: v })
@@ -136,6 +149,30 @@
     }
     const box = $('practiceSettings');
     box.replaceChildren();
+    document.body.classList.toggle('practice-full', isFull());
+    // 操作の説明：通しでインスペクションがオンのときはその手順
+    I.set($('timerHint'), isFull() ? (fullPrefs().inspection ? 'practice.hintInspection' : 'practice.hintFull') : 'practice.hint');
+    if (isFull()) {
+      // 通し：インスペクションのオン・オフだけ
+      box.append(
+        field(
+          'practice.inspection',
+          segment(
+            [
+              { value: true, key: 'practice.on' },
+              { value: false, key: 'practice.off' },
+            ],
+            fullPrefs().inspection,
+            (v) => {
+              saveFull({ inspection: v });
+              renderSettings();
+              resetTimer();
+            }
+          )
+        )
+      );
+      return;
+    }
     box.append(field('practice.groups', groupSummary()));
     const cases = inSelection(prefs.set);
     const count = (f) => (f === 'all' ? cases.length : cases.filter((c) => P.statusOf(prefs.set, c.name) === f).length);
@@ -241,8 +278,10 @@
   // 設定を変えたら保存し、（しきい値以外なら）次の問題を出し直す
   function changeSettings(change, renew) {
     savePrefs(change);
+    if (change.set) $('practiceResult').hidden = true; // 種類を変えたら前の結果は消す
     renderSettings();
     if (renew !== false) next();
+    renderHistory();
   }
 
   // ---- 出題 ----
@@ -255,6 +294,20 @@
 
   function next() {
     resetTimer();
+    if (isFull()) {
+      // 通し：毎回 WCA 形式のスクランブルを作る
+      $('practiceEmpty').hidden = true;
+      ['timer', 'dnfButton', 'skipButton'].forEach((id) => {
+        $(id).disabled = false;
+      });
+      hintUsed = false;
+      showHint(false);
+      current = { set: 'full', scramble: window.WcaScramble.megaminx() };
+      $('scramble').textContent = current.scramble;
+      $('scramble').classList.add('full');
+      return;
+    }
+    $('scramble').classList.remove('full');
     const forced = forcedName ? DATA[prefs.set].find((x) => x.name === forcedName) : null;
     forcedName = null;
     const list = forced ? [forced] : pool();
@@ -283,19 +336,25 @@
 
   // ---- タイマー ----
   // idle → running（スペースを押した瞬間・タイマーをタップした瞬間にスタート）→ idle
+  // 通しでインスペクションがオンのとき：idle → inspecting（15 秒のカウントダウン）→ running → idle
   let state = 'idle';
+  let inspectAt = 0;
+  let penalty = ''; // インスペクションの超過によるペナルティ（'' / '+2' / 'DNF'）
   let startAt = 0;
   let frame = null;
   const timerEl = $('timer');
-  const format = (sec) => sec.toFixed(2);
+  const format = (sec) => P.formatTime(sec); // 60 秒以上は分表記（1:05.23）
 
   function setState(next) {
     state = next;
     $('practiceStage').classList.toggle('running', next === 'running');
+    $('practiceStage').classList.toggle('inspecting', next === 'inspecting');
+    if (next !== 'inspecting') timerEl.classList.remove('warn8', 'warn12', 'over');
   }
 
   function resetTimer() {
     cancelAnimationFrame(frame);
+    clearHold();
     setState('idle');
     timerEl.textContent = format(0);
   }
@@ -304,10 +363,81 @@
   function press() {
     if (!current) return;
     if (state === 'running') stop();
+    else if (state === 'idle' && isFull() && fullPrefs().inspection) inspect();
     else start();
   }
 
+  // ---- 通し：長押しして離すとスタート ----
+  // スペース（タイマーの長押し）を 0.3 秒押すと準備完了（緑。押しはじめは赤）、離すとスタート。短く押しただけでは始まらない。
+  // インスペクションありのときは、最初の1回はインスペクションを始めるだけ（その押した指を離してもスタートしない）
+  const HOLD_MS = 300;
+  let holding = false;
+  let ready = false;
+  let holdTimer = null;
+  let ignoreRelease = false;
+
+  function clearHold() {
+    clearTimeout(holdTimer);
+    holding = false;
+    ready = false;
+    timerEl.classList.remove('holding', 'ready');
+  }
+
+  function fullDown() {
+    if (!current) return;
+    if (state === 'running') {
+      stop();
+      return;
+    }
+    if (state === 'idle' && fullPrefs().inspection) {
+      inspect();
+      ignoreRelease = true;
+      return;
+    }
+    if (holding) return;
+    holding = true;
+    timerEl.classList.add('holding');
+    holdTimer = setTimeout(() => {
+      ready = true;
+      timerEl.classList.remove('holding');
+      timerEl.classList.add('ready');
+    }, HOLD_MS);
+  }
+
+  function fullUp() {
+    if (ignoreRelease) {
+      ignoreRelease = false;
+      return;
+    }
+    if (!holding) return;
+    const go = ready;
+    clearHold();
+    if (go) start();
+  }
+
+  // インスペクション：15 秒のカウントダウン（WCA：8 秒・12 秒で知らせる。15 秒を超えて 17 秒までに始めたら +2、超えたら DNF）
+  function inspect() {
+    setState('inspecting');
+    inspectAt = performance.now();
+    const tick = () => {
+      const t = (performance.now() - inspectAt) / 1000;
+      timerEl.classList.toggle('warn8', t >= 8 && t < 12);
+      timerEl.classList.toggle('warn12', t >= 12 && t < 15);
+      timerEl.classList.toggle('over', t >= 15);
+      timerEl.textContent = t < 15 ? String(Math.ceil(15 - t)) : t < 17 ? '+2' : 'DNF';
+      frame = requestAnimationFrame(tick);
+    };
+    tick();
+  }
+
   function start() {
+    if (state === 'inspecting') {
+      cancelAnimationFrame(frame);
+      const t = (performance.now() - inspectAt) / 1000;
+      penalty = t < 15 ? '' : t < 17 ? '+2' : 'DNF';
+    } else {
+      penalty = '';
+    }
     setState('running');
     startAt = performance.now();
     const tick = () => {
@@ -326,7 +456,8 @@
     const sec = Math.round((performance.now() - startAt) / 10) / 100; // 0.01 秒単位
     timerEl.textContent = format(sec);
     setState('idle');
-    record(sec);
+    if (isFull()) recordFull(sec, penalty);
+    else record(sec);
   }
 
   // ---- 記録と判定 ----
@@ -414,7 +545,100 @@
     result.append(canvas, body);
   }
 
+  // ---- 通しの記録 ----
+  const fullLog = () => (Array.isArray(fullPrefs().log) ? fullPrefs().log : []);
+  const showTime = (rec) => {
+    const t = P.effectiveTime(rec);
+    return t === null ? 'DNF' : format(t) + (rec.penalty === '+2' ? '+' : '');
+  };
+  const showAvg = (a) => (a === undefined ? '–' : a === null ? 'DNF' : format(a));
+
+  function recordFull(sec, pen) {
+    const rec = { at: Date.now(), sec: sec, penalty: pen || '', scramble: current.scramble };
+    saveFull({ log: P.addLog(fullLog(), rec) });
+    showFullResult(rec);
+    renderHistory();
+    next();
+  }
+
+  function updateFull(rec, change) {
+    const log = fullLog().map((r) => (r.at === rec.at ? Object.assign({}, r, change) : r));
+    saveFull({ log: log });
+    return log.find((r) => r.at === rec.at);
+  }
+
+  function showFullResult(rec) {
+    const result = $('practiceResult');
+    result.hidden = false;
+    result.replaceChildren();
+    const body = el('div', 'practice-result-body w-100');
+    const head = el('div', 'd-flex flex-wrap align-items-center gap-2');
+    head.append(el('span', 'practice-result-time', showTime(rec)));
+    // ペナルティの切り替え（OK / +2 / DNF）。あとから変えられる
+    const seg = el('div', 'practice-segment');
+    [
+      ['', 'practice.penaltyOk'],
+      ['+2', null],
+      ['DNF', null],
+    ].forEach(([value, key]) => {
+      const b = el('button');
+      b.type = 'button';
+      if (key) I.set(b, key);
+      else b.textContent = value;
+      b.classList.toggle('active', rec.penalty === value);
+      b.addEventListener('click', () => {
+        const updated = updateFull(rec, { penalty: value });
+        if (updated) showFullResult(updated);
+        renderHistory();
+      });
+      seg.append(b);
+    });
+    const del = el('button', 'btn btn-link practice-undo');
+    del.type = 'button';
+    I.set(del, 'practice.delete');
+    del.addEventListener('click', () => {
+      saveFull({ log: fullLog().filter((r) => r.at !== rec.at) });
+      result.replaceChildren(el('div', 'text-muted small', I.t('practice.deleted')));
+      renderHistory();
+    });
+    head.append(seg, del);
+    const scramble = el('div', 'practice-case-alg practice-full-scramble mt-1', rec.scramble || '');
+    body.append(head, scramble);
+    result.append(body);
+  }
+
+  // 通しの ao5・ao12・ベスト（直近の記録の上）
+  function renderFullStats() {
+    const box = $('practiceFullStats');
+    if (!isFull()) {
+      box.hidden = true;
+      return;
+    }
+    const log = fullLog();
+    box.hidden = false;
+    const item = (key, value) => {
+      const d = el('div', 'practice-stat');
+      const label = el('span', 'practice-stat-label');
+      I.set(label, key);
+      d.append(label, el('span', 'practice-stat-value', value));
+      return d;
+    };
+    box.replaceChildren(
+      item('practice.ao5', showAvg(P.average(log, 5))),
+      item('practice.ao12', showAvg(P.average(log, 12))),
+      item('practice.bestSingle', P.bestSingle(log) == null ? '–' : format(P.bestSingle(log))),
+      item('practice.bestAo5', showAvg(P.bestAverage(log, 5))),
+      item('practice.bestAo12', showAvg(P.bestAverage(log, 12)))
+    );
+  }
+
   function renderHistory() {
+    renderFullStats();
+    if (isFull()) {
+      // 通し：保存してある直近の記録（ページを開き直しても出る）
+      $('practiceHistory').replaceChildren(...fullLog().slice(0, HISTORY).map((r) => el('li', P.effectiveTime(r) === null ? 'learning' : '', showTime(r))));
+      return;
+    }
     const list = $('practiceHistory');
     list.replaceChildren(
       ...sessionHistory.map((h) => {
@@ -440,18 +664,34 @@
       else stop();
       return;
     }
+    if (state === 'inspecting' && e.key === 'Escape') {
+      e.preventDefault();
+      resetTimer();
+      return;
+    }
     if (e.code === 'Space' || e.key === ' ') {
       e.preventDefault();
-      press();
+      if (isFull()) fullDown();
+      else press();
     }
   });
   document.addEventListener('keyup', (e) => {
-    if (!typing(e) && (e.code === 'Space' || e.key === ' ')) e.preventDefault();
+    if (!typing(e) && (e.code === 'Space' || e.key === ' ')) {
+      e.preventDefault();
+      if (isFull()) fullUp();
+    }
   });
-  // 画面ではタイマーをタップするとスタート、計測中はどこをタップしても止まる
+  // 画面ではタイマーをタップするとスタート（通しは長押しして離すとスタート）、計測中はどこをタップしても止まる
   timerEl.addEventListener('pointerdown', (e) => {
     e.preventDefault();
-    press();
+    if (isFull()) fullDown();
+    else press();
+  });
+  timerEl.addEventListener('pointerup', () => {
+    if (isFull()) fullUp();
+  });
+  timerEl.addEventListener('pointercancel', () => {
+    if (isFull()) clearHold();
   });
   timerEl.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') e.preventDefault(); // ボタンの Enter で押した扱いにしない
@@ -470,7 +710,8 @@
   $('dnfButton').addEventListener('click', () => {
     if (!current || performance.now() < ignoreClicksUntil) return;
     resetTimer();
-    record(null);
+    if (isFull()) recordFull(0, 'DNF');
+    else record(null);
   });
   // ヒント：ケースの名前と、解く手順の最初の3手（前の AUF は出題の向きで変わるので出さない）
   function firstMoves(alg, n) {
@@ -511,4 +752,5 @@
   savePrefs({ set: prefs.set, scope: prefs.scope, filter: prefs.filter, threshold: prefs.threshold });
   renderSettings();
   next();
+  renderHistory();
 })();

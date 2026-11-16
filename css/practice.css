@@ -172,6 +172,22 @@
   -webkit-user-select: none;
   transition: color .1s ease;
 }
+.practice-timer.warn8 {
+  color: #b07d00;
+}
+.practice-timer.warn12 {
+  color: #d9480f;
+}
+.practice-timer.over {
+  color: #dc3545;
+}
+/* 通し：長押し中（赤）→ 準備完了（緑）。離すとスタート。インスペクションの色より優先 */
+.practice-timer.holding {
+  color: #dc3545;
+}
+.practice-timer.ready {
+  color: #198754;
+}
 .practice-timer:focus-visible {
   outline: none;
 }
@@ -204,6 +220,48 @@
 .practice-empty {
   margin-top: 1rem;
   color: #6c757d;
+}
+
+/* ---- 通し ---- */
+.practice-scramble.full {
+  width: fit-content; /* 行の頭をそろえる（左寄せのまま中央に置く） */
+  text-align: left;
+  max-width: 34rem;
+  font-size: clamp(.82rem, 2.2vw, 1.05rem);
+  line-height: 1.7;
+  white-space: pre-line;
+  word-spacing: .1em;
+}
+.practice-full #hintButton,
+.practice-full #practiceHintText {
+  display: none;
+}
+.practice-full-scramble {
+  white-space: pre-line;
+  color: #6c757d;
+  font-size: .75rem;
+}
+.practice-full-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+.practice-stat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: .4rem;
+  padding: .3rem .75rem;
+  border: 1px solid #e9ecef;
+  border-radius: .6rem;
+  background: #fff;
+}
+.practice-stat-label {
+  color: #6c757d;
+  font-size: .72rem;
+}
+.practice-stat-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---- 結果 ---- */

@@ -1,4 +1,5 @@
 // 記録のページ（stats.html）：練習の記録（store.js の practice.log）を、期間の集計・日ごとのグラフ・ケースごとの表で見る。
+// 通し（practice.full.log）は、回数・ベスト・ベスト ao5/ao12（今の ao5/ao12）、日ごとのグラフ、記録の一覧で見る。
 // 仕様: reference/PRACTICE_SPEC.md「記録」
 //   - 種類（PLL / OLL）・範囲（OLL の No Dot / Dot / All）・期間（7日 / 30日 / すべて）で絞る（選んだものは practice.stats に保存）
 //   - 集計（回数・平均・解けなかった・習得済みの数）、日ごとの回数（棒）と平均タイム（線）の SVG、
@@ -33,7 +34,7 @@
   };
   const saved = practice().stats || {};
   const view = {
-    set: ['pll', 'oll'].includes(saved.set) ? saved.set : practice().set === 'oll' ? 'oll' : 'pll',
+    set: ['pll', 'oll', 'full'].includes(saved.set) ? saved.set : ['oll', 'full'].includes(practice().set) ? practice().set : 'pll',
     scope: SCOPES[saved.scope] ? saved.scope : 'nd',
     period: Object.prototype.hasOwnProperty.call(PERIODS, saved.period) ? saved.period : '30',
     sort: saved.sort || 'avg',
@@ -43,7 +44,7 @@
     S.set('practice', Object.assign({}, practice(), { stats: Object.assign({}, view) }));
   }
 
-  const fmt = (sec) => (typeof sec === 'number' ? sec.toFixed(2) : '–');
+  const fmt = (sec) => (typeof sec === 'number' ? P.formatTime(sec) : '–'); // 60 秒以上は分表記（1:05.23）
   const from = () => (PERIODS[view.period] ? Date.now() - PERIODS[view.period] * DAY : 0);
   const casesInScope = () => DATA[view.set].filter(view.set === 'oll' ? SCOPES[view.scope] : SCOPES.all);
   // 範囲に入るケースの記録だけを使う
@@ -76,6 +77,7 @@
         [
           { value: 'pll', text: 'PLL' },
           { value: 'oll', text: 'OLL' },
+          { value: 'full', key: 'practice.full' },
         ],
         view.set,
         (v) => change({ set: v })
@@ -169,7 +171,8 @@
         svg.append(t);
       }
       const t2 = svgEl('text', { x: W - pad.r + 6, y: y + 4, class: 'stats-axis stats-axis-avg' });
-      t2.textContent = (maxAvg * f).toFixed(f ? 1 : 0) + 's';
+      const v = maxAvg * f;
+      t2.textContent = v >= 60 ? P.formatTime(v, 0) : v.toFixed(f ? 1 : 0) + 's';
       svg.append(t2);
     });
     // 棒
@@ -311,6 +314,15 @@
   // ---- CSV の書き出し ----
   function exportCsv() {
     const f = from();
+    if (view.set === 'full') {
+      const recs = fullLog().filter((r) => r.at >= f);
+      const q = (v) => `"${String(v).replace(/"/g, '""')}"`;
+      const out = [['date', 'time', 'penalty', 'result', 'scramble'].join(',')].concat(
+        recs.map((r) => [new Date(r.at).toISOString(), r.sec.toFixed(2), r.penalty || 'OK', showTime(r), q((r.scramble || '').replace(/\n/g, ' / '))].join(','))
+      );
+      download(out, 'megaminx-full-solves.csv');
+      return;
+    }
     const names = new Set(casesInScope().map((c) => c.name));
     const list = (practice().log || []).filter((e) => e && e.set === view.set && names.has(e.name) && e.at >= f);
     const quote = (v) => `"${String(v).replace(/"/g, '""')}"`;
@@ -319,16 +331,98 @@
         [new Date(e.at).toISOString(), e.set, quote(e.name), e.sec == null ? 'DNF' : e.sec.toFixed(2), e.status, e.hint ? 1 : 0].join(',')
       )
     );
-    const blob = new Blob(['﻿' + lines.join('\n') + '\n'], { type: 'text/csv' });
+    download(lines, `megaminx-${view.set}-practice.csv`);
+  }
+
+  function download(lines, name) {
+    const blob = new Blob(['\ufeff' + lines.join('\n') + '\n'], { type: 'text/csv' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `megaminx-${view.set}-practice.csv`;
+    link.download = name;
     link.click();
     setTimeout(() => URL.revokeObjectURL(link.href), 10000);
   }
 
+  // ---- 通し ----
+  // 通しの記録（practice.full.log、新しい順）。グラフは記録をタイム（+2 込み、DNF は null）に直して使う
+  const fullLog = () => {
+    const f = practice().full;
+    return f && Array.isArray(f.log) ? f.log.filter((r) => r && typeof r.at === 'number') : [];
+  };
+  const asTimes = (recs) => recs.map((r) => ({ at: r.at, set: 'full', name: 'full', sec: P.effectiveTime(r) }));
+  const showTime = (r) => {
+    const t = P.effectiveTime(r);
+    return t === null ? 'DNF' : fmt(t) + (r.penalty === '+2' ? '+' : '');
+  };
+  const showAvg = (a) => (a === undefined ? '–' : a === null ? 'DNF' : fmt(a));
+
+  function renderFullCards(recs) {
+    const card = (labelKey, value, sub) => {
+      const c = el('div', 'stats-card');
+      const label = el('div', 'stats-card-label');
+      I.set(label, labelKey);
+      c.append(label, el('div', 'stats-card-value', value));
+      if (sub) c.append(el('div', 'stats-card-sub', sub));
+      return c;
+    };
+    const best = P.bestSingle(recs);
+    const dnf = recs.filter((r) => P.effectiveTime(r) === null).length;
+    $('statsCards').replaceChildren(
+      card('stats.count', String(recs.length), dnf ? I.t('stats.dnfCount', { n: dnf }) : ''),
+      card('practice.bestSingle', best == null ? '–' : fmt(best)),
+      card('practice.bestAo5', showAvg(P.bestAverage(recs, 5)), I.t('stats.current', { t: showAvg(P.average(recs, 5)) })),
+      card('practice.bestAo12', showAvg(P.bestAverage(recs, 12)), I.t('stats.current', { t: showAvg(P.average(recs, 12)) }))
+    );
+  }
+
+  // 記録の一覧（新しい順）：日時・タイム・その時点の ao5・ao12・スクランブル（押すと開く）
+  // all：通しの記録すべて（新しい順）。recs はその中の期間内のもの（同じ配列の要素）
+  function renderFullTable(recs, all) {
+    const head = el('tr');
+    ['stats.col.date', 'stats.col.time', 'practice.ao5', 'practice.ao12', 'practice.scramble'].forEach((key, i) => {
+      const th = el('th', i >= 1 && i <= 3 ? 'text-end' : '');
+      I.set(th, key);
+      head.append(th);
+    });
+    $('statsHead').replaceChildren(head);
+    $('statsEmpty').hidden = recs.length > 0;
+    // その時点の平均は期間に関係なく、それまでの記録から出す
+    $('statsBody').replaceChildren(
+      ...recs.map((r) => {
+        const i = all.indexOf(r);
+        const d = new Date(r.at);
+        const date = `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        const tr = el('tr');
+        const details = el('details', 'stats-scramble');
+        const summary = el('summary');
+        I.set(summary, 'stats.show');
+        details.append(summary, el('div', 'stats-scramble-text', r.scramble || ''));
+        const scrambleTd = el('td');
+        scrambleTd.append(details);
+        tr.append(
+          el('td', 'text-muted', date),
+          el('td', 'text-end fw-semibold', showTime(r)),
+          el('td', 'text-end', showAvg(P.average(all.slice(i), 5))),
+          el('td', 'text-end', showAvg(P.average(all.slice(i), 12))),
+          scrambleTd
+        );
+        return tr;
+      })
+    );
+  }
+
   function render() {
     renderControls();
+    const full = view.set === 'full';
+    I.set($('statsTableTitle'), full ? 'stats.solves' : 'stats.byCase');
+    if (full) {
+      const all = fullLog(); // 読むたびに別のオブジェクトになるので1回だけ読む
+      const recs = all.filter((r) => r.at >= from());
+      renderFullCards(recs);
+      renderChart(asTimes(all));
+      renderFullTable(recs, all);
+      return;
+    }
     const log = logInScope();
     renderCards(log);
     renderChart(log);

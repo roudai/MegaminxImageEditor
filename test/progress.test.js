@@ -124,3 +124,39 @@ test('daily：直近の日ごとの回数と平均（練習していない日は
     { day: '2026-11-16', count: 2, avg: 5 },
   ]);
 });
+
+test('effectiveTime：+2 を足し、DNF は null', () => {
+  assert.equal(P.effectiveTime({ sec: 50.1, penalty: '' }), 50.1);
+  assert.equal(P.effectiveTime({ sec: 50.1, penalty: '+2' }), 52.1);
+  assert.equal(P.effectiveTime({ sec: 50.1, penalty: 'DNF' }), null);
+});
+
+test('average（WCA 式）：最速と最遅を除く。DNF 1つは最遅、2つ以上は DNF。足りなければ undefined', () => {
+  const r = (sec, penalty) => ({ sec, penalty: penalty || '' });
+  assert.equal(P.average([r(50), r(60), r(55), r(40), r(70)], 5), 55); // (50+60+55)/3
+  assert.equal(P.average([r(50), r(60), r(55), r(40), r(70, 'DNF')], 5), 55); // DNF が最遅で除かれる → 50,60,55
+  assert.equal(P.average([r(50, '+2'), r(60), r(55), r(40), r(70)], 5), 55.67); // 52,60,55
+  assert.equal(P.average([r(50, 'DNF'), r(60), r(55), r(40, 'DNF'), r(70)], 5), null);
+  assert.equal(P.average([r(50), r(60)], 5), undefined);
+  // 直近の n 回だけを使う（新しい順）
+  assert.equal(P.average([r(10), r(10), r(10), r(10), r(10), r(99)], 5), 10);
+});
+
+test('bestAverage / bestSingle：これまでで最も速い平均と1回（DNF は除く）', () => {
+  const r = (sec, penalty) => ({ sec, penalty: penalty || '' });
+  const recs = [r(70), r(50), r(51), r(52), r(53), r(54), r(40, 'DNF')];
+  assert.equal(P.bestSingle(recs), 50);
+  assert.equal(P.bestAverage(recs, 5), 52); // 50..54 の窓：(51+52+53)/3
+  assert.equal(P.bestAverage(recs, 12), undefined);
+  assert.equal(P.bestSingle([r(1, 'DNF')]), null);
+});
+
+test('formatTime：60 秒未満は秒、60 秒以上は分表記（丸めてから分ける）', () => {
+  assert.equal(P.formatTime(5.2), '5.20');
+  assert.equal(P.formatTime(59.994), '59.99');
+  assert.equal(P.formatTime(59.996), '1:00.00');
+  assert.equal(P.formatTime(65.234), '1:05.23');
+  assert.equal(P.formatTime(600), '10:00.00');
+  assert.equal(P.formatTime(70.4, 0), '1:10');
+  assert.equal(P.formatTime(0), '0.00');
+});
