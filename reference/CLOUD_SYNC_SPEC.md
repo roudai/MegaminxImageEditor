@@ -11,7 +11,7 @@
 - 同じ Firebase プロジェクトで、ほかのアプリ（別リポジトリの VisualCube Editor など）も同じアカウントで使う。各アプリは `users/{uid}/apps/<アプリ名>` に保存し、互いの保存先はぶつからない
   - ほかのアプリも同じ形（`{ json, savedAt }`）で保存すれば、`firestore.rules` は変えなくてよい
   - GitHub Pages の同じドメイン（`roudai.github.io`）に置くアプリは localStorage を共有するので、ほかのアプリは別のキーの頭（`megaminx-image-editor:` 以外）を使う
-- `firestore.rules`：本人の `users/{uid}/apps/{アプリ名}` だけ読み書きでき、中身は `json`（50万文字未満の文字列）と `savedAt` だけ（プロジェクト共通のルール）
+- `firestore.rules`：本人の `users/{uid}/apps/{アプリ名}` だけ読み書きでき、中身は `json`（50万文字未満の文字列）と `savedAt` だけ（プロジェクト共通のルール）。作る・書き換えるのはルールの `appIds()` に書いたアプリ名（`megaminx-image-editor`・`visualcube-editor`）だけ。アプリを増やしたら名前を足して Firebase コンソールに貼り直す
 
 ## 保存の窓口（`js/store.js`）
 - エディタ・一覧ページの保存はすべて `Store.get(name)` / `Store.set(name, value)` を通す（localStorage のキーは `megaminx-image-editor:<name>`。今までと同じ形式なので既存のデータはそのまま読める）
