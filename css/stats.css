@@ -200,3 +200,49 @@
   white-space: pre-line;
   color: #495057;
 }
+
+/* 通しの記録の削除 */
+.stats-delete-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem;
+  min-height: 34px;
+  margin: .25rem 0 .5rem;
+  font-size: .82rem;
+}
+.stats-delete-confirm {
+  color: #b02a37;
+  font-weight: 500;
+}
+.stats-delete-message {
+  color: #6c757d;
+}
+.stats-undo {
+  font-size: .82rem;
+  text-decoration: none;
+}
+.stats-check {
+  width: 2rem;
+}
+.stats-check .form-check-input {
+  margin: 0;
+  cursor: pointer;
+}
+.stats-row-delete {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #adb5bd;
+  font-size: 1.05rem;
+  line-height: 1;
+}
+.stats-row-delete:hover,
+.stats-row-delete:focus-visible {
+  outline: none;
+  background: rgba(220, 53, 69, .1);
+  color: #dc3545;
+}

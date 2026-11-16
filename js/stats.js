@@ -1,5 +1,6 @@
 // 記録のページ（stats.html）：練習の記録（store.js の practice.log）を、期間の集計・日ごとのグラフ・ケースごとの表で見る。
 // 通し（practice.full.log）は、回数・ベスト・ベスト ao5/ao12（今の ao5/ao12）、日ごとのグラフ、記録の一覧で見る。
+// 通しの記録は、行ごとの × で1件、チェックで選んで「選択した記録を削除」でまとめて削除できる（どちらも元に戻せる）。
 // 仕様: reference/PRACTICE_SPEC.md「記録」
 //   - 種類（PLL / OLL）・範囲（OLL の No Dot / Dot / All）・期間（7日 / 30日 / すべて）で絞る（選んだものは practice.stats に保存）
 //   - 集計（回数・平均・解けなかった・習得済みの数）、日ごとの回数（棒）と平均タイム（線）の SVG、
@@ -376,16 +377,124 @@
   }
 
   // 記録の一覧（新しい順）：日時・タイム・その時点の ao5・ao12・スクランブル（押すと開く）
+  // ---- 通しの記録の削除 ----
+  // 個別：各行の × で1件を削除。一括：行のチェックで選び（見出しのチェックで表示中をすべて）、「選択した記録を削除」→ 確認 → 削除。
+  // どちらも削除のあとに「元に戻す」を出す（ブラウザの確認ダイアログは使わない）
+  const selected = new Set(); // 選んだ記録の at
+  let confirmingDelete = false;
+  let deleteMessage = null; // { text, undo }
+
+  function saveFullLog(log) {
+    const p = practice();
+    const full = Object.assign({ inspection: true }, p.full, { log: log });
+    S.set('practice', Object.assign({}, p, { full: full }));
+  }
+
+  // ats の記録を削除し、元に戻す関数を返す
+  function deleteRecords(ats) {
+    const set = new Set(ats);
+    const before = fullLog();
+    const removed = before.filter((r) => set.has(r.at));
+    saveFullLog(before.filter((r) => !set.has(r.at)));
+    ats.forEach((at) => selected.delete(at));
+    return () => {
+      // 削除したあとに増えた記録も残し、消したものを日時の順（新しい順）に戻す
+      const now = fullLog();
+      const have = new Set(now.map((r) => r.at));
+      const merged = now.concat(removed.filter((r) => !have.has(r.at))).sort((x, y) => y.at - x.at);
+      saveFullLog(merged);
+      deleteMessage = { key: 'stats.restored', params: { n: removed.length } };
+      render();
+    };
+  }
+
+  function afterDelete(n, undo) {
+    confirmingDelete = false;
+    deleteMessage = { key: 'stats.deletedN', params: { n: n }, undo: undo };
+    render();
+  }
+
+  function renderDeleteBar(recs) {
+    const bar = $('statsDeleteBar');
+    bar.hidden = false;
+    bar.replaceChildren();
+    // 期間を変えて見えなくなった記録は選択から外す
+    const visible = new Set(recs.map((r) => r.at));
+    [...selected].forEach((at) => {
+      if (!visible.has(at)) selected.delete(at);
+    });
+    const n = selected.size;
+    if (confirmingDelete && n) {
+      const text = el('span', 'stats-delete-confirm');
+      I.set(text, 'stats.deleteConfirm', { n: n });
+      const yes = el('button', 'btn btn-danger btn-sm');
+      yes.type = 'button';
+      I.set(yes, 'stats.deleteYes');
+      yes.addEventListener('click', () => afterDelete(n, deleteRecords([...selected])));
+      const no = el('button', 'btn btn-outline-secondary btn-sm');
+      no.type = 'button';
+      I.set(no, 'stats.cancel');
+      no.addEventListener('click', () => {
+        confirmingDelete = false;
+        render();
+      });
+      bar.append(text, yes, no);
+      return;
+    }
+    const del = el('button', 'btn btn-outline-danger btn-sm');
+    del.type = 'button';
+    I.set(del, 'stats.deleteSelected', { n: n });
+    del.disabled = !n;
+    del.addEventListener('click', () => {
+      deleteMessage = null;
+      confirmingDelete = true;
+      render();
+    });
+    bar.append(del);
+    if (deleteMessage) {
+      const msg = el('span', 'stats-delete-message');
+      I.set(msg, deleteMessage.key, deleteMessage.params);
+      bar.append(msg);
+      if (deleteMessage.undo) {
+        const undo = el('button', 'btn btn-link btn-sm p-0 stats-undo');
+        undo.type = 'button';
+        I.set(undo, 'stats.undo');
+        const fn = deleteMessage.undo;
+        undo.addEventListener('click', () => {
+          deleteMessage = null;
+          fn();
+        });
+        bar.append(undo);
+      }
+    }
+  }
+
   // all：通しの記録すべて（新しい順）。recs はその中の期間内のもの（同じ配列の要素）
   function renderFullTable(recs, all) {
     const head = el('tr');
+    // 見出しのチェック：表示中の記録をすべて選ぶ・外す
+    const checkTh = el('th', 'stats-check');
+    const all1 = el('input', 'form-check-input');
+    all1.type = 'checkbox';
+    all1.checked = recs.length > 0 && recs.every((r) => selected.has(r.at));
+    all1.indeterminate = !all1.checked && recs.some((r) => selected.has(r.at));
+    I.set(all1, 'stats.selectAll', null, 'aria-label');
+    all1.addEventListener('change', () => {
+      recs.forEach((r) => (all1.checked ? selected.add(r.at) : selected.delete(r.at)));
+      confirmingDelete = false;
+      render();
+    });
+    checkTh.append(all1);
+    head.append(checkTh);
     ['stats.col.date', 'stats.col.time', 'practice.ao5', 'practice.ao12', 'practice.scramble'].forEach((key, i) => {
       const th = el('th', i >= 1 && i <= 3 ? 'text-end' : '');
       I.set(th, key);
       head.append(th);
     });
+    head.append(el('th'));
     $('statsHead').replaceChildren(head);
     $('statsEmpty').hidden = recs.length > 0;
+    renderDeleteBar(recs);
     // その時点の平均は期間に関係なく、それまでの記録から出す
     $('statsBody').replaceChildren(
       ...recs.map((r) => {
@@ -393,18 +502,42 @@
         const d = new Date(r.at);
         const date = `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
         const tr = el('tr');
+        tr.classList.toggle('table-active', selected.has(r.at));
+        const checkTd = el('td', 'stats-check');
+        const check = el('input', 'form-check-input');
+        check.type = 'checkbox';
+        check.checked = selected.has(r.at);
+        I.set(check, 'stats.selectRow', { date: date }, 'aria-label');
+        check.addEventListener('change', () => {
+          if (check.checked) selected.add(r.at);
+          else selected.delete(r.at);
+          confirmingDelete = false;
+          render();
+        });
+        checkTd.append(check);
         const details = el('details', 'stats-scramble');
         const summary = el('summary');
         I.set(summary, 'stats.show');
         details.append(summary, el('div', 'stats-scramble-text', window.WcaScramble.textOf(r)));
         const scrambleTd = el('td');
         scrambleTd.append(details);
+        // 個別の削除（すぐに削除し、元に戻すを出す）
+        const delTd = el('td', 'text-end');
+        const del = el('button', 'stats-row-delete');
+        del.type = 'button';
+        del.textContent = '×';
+        I.set(del, 'stats.deleteRow', { date: date }, 'aria-label');
+        I.set(del, 'stats.deleteRow', { date: date }, 'title');
+        del.addEventListener('click', () => afterDelete(1, deleteRecords([r.at])));
+        delTd.append(del);
         tr.append(
+          checkTd,
           el('td', 'text-muted', date),
           el('td', 'text-end fw-semibold', showTime(r)),
           el('td', 'text-end', showAvg(P.average(all.slice(i), 5))),
           el('td', 'text-end', showAvg(P.average(all.slice(i), 12))),
-          scrambleTd
+          scrambleTd,
+          delTd
         );
         return tr;
       })
@@ -415,6 +548,7 @@
     renderControls();
     const full = view.set === 'full';
     I.set($('statsTableTitle'), full ? 'stats.solves' : 'stats.byCase');
+    if (!full) $('statsDeleteBar').hidden = true;
     if (full) {
       const all = fullLog(); // 読むたびに別のオブジェクトになるので1回だけ読む
       const recs = all.filter((r) => r.at >= from());
