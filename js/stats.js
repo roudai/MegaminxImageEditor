@@ -381,6 +381,7 @@
   // 個別：各行の × で1件を削除。一括：行のチェックで選び（見出しのチェックで表示中をすべて）、「選択した記録を削除」→ 確認 → 削除。
   // どちらも削除のあとに「元に戻す」を出す（ブラウザの確認ダイアログは使わない）
   const selected = new Set(); // 選んだ記録の at
+  const openScrambles = new Set(); // スクランブルを開いている記録の at
   let confirmingDelete = false;
   let deleteMessage = null; // { text, undo }
 
@@ -441,6 +442,21 @@
       bar.append(text, yes, no);
       return;
     }
+    // スマホでは表の見出しを隠すので、「すべて選ぶ」をここに出す
+    const allLabel = el('label', 'stats-select-all-mobile');
+    const allBox = el('input', 'form-check-input');
+    allBox.type = 'checkbox';
+    allBox.checked = recs.length > 0 && recs.every((r) => selected.has(r.at));
+    allBox.indeterminate = !allBox.checked && recs.some((r) => selected.has(r.at));
+    allBox.addEventListener('change', () => {
+      recs.forEach((r) => (allBox.checked ? selected.add(r.at) : selected.delete(r.at)));
+      confirmingDelete = false;
+      render();
+    });
+    const allText = el('span');
+    I.set(allText, 'stats.selectAllShort');
+    allLabel.append(allBox, allText);
+    bar.append(allLabel);
     const del = el('button', 'btn btn-outline-danger btn-sm');
     del.type = 'button';
     I.set(del, 'stats.deleteSelected', { n: n });
@@ -469,6 +485,12 @@
     }
   }
 
+  // スマホの表示で「ao5 1:07.27」のように前に付ける見出し（css/stats.css の data-label）
+  const labeled = (td, label) => {
+    td.dataset.label = label;
+    return td;
+  };
+
   // all：通しの記録すべて（新しい順）。recs はその中の期間内のもの（同じ配列の要素）
   function renderFullTable(recs, all) {
     const head = el('tr');
@@ -486,24 +508,26 @@
     });
     checkTh.append(all1);
     head.append(checkTh);
+    // 列の幅：日時・タイム・ao5・ao12・削除は中身の幅だけにし（stats-shrink）、残りはスクランブルの列にまわす
     ['stats.col.date', 'stats.col.time', 'practice.ao5', 'practice.ao12', 'practice.scramble'].forEach((key, i) => {
-      const th = el('th', i >= 1 && i <= 3 ? 'text-end' : '');
+      const th = el('th', (i >= 1 && i <= 3 ? 'text-end ' : '') + (i <= 3 ? 'stats-shrink' : ''));
       I.set(th, key);
       head.append(th);
     });
-    head.append(el('th'));
+    head.append(el('th', 'stats-shrink'));
     $('statsHead').replaceChildren(head);
     $('statsEmpty').hidden = recs.length > 0;
     renderDeleteBar(recs);
     // その時点の平均は期間に関係なく、それまでの記録から出す
+    // スクランブルは「見る」で、その行のすぐ下に表の幅いっぱいの行として開く（表の列の幅を崩さないように）
     $('statsBody').replaceChildren(
-      ...recs.map((r) => {
+      ...recs.flatMap((r) => {
         const i = all.indexOf(r);
         const d = new Date(r.at);
         const date = `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
         const tr = el('tr');
         tr.classList.toggle('table-active', selected.has(r.at));
-        const checkTd = el('td', 'stats-check');
+        const checkTd = el('td', 'stats-check cell-check');
         const check = el('input', 'form-check-input');
         check.type = 'checkbox';
         check.checked = selected.has(r.at);
@@ -515,16 +539,20 @@
           render();
         });
         checkTd.append(check);
-        const details = el('details', 'stats-scramble');
-        const summary = el('summary');
-        I.set(summary, 'stats.show');
-        const scrambleText = el('div', 'stats-scramble-text');
-        window.WcaScramble.render(scrambleText, window.WcaScramble.textOf(r));
-        details.append(summary, scrambleText);
-        const scrambleTd = el('td');
-        scrambleTd.append(details);
+        const open = openScrambles.has(r.at);
+        const toggle = el('button', 'stats-scramble-toggle');
+        toggle.type = 'button';
+        toggle.setAttribute('aria-expanded', String(open));
+        I.set(toggle, open ? 'stats.hide' : 'stats.show');
+        toggle.addEventListener('click', () => {
+          if (openScrambles.has(r.at)) openScrambles.delete(r.at);
+          else openScrambles.add(r.at);
+          render();
+        });
+        const scrambleTd = el('td', 'cell-toggle');
+        scrambleTd.append(toggle);
         // 個別の削除（すぐに削除し、元に戻すを出す）
-        const delTd = el('td', 'text-end');
+        const delTd = el('td', 'text-end stats-shrink cell-del');
         const del = el('button', 'stats-row-delete');
         del.type = 'button';
         del.textContent = '×';
@@ -534,14 +562,25 @@
         delTd.append(del);
         tr.append(
           checkTd,
-          el('td', 'text-muted', date),
-          el('td', 'text-end fw-semibold', showTime(r)),
-          el('td', 'text-end', showAvg(P.average(all.slice(i), 5))),
-          el('td', 'text-end', showAvg(P.average(all.slice(i), 12))),
+          el('td', 'text-muted stats-shrink cell-date', date),
+          el('td', 'text-end fw-semibold stats-shrink cell-time', showTime(r)),
+          labeled(el('td', 'text-end stats-shrink cell-avg', showAvg(P.average(all.slice(i), 5))), 'ao5'),
+          labeled(el('td', 'text-end stats-shrink cell-avg', showAvg(P.average(all.slice(i), 12))), 'ao12'),
           scrambleTd,
           delTd
         );
-        return tr;
+        if (!open) return [tr];
+        const detail = el('tr', 'stats-scramble-row');
+        const cell = el('td');
+        cell.colSpan = 7;
+        // 包む要素の幅を 0（最小で行の幅）にして、スクランブルの長さが表の列の幅に影響しないようにする
+        const wrap = el('div', 'stats-scramble-wrap');
+        const scrambleText = el('div', 'stats-scramble-text');
+        window.WcaScramble.render(scrambleText, window.WcaScramble.textOf(r));
+        wrap.append(scrambleText);
+        cell.append(wrap);
+        detail.append(cell);
+        return [tr, detail];
       })
     );
   }
@@ -551,6 +590,7 @@
     const full = view.set === 'full';
     I.set($('statsTableTitle'), full ? 'stats.solves' : 'stats.byCase');
     if (!full) $('statsDeleteBar').hidden = true;
+    $('statsTable').classList.toggle('stats-full-table', full); // スマホでは通しの一覧を2段のカード風にする
     if (full) {
       const all = fullLog(); // 読むたびに別のオブジェクトになるので1回だけ読む
       const recs = all.filter((r) => r.at >= from());
