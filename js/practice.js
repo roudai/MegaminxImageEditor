@@ -1,6 +1,7 @@
 // 練習ページ（practice.html）：スクランブルを出し、手元のパズルで解くタイムを測って覚えた度を自動で変える。
 // 仕様: reference/PRACTICE_SPEC.md
-//   - 出題：選んだ種類（PLL / OLL）・範囲（OLL の No Dot / Dot / All）・対象（覚えた度）に当てはまるケースからランダム
+//   - 出題：選んだ種類（PLL / OLL）・範囲（OLL の No Dot / Dot / All）・グループ（選んでいなければすべて）・
+//     対象（覚えた度）に当てはまるケースからランダム
 //     （直前と同じケースは避ける）、そのケースのスクランブル（js/<pll|oll>-scrambles.js）からランダムに選び、
 //     前後にランダムな AUF を足す（progress.js の wrapAuf）。
 //     ケースの名前と画像は解き終わるまで出さない
@@ -9,7 +10,7 @@
 //   - ヒント：ケースの名前と解く手順の最初の3手を出す（もう一度押すと消す）。ヒントを見た問題は目安以内でも練習中にし、タイムを最近の記録に入れない
 //   - 判定（progress.js の judge）：しきい値以内 → 習得済み、超えた・「解けなかった」→ 練習中。「スキップ」は記録しない。
 //     結果の「取り消す」で直前の判定とタイムを戻す
-//   - 設定（種類・範囲・対象・しきい値）と各ケースの最近のタイム（最大10件）は store.js の 'practice' に保存
+//   - 設定（種類・範囲・グループ・対象・しきい値）と各ケースの最近のタイム（最大10件）は store.js の 'practice' に保存
 //     （ログイン中はクラウドにも）。URL ?set=oll&scope=nd&filter=new で初期値を指定できる
 (function () {
   'use strict';
@@ -63,7 +64,18 @@
 
   const scopeOf = (set) => (set === 'oll' ? prefs.scope : 'all');
   const inScope = (set) => DATA[set].filter(SCOPES[scopeOf(set)]);
-  const pool = () => inScope(prefs.set).filter((c) => prefs.filter === 'all' || P.statusOf(prefs.set, c.name) === prefs.filter);
+  // グループの絞り込み：prefs.groups[set] に選んだグループ（1つも選んでいなければすべて）
+  const NOTES = window.CASE_GROUP_NOTES || {};
+  const chosenGroups = (set) => {
+    const list = prefs.groups && Array.isArray(prefs.groups[set]) ? prefs.groups[set] : [];
+    return list.length ? new Set(list) : null;
+  };
+  const inSelection = (set) => {
+    const chosen = chosenGroups(set);
+    return inScope(set).filter((c) => !chosen || chosen.has(c.group));
+  };
+  const pool = () => inSelection(prefs.set).filter((c) => prefs.filter === 'all' || P.statusOf(prefs.set, c.name) === prefs.filter);
+  let groupsOpen = false; // グループを選ぶ欄を開いているか
 
   // ---- 設定の表示 ----
   function segment(items, current, onPick) {
@@ -94,9 +106,10 @@
   }
 
   function renderSettings() {
-    const box = $('practiceSettings');
-    box.replaceChildren();
-    box.append(
+    // 種類と範囲は見出しの横に置く（設定の行を1行に収めるため）
+    const setBox = $('practiceSetBox');
+    setBox.replaceChildren();
+    setBox.append(
       segment(
         [
           { value: 'pll', text: 'PLL' },
@@ -107,7 +120,7 @@
       )
     );
     if (prefs.set === 'oll') {
-      box.append(
+      setBox.append(
         segment(
           [
             { value: 'nd', key: 'list.scopeNd', count: DATA.oll.filter(SCOPES.nd).length },
@@ -119,7 +132,10 @@
         )
       );
     }
-    const cases = inScope(prefs.set);
+    const box = $('practiceSettings');
+    box.replaceChildren();
+    box.append(field('practice.groups', groupSummary()));
+    const cases = inSelection(prefs.set);
     const count = (f) => (f === 'all' ? cases.length : cases.filter((c) => P.statusOf(prefs.set, c.name) === f).length);
     box.append(
       field(
@@ -131,8 +147,9 @@
         )
       )
     );
-    const thresholds = THRESHOLDS.includes(prefs.threshold) ? THRESHOLDS : THRESHOLDS.concat(prefs.threshold).sort((a, b) => a - b);
-    const custom = el('input', 'form-control form-control-sm practice-seconds');
+    // 目安：よく使う秒数のボタンと、任意の秒数の入力欄（任意の秒数はボタンには足さず、入力欄を強調する）
+    const thresholds = THRESHOLDS;
+    const custom = el('input', 'form-control form-control-sm practice-seconds' + (THRESHOLDS.includes(prefs.threshold) ? '' : ' active'));
     custom.type = 'number';
     custom.min = '1';
     custom.max = '120';
@@ -154,6 +171,69 @@
       custom
     );
     box.append(field('practice.threshold', thresholdBox));
+    if (groupsOpen) box.append(groupPicker());
+  }
+
+  // 選んでいるグループの要約（押すとグループを選ぶ欄を開く・閉じる）
+  function groupSummary() {
+    const chosen = chosenGroups(prefs.set);
+    const button = el('button', 'practice-groups-toggle');
+    button.type = 'button';
+    button.setAttribute('aria-expanded', String(groupsOpen));
+    const label = el('span');
+    if (!chosen) I.set(label, 'practice.groupsAll');
+    else {
+      const names = [...chosen];
+      label.textContent = names.length <= 4 ? names.join(', ') : `${names.slice(0, 4).join(', ')} … (${names.length})`;
+    }
+    button.append(label, el('span', 'practice-groups-caret', groupsOpen ? '▴' : '▾'));
+    button.addEventListener('click', () => {
+      groupsOpen = !groupsOpen;
+      renderSettings();
+    });
+    return button;
+  }
+
+  // グループを選ぶ欄：押したグループだけを出題する（1つも選んでいなければすべて）
+  function groupPicker() {
+    const set = prefs.set;
+    const chosen = chosenGroups(set) || new Set();
+    const scoped = inScope(set);
+    const groups = scoped.map((c) => c.group).filter((g, i, all) => all.indexOf(g) === i);
+    const box = el('div', 'practice-groups');
+    const chips = el('div', 'practice-group-chips');
+    groups.forEach((g) => {
+      const b = el('button', 'practice-group-chip' + (chosen.has(g) ? ' active' : ''));
+      b.type = 'button';
+      b.textContent = g;
+      const note = (NOTES[set] || {})[g];
+      const n = scoped.filter((c) => c.group === g).length;
+      b.title = note ? `${g} (${note}) · ${n}` : `${g} · ${n}`;
+      b.setAttribute('aria-pressed', String(chosen.has(g)));
+      b.addEventListener('click', () => {
+        const next = new Set(chosen);
+        if (next.has(g)) next.delete(g);
+        else next.add(g);
+        setGroups(set, groups.filter((x) => next.has(x))); // データの並び順で保存する
+      });
+      chips.append(b);
+    });
+    const help = el('div', 'practice-groups-help');
+    I.set(help, 'practice.groupsHelp');
+    const clear = el('button', 'btn btn-link btn-sm practice-groups-clear');
+    clear.type = 'button';
+    I.set(clear, 'practice.groupsClear');
+    clear.disabled = !chosen.size;
+    clear.addEventListener('click', () => setGroups(set, []));
+    const foot = el('div', 'd-flex align-items-center gap-2 mt-1');
+    foot.append(help, clear);
+    box.append(chips, foot);
+    return box;
+  }
+
+  function setGroups(set, list) {
+    const groups = Object.assign({}, prefs.groups, { [set]: list });
+    changeSettings({ groups: groups });
   }
 
   // 設定を変えたら保存し、（しきい値以外なら）次の問題を出し直す

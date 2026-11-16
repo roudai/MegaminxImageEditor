@@ -8,9 +8,9 @@
 .practice-settings {
   display: flex;
   flex-wrap: wrap;
-  gap: .75rem 1.5rem;
+  gap: .75rem 1.25rem;
   align-items: center;
-  padding: .75rem 1rem;
+  padding: .65rem 1rem;
   border: 1px solid #e9ecef;
   border-radius: .75rem;
   background: #fbfbfc;
@@ -60,7 +60,75 @@
   font-variant-numeric: tabular-nums;
 }
 .practice-seconds {
-  width: 4.5rem;
+  width: 3.75rem;
+}
+.practice-seconds.active {
+  border-color: #212529;
+  font-weight: 600;
+}
+
+/* グループの絞り込み */
+.practice-groups-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  max-width: 14rem;
+  padding: .2rem .7rem;
+  border: 1px solid #dee2e6;
+  border-radius: 50rem;
+  background: #fff;
+  color: #212529;
+  font-size: .82rem;
+}
+.practice-groups-toggle > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.practice-groups-toggle[aria-expanded="true"] {
+  border-color: #adb5bd;
+}
+.practice-groups-caret {
+  color: #6c757d;
+  font-size: .7rem;
+}
+.practice-groups {
+  flex-basis: 100%;
+  padding-top: .5rem;
+  border-top: 1px dashed #e3e6ea;
+}
+.practice-group-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .3rem;
+}
+.practice-group-chip {
+  min-width: 2.2rem;
+  padding: .15rem .5rem;
+  border: 1px solid #dee2e6;
+  border-radius: .45rem;
+  background: #fff;
+  color: #495057;
+  font-size: .8rem;
+  font-variant-numeric: tabular-nums;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+.practice-group-chip:hover {
+  border-color: #adb5bd;
+}
+.practice-group-chip.active {
+  border-color: #0d6efd;
+  background: #0d6efd;
+  color: #fff;
+}
+.practice-groups-help {
+  color: #6c757d;
+  font-size: .75rem;
+}
+.practice-groups-clear {
+  padding: 0;
+  font-size: .75rem;
+  text-decoration: none;
 }
 
 /* ---- 出題とタイマー ---- */
