@@ -1,5 +1,5 @@
 // pll/algs_info.json から js/pll-data.js を生成する。
-// 実行: node tools/build-pll-data.js
+// 実行: node tools/build-pll-data.js（練習用のスクランブル js/pll-scrambles.js も作る。tools/scrambles-lib.js）
 // 仕様: reference/PLL_SPEC.md
 //   - AUF は pll/algs_info.json の a・s に括弧付きで直接書く（このスクリプトは足さない）
 //       a: [前AUF] 手順              例: "(U') F' R' F R ..."（最後のAUF・持ち替え y は付けない）
@@ -17,8 +17,11 @@ const path = require('path');
 const ROOT = path.join(__dirname, '..');
 const SRC = path.join(ROOT, 'pll', 'algs_info.json');
 const OUT = path.join(ROOT, 'js', 'pll-data.js');
+const SCRAMBLES_SRC = path.join(ROOT, 'pll', 'scrambles.json');
+const SCRAMBLES_OUT = path.join(ROOT, 'js', 'pll-scrambles.js');
 
 const C = require('../js/case-check.js');
+const { buildScrambles } = require('./scrambles-lib.js');
 
 const convert = C.convert;
 
@@ -42,7 +45,8 @@ function check(a, s) {
 // 候補が複数あるときは s に付ける AUF が少ない → s の前に AUF を付けない を優先する。
 const suggest = (a, s) => C.fitSetup('pll', a, s);
 
-function build() {
+// 生成するファイルの中身 { data: js/pll-data.js, scrambles: js/pll-scrambles.js }
+function buildAll() {
   const src = JSON.parse(fs.readFileSync(SRC, 'utf8'));
   const errors = [];
   const cases = Object.values(src).map((c) => {
@@ -72,7 +76,7 @@ function build() {
   if (errors.length) throw new Error('pll/algs_info.json に問題があります:\n  ' + errors.join('\n  '));
 
   const lines = cases.map((c) => '  ' + JSON.stringify(c) + ',');
-  return [
+  const data = [
     '// 自動生成ファイル。手で編集しないこと。',
     '// 元データ: pll/algs_info.json / 生成: node tools/build-pll-data.js',
     '(function (root, data) {',
@@ -83,15 +87,21 @@ function build() {
     ']);',
     '',
   ].join('\n');
+  return { data: data, scrambles: buildScrambles('pll', SRC, SCRAMBLES_SRC, src, cases) };
 }
 
-module.exports = { build, check, suggest, OUT };
+const build = () => buildAll().data;
+const buildScrambleFile = () => buildAll().scrambles;
+
+module.exports = { build, buildScrambleFile, check, suggest, OUT, SCRAMBLES_OUT };
 
 if (require.main === module) {
   try {
-    const text = build();
-    fs.writeFileSync(OUT, text);
+    const out = buildAll();
+    fs.writeFileSync(OUT, out.data);
     console.log('wrote ' + path.relative(ROOT, OUT));
+    fs.writeFileSync(SCRAMBLES_OUT, out.scrambles);
+    console.log('wrote ' + path.relative(ROOT, SCRAMBLES_OUT));
   } catch (e) {
     console.error(e.message);
     process.exit(1);

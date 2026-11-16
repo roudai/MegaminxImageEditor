@@ -1,5 +1,5 @@
 // oll/algs_info.json から js/oll-data.js を生成する。
-// 実行: node tools/build-oll-data.js
+// 実行: node tools/build-oll-data.js（練習用のスクランブル js/oll-scrambles.js も作る。tools/scrambles-lib.js）
 // 仕様: reference/OLL_SPEC.md
 //   - 形式は pll/algs_info.json と同じ（a・s は手順1本の文字列。AUF は括弧付きで直接書く）
 //       a: [前AUF] 手順              例: "(U2') Br' R' U' R F U Br R U' R' F'"（最後のAUF・持ち替え y は付けない）
@@ -19,8 +19,11 @@ const path = require('path');
 const ROOT = path.join(__dirname, '..');
 const SRC = path.join(ROOT, 'oll', 'algs_info.json');
 const OUT = path.join(ROOT, 'js', 'oll-data.js');
+const SCRAMBLES_SRC = path.join(ROOT, 'oll', 'scrambles.json');
+const SCRAMBLES_OUT = path.join(ROOT, 'js', 'oll-scrambles.js');
 
 const C = require('../js/case-check.js');
+const { buildScrambles } = require('./scrambles-lib.js');
 
 const convert = C.convert;
 
@@ -43,7 +46,8 @@ function check(a, s) {
 // a の最後に AUF や持ち替え（y）があれば外す。（OLL では s の前の AUF は上面の向きに影響しない）
 const suggest = (a, s) => C.fitSetup('oll', a, s);
 
-function build() {
+// 生成するファイルの中身 { data: js/oll-data.js, scrambles: js/oll-scrambles.js }
+function buildAll() {
   const src = JSON.parse(fs.readFileSync(SRC, 'utf8'));
   const errors = [];
   const cases = Object.values(src).map((c) => {
@@ -73,7 +77,7 @@ function build() {
   if (errors.length) throw new Error('oll/algs_info.json に問題があります:\n  ' + errors.join('\n  '));
 
   const lines = cases.map((c) => '  ' + JSON.stringify(c) + ',');
-  return [
+  const data = [
     '// 自動生成ファイル。手で編集しないこと。',
     '// 元データ: oll/algs_info.json / 生成: node tools/build-oll-data.js',
     '(function (root, data) {',
@@ -84,15 +88,21 @@ function build() {
     ']);',
     '',
   ].join('\n');
+  return { data: data, scrambles: buildScrambles('oll', SRC, SCRAMBLES_SRC, src, cases) };
 }
 
-module.exports = { build, check, suggest, OUT };
+const build = () => buildAll().data;
+const buildScrambleFile = () => buildAll().scrambles;
+
+module.exports = { build, buildScrambleFile, check, suggest, OUT, SCRAMBLES_OUT };
 
 if (require.main === module) {
   try {
-    const text = build();
-    fs.writeFileSync(OUT, text);
+    const out = buildAll();
+    fs.writeFileSync(OUT, out.data);
     console.log('wrote ' + path.relative(ROOT, OUT));
+    fs.writeFileSync(SCRAMBLES_OUT, out.scrambles);
+    console.log('wrote ' + path.relative(ROOT, SCRAMBLES_OUT));
   } catch (e) {
     console.error(e.message);
     process.exit(1);

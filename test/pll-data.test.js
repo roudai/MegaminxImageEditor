@@ -35,3 +35,12 @@ PLL.forEach((c) => {
     assert.ok(M.toImageColors(caseState).ucolor.every((x, _, arr) => x === arr[0]), '上面がU色だけでない');
   });
 });
+
+test('練習用のスクランブル js/pll-scrambles.js が最新で、全ケース分ある（各スクランブルがそのケースになるかは生成時に確認）', () => {
+  const { buildScrambleFile, SCRAMBLES_OUT } = require('../tools/build-pll-data.js');
+  assert.equal(fs.readFileSync(SCRAMBLES_OUT, 'utf8'), buildScrambleFile());
+  const scrambles = require('../js/pll-scrambles.js');
+  const data = require('../js/pll-data.js');
+  assert.deepEqual(Object.keys(scrambles), data.map((c) => c.name));
+  Object.values(scrambles).forEach((list) => assert.ok(list.length > 0));
+});

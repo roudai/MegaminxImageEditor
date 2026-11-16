@@ -48,3 +48,12 @@ OLL.forEach((c) => {
     assert.equal(pattern(M.applyAlg(c.alg, { inverse: true, cancelRotation: true })), pattern(M.applyAlg(c.setup)));
   });
 });
+
+test('練習用のスクランブル js/oll-scrambles.js が最新で、全ケース分ある（各スクランブルがそのケースになるかは生成時に確認）', () => {
+  const { buildScrambleFile, SCRAMBLES_OUT } = require('../tools/build-oll-data.js');
+  assert.equal(fs.readFileSync(SCRAMBLES_OUT, 'utf8'), buildScrambleFile());
+  const scrambles = require('../js/oll-scrambles.js');
+  const data = require('../js/oll-data.js');
+  assert.deepEqual(Object.keys(scrambles), data.map((c) => c.name));
+  Object.values(scrambles).forEach((list) => assert.ok(list.length > 0));
+});
