@@ -44,3 +44,11 @@ test('練習用のスクランブル js/pll-scrambles.js が最新で、全ケ�
   assert.deepEqual(Object.keys(scrambles), data.map((c) => c.name));
   Object.values(scrambles).forEach((list) => assert.ok(list.length > 0));
 });
+
+test('覚える順番（pll/learn_order.json）は全151ケースをちょうど1回ずつ含む', () => {
+  const order = require('../pll/learn_order.json');
+  const names = Object.values(SRC).map((c) => c.name);
+  assert.equal(order.length, names.length);
+  assert.equal(new Set(order).size, order.length, '重複がある');
+  assert.deepEqual([...order].sort(), [...names].sort());
+});
