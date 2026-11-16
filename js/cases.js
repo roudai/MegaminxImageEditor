@@ -8,6 +8,8 @@
 //   - ケースをクリックすると、そのケースを選んだ状態でエディタ（index.html?pll=… / ?oll=…）を開く
 //   - 覚えた度：各カード右上のバッジをタップで 未着手 → 練習中 → 覚えた と切り替え、localStorage に保存する。
 //     上部に進み具合（積み上げバー・件数）と絞り込みチップ、グループ見出しに「覚えた数 / 全体」を出す
+//   - PLL は「グループ順 / 覚える順」を切り替えられる。覚える順は pll/learn_order.json の段階（27）ごとの見出しで、
+//     段階の中も覚える順（区切りは case-sections.js。選んだ並びは 'list-filter' の pllOrder に保存し、練習ページと共通）
 //   - OLL は No Dot（algset ND、1〜37）と Dot（algset D、1C・38〜53）を切り替えて表示する（All も選べる）。
 //     件数・進捗バー・絞り込み・一括ダウンロードは選んだ範囲だけで数える（覚えた度の保存はケースごとで共通）
 //   - エディタで保存した自分の手順があれば、そのケースはその手順（と画像）で表示し、名前の横に「custom」を付ける
@@ -141,6 +143,12 @@
   const inScope = (c) => scope.test(c);
   const scoped = () => DATA.filter(inScope);
 
+  // ---- 並び（グループ順 / 覚える順）----
+  const CS = window.CaseSections;
+  const HAS_STAGES = CS.hasStages(DATA);
+  let byStage = false;
+  let sections = []; // 今の並びの区切り（CaseSections.list）
+
   // ---- 進み具合・絞り込み ----
   let filter = 'all';
   const counts = (list) => {
@@ -174,6 +182,31 @@
         sw.append(b);
       });
       box.append(sw);
+    }
+    if (HAS_STAGES) {
+      const sw = el('div', 'scope-switch mb-2');
+      sw.setAttribute('role', 'group');
+      I.set(sw, 'list.orderAria', null, 'aria-label');
+      [
+        { value: false, label: 'list.orderGroup', title: 'list.orderGroupTitle' },
+        { value: true, label: 'list.orderLearn', title: 'list.orderLearnTitle' },
+      ].forEach((o) => {
+        const b = el('button', 'scope-option');
+        b.type = 'button';
+        b.dataset.order = String(o.value);
+        I.set(b, o.label);
+        I.set(b, o.title, null, 'title');
+        b.addEventListener('click', () => {
+          if (byStage === o.value) return;
+          byStage = o.value;
+          writeJSON(FILTER_KEY, Object.assign(readJSON(FILTER_KEY), { [SET + 'Order']: byStage ? 'learn' : 'group' }));
+          buildSections();
+          updateSummary();
+          applyFilter();
+        });
+        sw.append(b);
+      });
+      box.append(' ', sw);
     }
     const bar = el('div', 'progress-stacked mb-1');
     I.set(bar, 'list.progressAria', null, 'aria-label');
@@ -228,13 +261,13 @@
     document.querySelectorAll('#progressBox [data-filter]').forEach((b) => {
       b.querySelector('.chip-count').textContent = n[b.dataset.filter];
     });
-    groups().forEach((g) => {
-      const list = DATA.filter((c) => c.group === g);
+    sections.forEach((s) => {
+      const list = s.cases;
       const learned = list.filter((c) => statusOf(c) === 'learned').length;
-      const label = document.querySelector(`#group-${CSS.escape(g)} .group-count`);
+      const label = document.querySelector(`#group-${CSS.escape(s.key)} .group-count`);
       label.textContent = `${learned}/${list.length}`;
       label.classList.toggle('complete', learned === list.length);
-      document.querySelector(`#groupNav [data-group="${CSS.escape(g)}"]`).classList.toggle('group-nav-complete', learned === list.length);
+      document.querySelector(`#groupNav [data-group="${CSS.escape(s.key)}"]`).classList.toggle('group-nav-complete', learned === list.length);
     });
   }
 
@@ -242,6 +275,11 @@
   function applyFilter() {
     document.querySelectorAll('#progressBox [data-scope]').forEach((b) => {
       const on = b.dataset.scope === scope.key;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-pressed', String(on));
+    });
+    document.querySelectorAll('#progressBox [data-order]').forEach((b) => {
+      const on = b.dataset.order === String(byStage);
       b.classList.toggle('active', on);
       b.setAttribute('aria-pressed', String(on));
     });
@@ -285,34 +323,48 @@
   DATA.forEach((c) => {
     BY_NAME[c.name] = c;
   });
-  const groups = () => DATA.map((c) => c.group).filter((g, i, all) => all.indexOf(g) === i);
+  // カードは1回だけ作り、並びを変えたら見出しの下に入れ直す（画像を描き直さない）
+  const CARDS = {};
 
-  function render() {
-    const settings = savedSettings();
+  // 見出し（グループ：「A (3 corner CP)」、段階：「2. A1–2」）
+  const sectionTitle = (s) => (s.stage ? `${s.stage}. ${s.label}` : groupLabel(s.key));
 
-    // グループへのジャンプ
+  // 今の並びで、ジャンプのボタンと見出しごとのカードを作り直す
+  function buildSections() {
+    sections = CS.list(DATA, byStage);
     const nav = $('groupNav');
-    groups().forEach((g) => {
-      const a = el('a', 'btn btn-outline-secondary btn-sm me-1 mb-1', g);
-      a.dataset.group = g;
-      a.href = '#group-' + g;
-      a.title = groupLabel(g);
+    nav.replaceChildren();
+    sections.forEach((s) => {
+      const a = el('a', 'btn btn-outline-secondary btn-sm me-1 mb-1', s.label);
+      a.dataset.group = s.key;
+      a.href = '#group-' + s.key;
+      a.title = sectionTitle(s);
       nav.append(a);
     });
 
     const list = $('caseList');
-    groups().forEach((g) => {
+    list.querySelectorAll('section').forEach((section) => section.remove());
+    const empty = $('emptyMessage');
+    sections.forEach((s) => {
       const section = el('section', 'mb-4');
-      section.id = 'group-' + g;
-      section.dataset.group = g;
-      const heading = el('h2', 'h5 border-bottom pb-1 d-flex justify-content-between align-items-baseline', groupLabel(g));
+      section.id = 'group-' + s.key;
+      section.dataset.group = s.key;
+      const heading = el('h2', 'h5 border-bottom pb-1 d-flex justify-content-between align-items-baseline', sectionTitle(s));
       heading.append(el('span', 'group-count'));
       section.append(heading);
       const row = el('div', 'row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-2');
-      DATA.filter((c) => c.group === g).forEach((c) => row.append(caseCard(c, settings)));
+      s.cases.forEach((c) => row.append(CARDS[c.name]));
       section.append(row);
-      list.append(section);
+      list.insertBefore(section, empty);
     });
+  }
+
+  function render() {
+    const settings = savedSettings();
+    DATA.forEach((c) => {
+      CARDS[c.name] = caseCard(c, settings);
+    });
+    const list = $('caseList');
     const empty = el('p', 'text-muted text-center py-5');
     I.set(empty, 'list.empty');
     empty.id = 'emptyMessage';
@@ -322,6 +374,8 @@
     const savedFilter = readJSON(FILTER_KEY);
     scope = SCOPES.find((sc) => sc.key === savedFilter[SET + 'Scope']) || SCOPES[0];
     filter = ['all'].concat(STATUSES).includes(savedFilter[SET]) ? savedFilter[SET] : 'all';
+    byStage = HAS_STAGES && savedFilter[SET + 'Order'] === 'learn';
+    buildSections();
     buildSummary();
     updateSummary();
     applyFilter();

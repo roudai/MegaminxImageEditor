@@ -5,6 +5,9 @@
 //     （直前と同じケースは避ける）、そのケースのスクランブル（js/<pll|oll>-scrambles.js）からランダムに選び、
 //     前後にランダムな AUF を足す（progress.js の wrapAuf）。
 //     ケースの名前と画像は解き終わるまで出さない
+//   - PLL は、グループを選ぶ欄で「グループ順 / 覚える順」を切り替えられる。覚える順では A〜Z の代わりに
+//     覚える順番の段階（F1、A1–2、… の 27。case-sections.js）を選んで出題する。並びは 'list-filter' の pllOrder（一覧ページと共通）、
+//     選んだ段階は prefs.groups['pll-stage']（段階の番号）に保存する
 //   - タイマー：スペースを押す（画面ではタイマーをタップする）とスタート。何かのキー（タップ）でストップ。
 //     計測中の Esc は中止（記録しない）。計測中に「スキップ」「解けなかった」を押してもタイムは記録しない。
 //     押しっぱなしの繰り返しは無視する
@@ -80,13 +83,26 @@
   const inScope = (set) => DATA[set].filter(SCOPES[scopeOf(set)]);
   // グループの絞り込み：prefs.groups[set] に選んだグループ（1つも選んでいなければすべて）
   const NOTES = window.CASE_GROUP_NOTES || {};
+  // 覚える順（段階で選ぶ）か。並びは一覧ページと共通（'list-filter' の <set>Order）
+  const CS = window.CaseSections;
+  const byStage = (set) => CS.hasStages(DATA[set]) && ((S.get('list-filter') || {})[set + 'Order'] === 'learn');
+  function setOrder(set, learn) {
+    const f = S.get('list-filter');
+    S.set('list-filter', Object.assign({}, f && typeof f === 'object' ? f : {}, { [set + 'Order']: learn ? 'learn' : 'group' }));
+    renderSettings();
+    next();
+  }
+  // 選んでいるグループ（覚える順なら段階の key "s9" など）。保存は prefs.groups[set]（段階は prefs.groups[set + '-stage'] に番号で）
+  const groupsKey = (set) => (byStage(set) ? set + '-stage' : set);
   const chosenGroups = (set) => {
-    const list = prefs.groups && Array.isArray(prefs.groups[set]) ? prefs.groups[set] : [];
-    return list.length ? new Set(list) : null;
+    const list = prefs.groups && Array.isArray(prefs.groups[groupsKey(set)]) ? prefs.groups[groupsKey(set)] : [];
+    if (!list.length) return null;
+    return new Set(byStage(set) ? list.map((n) => 's' + n) : list);
   };
   const inSelection = (set) => {
     const chosen = chosenGroups(set);
-    return inScope(set).filter((c) => !chosen || chosen.has(c.group));
+    const stage = byStage(set);
+    return inScope(set).filter((c) => !chosen || chosen.has(CS.keyOf(c, stage)));
   };
   const pool = () => inSelection(prefs.set).filter((c) => prefs.filter === 'all' || P.statusOf(prefs.set, c.name) === prefs.filter);
   let groupsOpen = false; // グループを選ぶ欄を開いているか
@@ -177,7 +193,7 @@
       );
       return;
     }
-    box.append(field('practice.groups', groupSummary()));
+    box.append(field(byStage(prefs.set) ? 'practice.stages' : 'practice.groups', groupSummary()));
     const cases = inSelection(prefs.set);
     const count = (f) => (f === 'all' ? cases.length : cases.filter((c) => P.statusOf(prefs.set, c.name) === f).length);
     box.append(
@@ -224,9 +240,13 @@
     button.type = 'button';
     button.setAttribute('aria-expanded', String(groupsOpen));
     const label = el('span');
-    if (!chosen) I.set(label, 'practice.groupsAll');
+    if (!chosen) I.set(label, byStage(prefs.set) ? 'practice.stagesAll' : 'practice.groupsAll');
     else {
-      const names = [...chosen];
+      const labels = {};
+      CS.list(DATA[prefs.set], byStage(prefs.set)).forEach((s) => {
+        labels[s.key] = s.label;
+      });
+      const names = [...chosen].map((k) => labels[k] || k);
       label.textContent = names.length <= 4 ? names.join(', ') : `${names.slice(0, 4).join(', ')} … (${names.length})`;
     }
     button.append(label, el('span', 'practice-groups-caret', groupsOpen ? '▴' : '▾'));
@@ -240,29 +260,44 @@
   // グループを選ぶ欄：押したグループだけを出題する（1つも選んでいなければすべて）
   function groupPicker() {
     const set = prefs.set;
+    const stage = byStage(set);
     const chosen = chosenGroups(set) || new Set();
-    const scoped = inScope(set);
-    const groups = scoped.map((c) => c.group).filter((g, i, all) => all.indexOf(g) === i);
+    const sections = CS.list(inScope(set), stage);
     const box = el('div', 'practice-groups');
+    // PLL：グループ順 / 覚える順（一覧ページと共通）
+    if (CS.hasStages(DATA[set])) {
+      const order = segment(
+        [
+          { value: false, key: 'list.orderGroup' },
+          { value: true, key: 'list.orderLearn' },
+        ],
+        stage,
+        (v) => setOrder(set, v)
+      );
+      order.classList.add('mb-2');
+      box.append(order);
+    }
     const chips = el('div', 'practice-group-chips');
-    groups.forEach((g) => {
-      const b = el('button', 'practice-group-chip' + (chosen.has(g) ? ' active' : ''));
+    sections.forEach((s) => {
+      const b = el('button', 'practice-group-chip' + (chosen.has(s.key) ? ' active' : ''));
       b.type = 'button';
-      b.textContent = g;
-      const note = (NOTES[set] || {})[g];
-      const n = scoped.filter((c) => c.group === g).length;
-      b.title = note ? `${g} (${note}) · ${n}` : `${g} · ${n}`;
-      b.setAttribute('aria-pressed', String(chosen.has(g)));
+      b.textContent = s.label;
+      const note = stage ? I.t('practice.stageTitle', { n: s.stage }) : (NOTES[set] || {})[s.key];
+      const n = s.cases.length;
+      b.title = note ? `${s.label} (${note}) · ${n}` : `${s.label} · ${n}`;
+      b.setAttribute('aria-pressed', String(chosen.has(s.key)));
       b.addEventListener('click', () => {
         const next = new Set(chosen);
-        if (next.has(g)) next.delete(g);
-        else next.add(g);
-        setGroups(set, groups.filter((x) => next.has(x))); // データの並び順で保存する
+        if (next.has(s.key)) next.delete(s.key);
+        else next.add(s.key);
+        // 並びの順で保存する（段階は番号で）
+        const picked = sections.filter((x) => next.has(x.key));
+        setGroups(set, stage ? picked.map((x) => x.stage) : picked.map((x) => x.key));
       });
       chips.append(b);
     });
     const help = el('div', 'practice-groups-help');
-    I.set(help, 'practice.groupsHelp');
+    I.set(help, stage ? 'practice.stagesHelp' : 'practice.groupsHelp');
     const clear = el('button', 'btn btn-link btn-sm practice-groups-clear');
     clear.type = 'button';
     I.set(clear, 'practice.groupsClear');
@@ -275,7 +310,7 @@
   }
 
   function setGroups(set, list) {
-    const groups = Object.assign({}, prefs.groups, { [set]: list });
+    const groups = Object.assign({}, prefs.groups, { [groupsKey(set)]: list });
     changeSettings({ groups: groups });
   }
 

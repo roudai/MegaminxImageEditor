@@ -6,6 +6,8 @@
 //       s: [AUF] setup [AUF]         例: "(U') R U R' ..."（a の前AUFを変えたら s の前後のAUFで合わせる）
 //   - 記法を読み替える（Br → BR, Bl → BL, Dfr → DR）
 //   - 確認処理は js/case-check.js（エディタの「自分の手順」と共通）
+//   - 覚える順番 pll/learn_order.json（段階ごとのケース名の配列）から、各ケースに
+//       stage（段階 1〜27）と order（覚える順の通し番号 1〜151）を付ける。全ケースがちょうど1回ずつ無ければエラー
 //   - 次を確認し、合わないケースがあれば直し方の候補を表示してエラーで止める
 //       a が s のケースを最後のAUFを除いて揃える（手順中の y による完成後の向きの違いは無視）
 //       a の最後にAUF・持ち替え（y）が無い
@@ -19,6 +21,7 @@ const SRC = path.join(ROOT, 'pll', 'algs_info.json');
 const OUT = path.join(ROOT, 'js', 'pll-data.js');
 const SCRAMBLES_SRC = path.join(ROOT, 'pll', 'scrambles.json');
 const SCRAMBLES_OUT = path.join(ROOT, 'js', 'pll-scrambles.js');
+const ORDER_SRC = path.join(ROOT, 'pll', 'learn_order.json');
 
 const C = require('../js/case-check.js');
 const { buildScrambles } = require('./scrambles-lib.js');
@@ -45,10 +48,27 @@ function check(a, s) {
 // 候補が複数あるときは s に付ける AUF が少ない → s の前に AUF を付けない を優先する。
 const suggest = (a, s) => C.fitSetup('pll', a, s);
 
+// 覚える順番：ケース名 → { stage, order }。全ケースをちょうど1回ずつ含まなければエラーを足す
+function learnOrder(names, errors) {
+  const stages = JSON.parse(fs.readFileSync(ORDER_SRC, 'utf8'));
+  const at = {};
+  let order = 0;
+  stages.forEach((list, i) =>
+    list.forEach((name) => {
+      if (at[name]) errors.push(`learn_order.json: ${name} が2回あります`);
+      else if (!names.includes(name)) errors.push(`learn_order.json: ${name} は algs_info.json にありません`);
+      at[name] = { stage: i + 1, order: ++order };
+    })
+  );
+  names.filter((n) => !at[n]).forEach((n) => errors.push(`learn_order.json: ${n} がありません`));
+  return at;
+}
+
 // 生成するファイルの中身 { data: js/pll-data.js, scrambles: js/pll-scrambles.js }
 function buildAll() {
   const src = JSON.parse(fs.readFileSync(SRC, 'utf8'));
   const errors = [];
+  const learn = learnOrder(Object.values(src).map((c) => c.name), errors);
   const cases = Object.values(src).map((c) => {
     if (typeof c.a !== 'string' || typeof c.s !== 'string') {
       errors.push(`${c.name}: a と s は手順1本の文字列にしてください`);
@@ -71,7 +91,8 @@ function buildAll() {
       );
       return null;
     }
-    return { name: c.name, group: c.group, alg: alg, setup: setup };
+    const at = learn[c.name] || {};
+    return { name: c.name, group: c.group, stage: at.stage, order: at.order, alg: alg, setup: setup };
   });
   if (errors.length) throw new Error('pll/algs_info.json に問題があります:\n  ' + errors.join('\n  '));
 

@@ -45,10 +45,16 @@ test('練習用のスクランブル js/pll-scrambles.js が最新で、全ケ�
   Object.values(scrambles).forEach((list) => assert.ok(list.length > 0));
 });
 
-test('覚える順番（pll/learn_order.json）は全151ケースをちょうど1回ずつ含む', () => {
-  const order = require('../pll/learn_order.json');
+test('覚える順番（pll/learn_order.json）は全151ケースをちょうど1回ずつ含み、pll-data.js の stage・order と合う', () => {
+  const stages = require('../pll/learn_order.json');
+  const order = stages.flat();
   const names = Object.values(SRC).map((c) => c.name);
+  assert.equal(stages.length, 27);
   assert.equal(order.length, names.length);
   assert.equal(new Set(order).size, order.length, '重複がある');
   assert.deepEqual([...order].sort(), [...names].sort());
+  PLL.forEach((c) => {
+    assert.equal(c.order, order.indexOf(c.name) + 1, c.name);
+    assert.ok(stages[c.stage - 1].includes(c.name), c.name);
+  });
 });
