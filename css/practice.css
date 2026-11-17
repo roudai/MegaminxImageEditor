@@ -194,9 +194,26 @@
 .practice-stage.running .practice-timer {
   color: #0d6efd;
 }
-.practice-stage.running .practice-hint,
-.practice-stage.running .practice-scramble {
+/* 計測中は操作の説明を隠す（スクランブルは計測中も出したまま） */
+.practice-stage.running .practice-hint {
   visibility: hidden;
+}
+/* PLL・OLL：解き終わったケース（例「PLL A1+」）。空でも高さを取っておき、出し入れでタイマー・ボタンが動かないようにする */
+.practice-timer-case {
+  height: 1.4em;
+  margin-top: 1rem; /* スクランブルから離し、下のタイマーに寄せる */
+  color: #6c757d;
+  font-size: .95rem;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* ケース名のすぐ下にタイマーを置く（通しはケース名を出さないので今までの間隔のまま） */
+body:not(.practice-full) .practice-timer-case + .practice-timer {
+  margin-top: 0;
+  padding-top: .15rem;
 }
 .practice-hint-text {
   min-height: 1.6em;
@@ -233,7 +250,8 @@
 .practice-full #hintButton,
 .practice-full #dnfButton,
 .practice-full #skipButton,
-.practice-full #practiceHintText {
+.practice-full #practiceHintText,
+.practice-full #timerCase {
   display: none;
 }
 .practice-full-scramble {

@@ -52,6 +52,8 @@
     <section id="practiceStage" class="practice-stage mt-3">
       <div class="practice-label" data-i18n="practice.scramble">Scramble</div>
       <div id="scramble" class="practice-scramble"></div>
+      <!-- PLL・OLL：解き終わったケース（次の計測が始まるまで、タイムと一緒に出す） -->
+      <div id="timerCase" class="practice-timer-case" aria-live="polite"></div>
       <button id="timer" type="button" class="practice-timer" aria-live="off">0.00</button>
       <div id="timerHint" class="practice-hint" data-i18n="practice.hint">Space to start, any key to stop (tap on phones)</div>
       <div class="d-flex justify-content-center gap-2 mt-2">
