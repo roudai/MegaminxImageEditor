@@ -6,14 +6,14 @@
 //       PLL: 保存した配色。OLL 配色のときは OLL を選ぶ前の配色、それも無いときは Standard
 //       OLL: 保存した U の色だけを残した OLL 配色（他の面は dimgray）
 //   - ケースをクリックすると、そのケースを選んだ状態でエディタ（./?pll=… / ?oll=…）を開く
-//   - 覚えた度：各カード右上のバッジをタップで 未着手 → 練習中 → 覚えた と切り替え、localStorage に保存する。
+//   - 習得状況：各カード右上のバッジをタップで 未着手 → 練習中 → 覚えた と切り替え、localStorage に保存する。
 //     上部に進み具合（積み上げバー・件数）と絞り込みチップ、グループ見出しに「覚えた数 / 全体」を出す
 //   - PLL は「グループ順 / 覚える順」を切り替えられる。覚える順は data/pll/learn_order.json の段階（27）ごとの見出しで、
 //     段階の中も覚える順（区切りは case-sections.js。選んだ並びは 'list-filter' の pllOrder に保存し、練習ページと共通）
 //   - 上のグループ（覚える順なら段階）のボタンは、押すとそのグループだけを表示する（複数選べる。もう一度押すと外す。
 //     1つも選んでいなければすべて。「選択を解除」で戻す）。選んだものは 'list-filter' の <set>Groups（覚える順は <set>Stages）に保存
 //   - OLL は No Dot（algset ND、1〜37）と Dot（algset D、1C・38〜53）を切り替えて表示する（All も選べる）。
-//     件数・進捗バー・絞り込み・一括ダウンロードは選んだ範囲だけで数える（覚えた度の保存はケースごとで共通）
+//     件数・進捗バー・絞り込み・一括ダウンロードは選んだ範囲だけで数える（習得状況の保存はケースごとで共通）
 //   - エディタで保存した自分の手順があれば、そのケースはその手順（と画像）で表示し、名前の横に「custom」を付ける
 //   - ZIP でダウンロード（Download ZIP）：全ケースを一覧と同じ配色で PNG にし、zip（megaminx-<pll|oll>.zip）にまとめる。
 //     画像サイズ・Body Color・背景はエディタで保存した設定（zip-store.js で無圧縮の zip を作る）
@@ -31,7 +31,7 @@
   const NOTES = (window.CASE_GROUP_NOTES || {})[SET] || {};
   const IMAGE_SIZE = 120; // 表示サイズ（px）。高解像度の画面では devicePixelRatio 倍で描く
 
-  const P = window.Progress; // 覚えた度・画像の色（progress.js。練習ページと共通）
+  const P = window.Progress; // 習得状況・画像の色（progress.js。練習ページと共通）
   // エディタで保存した設定から、画像の配色・線の色・背景・サイズを決める
   const savedSettings = () => P.displaySettings(SET);
 
@@ -46,7 +46,7 @@
   // solve case（alg の逆手順を適用、持ち替え y は打ち消す）の状態の画像の色
   const caseColors = (c, settings) => P.caseColors(c, settings.scheme);
 
-  // ---- 覚えた度 ----
+  // ---- 習得状況 ----
   // { pll: { 'A1+': 'learning', ... }, oll: { ... } }。未着手（new）は保存しない
   // 保存は store.js 経由（ログイン中はクラウドにも）
   const FILTER_KEY = 'list-filter';
@@ -60,7 +60,7 @@
   };
   const writeJSON = (name, value) => window.Store.set(name, value);
 
-  // 表示中は覚えた度を手元に持っておき（件数を数えるたびに読み直さないように）、変えるときは progress.js で保存する
+  // 表示中は習得状況を手元に持っておき（件数を数えるたびに読み直さないように）、変えるときは progress.js で保存する
   let progress = P.statuses(SET);
   const statusOf = (c) => (STATUSES.includes(progress[c.name]) ? progress[c.name] : 'new');
   function setStatus(c, status) {
@@ -275,7 +275,7 @@
   }
 
   // ---- すべて未習得に戻す ----
-  // 範囲（No Dot / Dot）・グループの選択に関係なく、この種類（PLL / OLL）のケースすべての覚えた度を消す。
+  // 範囲（No Dot / Dot）・グループの選択に関係なく、この種類（PLL / OLL）のケースすべての習得状況を消す。
   // 間違って押しても困らないよう、押したらまず確認を出し、戻したあとも「元に戻す」で戻せるようにする（ブラウザの確認ダイアログは使わない）
   let resetState = null; // null / { confirming: true } / { done: n, undo: 関数 } / { restored: n }
 
@@ -290,7 +290,7 @@
     const n = Object.keys(before).length;
     writeSet({});
     const undo = () => {
-      // 戻したあとに付けた覚えた度は残し、消したものだけを戻す
+      // 戻したあとに付けた習得状況は残し、消したものだけを戻す
       writeSet(Object.assign({}, before, P.statuses(SET)));
       resetState = { restored: n };
       refreshStatuses();
@@ -299,7 +299,7 @@
     refreshStatuses();
   }
 
-  // 全カードのバッジ・件数・絞り込みを今の覚えた度に合わせる
+  // 全カードのバッジ・件数・絞り込みを今の習得状況に合わせる
   function refreshStatuses() {
     document.querySelectorAll('#caseList .status-badge').forEach((b) => b.dispatchEvent(new Event('relabel')));
     updateSummary();

@@ -61,12 +61,12 @@ OLL  [Group ▼] [Case ▼] [‹ Prev][Next ›]
 - 画像は solve case の状態。配色は、エディタで保存した U の色だけを残した OLL 配色（他の面は dimgray）。Body Color も保存した設定
 - ケースをクリックすると、そのケースを選んだ状態でエディタ（`./?oll=<名前>`）を開く
 - ナビバー：エディタは `PLL List`・`OLL List`、一覧ページは `Editor` ともう一方の一覧へのリンク
-- 覚えた度の印・進み具合・絞り込みも PLL 一覧と同じ（`reference/PLL_SPEC.md`。保存は PLL と別）
+- 習得状況の印・進み具合・絞り込みも PLL 一覧と同じ（`reference/PLL_SPEC.md`。保存は PLL と別）
 - **No Dot / Dot の切り替え**：上部のセグメント型の切り替え（`No Dot 178` / `Dot 81` / `All 259`）で表示する範囲を選ぶ（既定は No Dot）
   - No Dot は `algset` が `ND` のケース（グループ 1〜37）、Dot は `D` のケース（`1C`・38〜53）
   - 件数・進捗バー・状態の絞り込み・グループのボタン・一括ダウンロードは、選んだ範囲だけを対象にする
     （ダウンロードのボタン名は `Download No Dot OLL (.zip)` などに変わり、ファイル名は `megaminx-oll-nd.zip` / `megaminx-oll-d.zip`。All は `megaminx-oll.zip`）
-  - 覚えた度の保存はケースごとなので、範囲を切り替えても印は共通。選んだ範囲は `megaminx-image-editor:list-filter` の `ollScope` に保存する
+  - 習得状況の保存はケースごとなので、範囲を切り替えても印は共通。選んだ範囲は `megaminx-image-editor:list-filter` の `ollScope` に保存する
   - そのため `js/oll-data.js` の各ケースに `algset` を含める
 
 ## 自分の手順

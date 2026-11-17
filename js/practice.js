@@ -1,7 +1,7 @@
-// 練習ページ（practice.html）：スクランブルを出し、手元のパズルで解くタイムを測って覚えた度を自動で変える。
+// 練習ページ（practice.html）：スクランブルを出し、手元のパズルで解くタイムを測って習得状況を自動で変える。
 // 仕様: reference/PRACTICE_SPEC.md
 //   - 出題：選んだ種類（PLL / OLL）・範囲（OLL の No Dot / Dot / All）・グループ（選んでいなければすべて）・
-//     対象（覚えた度）に当てはまるケースからランダム
+//     対象（習得状況）に当てはまるケースからランダム
 //     （直前と同じケースは避ける）、そのケースのスクランブル（js/<pll|oll>-scrambles.js）からランダムに選び、
 //     前後にランダムな AUF を足す（progress.js の wrapAuf）。
 //     ケースの名前と画像は解き終わるまで出さない
@@ -21,7 +21,7 @@
 //     &order=learn|group&groups=A,B（覚える順なら段階の番号 9,24。空ならすべて）で、一覧で選んだグループも引き継ぐ。?case=J3%2B なら最初の1問はそのケース
 //   - 通し（set: 'full'）：WCA 形式のスクランブル（wca-scramble.js）で通しで解く。15秒のインスペクション（オン・オフ）、
 //     +2 / DNF（インスペクションの超過で自動、結果からも変えられる）、ao5・ao12・ベスト（progress.js の average など）。
-//     記録は practice.full = { inspection, log: [{ at, sec, penalty, s }] }（s はスクランブルの短い形）。覚えた度は変えない。
+//     記録は practice.full = { inspection, log: [{ at, sec, penalty, s }] }（s はスクランブルの短い形）。習得状況は変えない。
 //     通しのタイマーは長押し（0.3 秒で準備完了）して離したときにスタートする
 (function () {
   'use strict';
