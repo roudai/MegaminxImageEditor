@@ -432,10 +432,24 @@
     clearShown();
   }
 
+  // 止めた直後に続けて押して、次の計測を始めてしまわないように、止めてから COOLDOWN_MS の間はスタートしない
+  // （その間はタイマーの数字を赤にする。ストップ・ボタンには関係しない）
+  const COOLDOWN_MS = 2000;
+  let cooldownUntil = 0;
+  let cooldownTimer = null;
+  const coolingDown = () => performance.now() < cooldownUntil;
+  function startCooldown() {
+    cooldownUntil = performance.now() + COOLDOWN_MS;
+    timerEl.classList.add('cooldown');
+    clearTimeout(cooldownTimer);
+    cooldownTimer = setTimeout(() => timerEl.classList.remove('cooldown'), COOLDOWN_MS);
+  }
+
   // スペース・タップ：止まっていればスタート、計測中ならストップ
   function press() {
     if (!current) return;
     if (state === 'running') stop();
+    else if (coolingDown()) return;
     else if (state === 'idle' && isFull() && fullPrefs().inspection) inspect();
     else start();
   }
@@ -462,6 +476,7 @@
       stop();
       return;
     }
+    if (state === 'idle' && coolingDown()) return;
     if (state === 'idle' && fullPrefs().inspection) {
       inspect();
       ignoreRelease = true;
@@ -527,6 +542,7 @@
 
   function stop() {
     ignoreClicksUntil = performance.now() + 400;
+    startCooldown();
     cancelAnimationFrame(frame);
     const sec = Math.round((performance.now() - startAt) / 10) / 100; // 0.01 秒単位
     timerEl.textContent = format(sec);
