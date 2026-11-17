@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ja" data-i18n-title-page="title.guide">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/favicon-192.png">
+  <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.9/dist/css/bootstrap.min.css" integrity="sha384-yEPZ7jP9S0QKiUQ0m3jjsO4ProIW7wvR9gXkI7JOGa2XVsw53Yke2bsdkBbjmmiX" crossorigin="anonymous">
+  <title>How to Use - Megaminx Image Editor 2.0</title>
+  <link rel="stylesheet" href="css/common.css">
+  <style>
+    .policy h2 {
+      font-size: 1.05rem;
+      margin-top: 1.75rem;
+    }
+    .policy p,
+    .policy li {
+      font-size: .925rem;
+      line-height: 1.75;
+    }
+  </style>
+</head>
+<body>
+  <div class="container pb-5">
+    <nav class="navbar bg-light site-nav">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="./">Megaminx Image Editor 2.0</a>
+        <!-- 右側：広い画面では 言語・アカウント・ページへのリンク・GitHub を1行に並べる。
+             スマホではアカウントとメニューのボタンだけを出し、言語とリンクはメニューの中に入れる（js/navbar.js） -->
+        <div class="nav-right">
+          <span id="accountBox"></span>
+          <button type="button" class="nav-toggle" id="navToggle" aria-controls="navMenu" aria-expanded="false" data-i18n-aria-label="nav.menu" aria-label="Menu">
+            <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M3 5.5h14M3 10h14M3 14.5h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+          <div class="nav-menu" id="navMenu">
+            <span id="langSwitch"></span>
+            <a href="./" class="nav-link-item" data-i18n="nav.editor">Editor</a>
+            <a href="pll" class="nav-link-item" data-i18n="nav.pllList">PLL List</a>
+            <a href="oll" class="nav-link-item" data-i18n="nav.ollList">OLL List</a>
+            <a href="practice" class="nav-link-item" data-i18n="nav.practice">Practice</a>
+            <a href="stats" class="nav-link-item" data-i18n="nav.stats">Stats</a>
+            <a href="https://github.com/roudai/MegaminxImageEditor" class="nav-link-item nav-github" aria-label="GitHub">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-github" viewBox="0 0 16 16">
+                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="d-flex justify-content-end text-muted small">presented by&nbsp;<a href="https://roudai.net" style="text-decoration: none">roudai.net</a></div>
+
+    <main class="policy mx-auto" style="max-width: 46rem">
+      <!-- 日本語 -->
+      <article lang="ja" data-lang-block="ja">
+        <h1 class="h4 mt-4">使い方</h1>
+        <p>Megaminx Image Editor は、メガミンクスの上面の画像を作り、PLL・OLL を覚えて練習するためのサイトです。</p>
+        <ul>
+          <li><a href="./">エディタ</a>：手順や色から画像を作る</li>
+          <li><a href="pll">PLL一覧</a>・<a href="oll">OLL一覧</a>：すべてのケースを見て、習得状況をつける</li>
+          <li><a href="practice">練習</a>：タイマーでケースを解く。通し（1回ぶんすべて）も練習できる</li>
+          <li><a href="stats">記録</a>：タイムの推移や、苦手なケースを見る</li>
+        </ul>
+
+        <h2>エディタ</h2>
+        <ul>
+          <li>「手順」の欄に回転記号を入れると、すぐに画像に反映されます。下のボタンでも記号を入れられます。</li>
+          <li>入れた手順の扱いは3つから選べます。「手順を回した状態」は揃った状態から手順を回したところ、「この手順で揃う状態」はその手順を回すと揃うところ、「色を直接指定」はステッカーの色を1枚ずつ選びます。</li>
+          <li>PLL・OLL の行でグループとケースを選ぶと、そのケースの手順が入ります。「‹ 前へ」「次へ ›」で順に見られます。</li>
+          <li>ケースを選んだまま手順を書き換えて「保存」すると、自分の手順として覚えておきます（「この手順で揃う状態」のときだけ）。一覧や練習のヒントでも、この手順を使います。「既定に戻す」で元の手順に戻ります。</li>
+          <li>配色プリセット・面の色・本体の色・背景・画像サイズを変えて、「ダウンロード」で PNG を保存します。</li>
+        </ul>
+
+        <h2>PLL一覧・OLL一覧</h2>
+        <ul>
+          <li>画像を押すと、そのケースをエディタで開きます。</li>
+          <li>右上の丸を押すたびに、未習得 → 練習中 → 習得済み と切り替わります。上のバーで進み具合がわかります。</li>
+          <li>習得状況やグループで絞り込めます。PLL は「覚える順」にすると、覚えるとよい順番に段階に分けて並びます。OLL は No Dot・Dot で分けて見られます。</li>
+          <li>「練習する」で、表示しているケースをそのまま練習できます。</li>
+          <li>「ZIP でダウンロード」で、すべてのケースの画像をまとめて保存できます（パソコンのみ）。</li>
+          <li>「すべて未習得に戻す」で習得状況をまとめて消せます。押すと確認が出て、戻したあとも「元に戻す」で取り消せます。</li>
+        </ul>
+
+        <h2>練習</h2>
+        <ul>
+          <li>PLL・OLL・通しから選びます。PLL・OLL は、対象（未習得・練習中・習得済み・すべて）とグループで出すケースを絞れます。</li>
+          <li>スクランブルの通りに回してから、スペースキー（スマホはタイマーをタップ）でスタートし、解けたらもう一度押して止めます。Esc で中止できます。</li>
+          <li>「習得の目安」の秒数以内に解けたケースは習得済み、超えたケースは練習中になります。目安は PLL と OLL で別々に決められます。</li>
+          <li>わからないときは、スタート前に「ヒント」で手順の最初の3手を見られます。ヒントを見たときは、目安以内でも練習中になります。</li>
+          <li>解けなかったときは「解けなかった」、飛ばしたいときは「スキップ」を押します。結果の「取り消す」で、記録を取り消せます。</li>
+          <li>通しは WCA と同じ形のスクランブルで計ります。インスペクション（15秒）のあり・なしを選べ、+2・DNF をつけられます。ao5・ao12 も出ます。</li>
+        </ul>
+
+        <h2>記録</h2>
+        <ul>
+          <li>上のボタンで PLL・OLL・通しと期間を選びます。</li>
+          <li>グラフは1回ごとのタイムです。通しには ao5・ao12 の線が、PLL・OLL には習得の目安の線が出ます。</li>
+          <li>「ケースごと」の表では、ケースごとの回数・ベスト・平均・最近（直近10回の平均）を見られます。「苦手順」にすると、最近のタイムが遅いケースから並びます。ケースを押すと、そのケースを練習できます。</li>
+          <li>「記録の一覧」では、記録を1件ずつ、または選んでまとめて削除できます。削除したあとも「元に戻す」で取り消せます。</li>
+        </ul>
+
+        <h2>保存とログイン</h2>
+        <ul>
+          <li>ログインしなくても、設定・習得状況・練習の記録はこのブラウザに保存されます。</li>
+          <li>右上の「ログイン」から Google・Facebook・GitHub のアカウントでログインすると、アカウントにも保存され、ほかの端末やブラウザでも同じデータを使えます。</li>
+          <li>保存できる記録の量には上限があります。詳しくは<a href="terms">利用規約</a>をご覧ください。データの扱いは<a href="privacy">プライバシーポリシー</a>に書いています。</li>
+        </ul>
+
+        <h2>困ったとき</h2>
+        <p>不具合や要望は <a href="https://github.com/roudai/MegaminxImageEditor/issues">GitHub の Issues</a> にお寄せください。</p>
+      </article>
+
+      <!-- English -->
+      <article lang="en" data-lang-block="en" hidden>
+        <h1 class="h4 mt-4">How to use</h1>
+        <p>Megaminx Image Editor lets you make images of the top of a Megaminx, and learn and practice PLL and OLL.</p>
+        <ul>
+          <li><a href="./">Editor</a>: make an image from an algorithm or from colors</li>
+          <li><a href="pll">PLL List</a> / <a href="oll">OLL List</a>: see every case and track your progress</li>
+          <li><a href="practice">Practice</a>: solve cases with a timer, or practice full solves</li>
+          <li><a href="stats">Stats</a>: see how your times change and which cases are slowest</li>
+        </ul>
+
+        <h2>Editor</h2>
+        <ul>
+          <li>Type moves into the Algorithm box and the image updates right away. You can also add moves with the buttons below it.</li>
+          <li>Choose how the algorithm is used: "Algorithm to apply" applies it to a solved puzzle, "Algorithm to solve case" shows the state it solves, and "Defines the puzzle state" lets you pick each sticker's color.</li>
+          <li>Pick a group and case in the PLL or OLL row to load its algorithm. Use "‹ Prev" and "Next ›" to step through the cases.</li>
+          <li>With a case selected, edit the algorithm and press "Save" to keep it as your own (only with "Algorithm to solve case"). The lists and practice hints use it too. "Reset to default" brings back the original.</li>
+          <li>Adjust the color preset, face colors, body color, background and image size, then press "Download" to save a PNG.</li>
+        </ul>
+
+        <h2>PLL List / OLL List</h2>
+        <ul>
+          <li>Click an image to open that case in the editor.</li>
+          <li>Tap the circle in the top-right corner to cycle through To learn → Learning → Learned. The bar at the top shows your progress.</li>
+          <li>Filter by status or group. For PLL, "Learning order" sorts the cases into stages in a recommended order. For OLL, you can view No Dot and Dot cases separately.</li>
+          <li>"Practice" starts practicing the cases shown on the page.</li>
+          <li>"Download ZIP" saves images of every case at once (desktop only).</li>
+          <li>"Reset all progress" clears every status after you confirm. You can still undo it afterwards.</li>
+        </ul>
+
+        <h2>Practice</h2>
+        <ul>
+          <li>Choose PLL, OLL or Full solve. For PLL and OLL, narrow down the cases by target (To learn, Learning, Learned or All) and by group.</li>
+          <li>Apply the scramble, then press Space (or tap the timer on a phone) to start, and press again when you're done. Press Esc to cancel.</li>
+          <li>Cases solved within the "Learned within" time are marked Learned; slower ones are marked Learning. PLL and OLL each have their own time.</li>
+          <li>Stuck? Before starting, press "Hint" to see the first three moves. If you use a hint, the case stays Learning even if you're fast enough.</li>
+          <li>Press "Couldn't solve" if you can't solve it, or "Skip" to move on. "Undo" in the result removes the solve.</li>
+          <li>Full solves use WCA-style scrambles. Inspection (15s) can be turned on or off, and you can add +2 or DNF. ao5 and ao12 are shown too.</li>
+        </ul>
+
+        <h2>Stats</h2>
+        <ul>
+          <li>Choose PLL, OLL or Full solve and a time period at the top.</li>
+          <li>The chart shows each solve. Full solves also show ao5 and ao12 lines; PLL and OLL show a line for your "Learned within" time.</li>
+          <li>The "By case" table shows the count, best, average and recent average (last 10 solves) for each case. "Weakest first" puts the cases with the slowest recent times on top. Click a case to practice it.</li>
+          <li>In "Solves", you can delete solves one at a time or select several at once. You can undo a deletion.</li>
+        </ul>
+
+        <h2>Saving and signing in</h2>
+        <ul>
+          <li>Without signing in, your settings, progress and practice data are saved in this browser.</li>
+          <li>Sign in with Google, Facebook or GitHub from "Sign in" at the top right to also save them to your account and use them on other devices and browsers.</li>
+          <li>There is a limit on how many solves are kept. See the <a href="terms">Terms of Use</a> for details, and the <a href="privacy">Privacy Policy</a> for how your data is handled.</li>
+        </ul>
+
+        <h2>Need help?</h2>
+        <p>Please report bugs or send requests via <a href="https://github.com/roudai/MegaminxImageEditor/issues">GitHub Issues</a>.</p>
+      </article>
+    </main>
+  </div>
+  <script type="text/javascript" src="js/store.js"></script>
+  <script type="text/javascript" src="js/i18n.js"></script>
+  <script type="text/javascript" src="js/navbar.js"></script>
+  <script type="text/javascript" src="js/legal.js"></script>
+  <script type="text/javascript" src="js/firebase-config.js"></script>
+  <script type="module" src="js/cloud-sync.js"></script>
+</body>
+</html>

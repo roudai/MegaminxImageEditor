@@ -135,9 +135,11 @@
       // ログイン・クラウド保存（cloud-sync.js）
       'account.signIn': 'Sign in',
       'account.signOut': 'Sign out',
+      'account.guide': 'How to use',
       'account.privacyPolicy': 'Privacy policy',
       'account.terms': 'Terms of use',
       'title.terms': 'Terms of Use - Megaminx Image Editor 2.0',
+      'title.guide': 'How to Use - Megaminx Image Editor 2.0',
       // 練習（practice.html・practice.js）
       'nav.practice': 'Practice',
       'title.practice': 'Practice - Megaminx Image Editor 2.0',
@@ -368,9 +370,11 @@
       'status.badgeAria': '{name}：{status}。押すと切り替え',
       'account.signIn': 'ログイン',
       'account.signOut': 'ログアウト',
+      'account.guide': '使い方',
       'account.privacyPolicy': 'プライバシーポリシー',
       'account.terms': '利用規約',
       'title.terms': '利用規約 - Megaminx Image Editor 2.0',
+      'title.guide': '使い方 - Megaminx Image Editor 2.0',
       'nav.practice': '練習',
       'title.practice': '練習 - Megaminx Image Editor 2.0',
       'practice.heading': '練習',
