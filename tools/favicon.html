@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<!--
+  ファビコンの画像を作るページ（サイトからはリンクしない）。
+  node tools/serve.js → http://localhost:8765/tools/favicon.html を開き、各画像の「保存」で img/ に置く。
+  画像は、標準の配色で手順 ALG を回した上面（エディタと同じ描画 js/megaminx-draw.js）。
+-->
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Favicon</title>
+  <style>
+    body { font: 14px sans-serif; margin: 16px; }
+    figure { display: inline-block; margin: 0 16px 16px 0; text-align: center; vertical-align: top; }
+    canvas { display: block; margin: 0 auto 4px; border: 1px dashed #ccc; }
+  </style>
+</head>
+<body>
+  <p>手順：<code id="alg"></code></p>
+  <div id="out"></div>
+  <script src="../js/store.js"></script>
+  <script src="../js/megaminx-state.js"></script>
+  <script src="../js/megaminx-draw.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      const ALG = "R2 F' U2 R U F2"; // 上面にいろいろな色が出る適当な手順
+      // 作る画像：ファイル名・大きさ・背景（null なら透明。ホーム画面のアイコンは透明にできないので白）
+      const ICONS = [
+        { file: 'favicon-32.png', size: 32, background: null },
+        { file: 'favicon-192.png', size: 192, background: null },
+        { file: 'apple-touch-icon.png', size: 180, background: '#ffffff' },
+      ];
+      const M = window.MegaminxState;
+      const colors = M.toImageColors(M.applyAlg(ALG), M.DEFAULT_SCHEME);
+      document.getElementById('alg').textContent = ALG;
+      ICONS.forEach((icon) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = icon.size;
+        window.MegaminxDraw.draw(canvas, colors.ucolor, colors.scolor, { background: icon.background });
+        const link = document.createElement('a');
+        link.href = canvas.toDataURL('image/png');
+        link.download = icon.file;
+        link.textContent = '保存：' + icon.file;
+        const figure = document.createElement('figure');
+        figure.append(canvas, link);
+        document.getElementById('out').append(figure);
+      });
+    })();
+  </script>
+</body>
+</html>
