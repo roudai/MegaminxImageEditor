@@ -9,7 +9,7 @@ const OLL = require('../js/oll-data.js');
 const W = require('../js/wca-scramble.js');
 
 const DAY = 24 * 60 * 60 * 1000;
-const THRESHOLD = 8; // 習得の目安（秒）
+const THRESHOLDS = { pll: 8, oll: 5 }; // 習得の目安（秒）。PLL・OLL で別々
 
 // 種を固定した乱数（mulberry32）
 function rng(seed) {
@@ -52,7 +52,7 @@ function caseLog(random, set, cases, count, days, now) {
     if (random() > 0.05 + (1 - skill) * 0.06) {
       sec = round2(Math.max(2.5, 16 - progress * 6 - skill * 5 + (random() - 0.4) * 6));
     }
-    const status = !hint && sec !== null && sec <= THRESHOLD ? 'learned' : 'learning';
+    const status = !hint && sec !== null && sec <= THRESHOLDS[set] ? 'learned' : 'learning';
     log.push({ at: at, set: set, name: c.name, sec: sec, status: status, hint: hint });
   });
   return log;
@@ -92,7 +92,7 @@ function build(opts) {
     set: 'pll',
     scope: 'nd',
     filter: 'all',
-    threshold: THRESHOLD,
+    thresholds: THRESHOLDS,
     log: caseRecords,
     times: times,
     full: { inspection: true, log: fullLog(random, 260, 60, now).reverse() }, // 新しい順

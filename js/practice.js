@@ -55,7 +55,7 @@
 
   // ---- 設定 ----
   const saved = S.get('practice');
-  const prefs = Object.assign({ set: 'pll', scope: 'nd', filter: 'new', threshold: 8, times: {} }, saved && typeof saved === 'object' ? saved : {});
+  const prefs = Object.assign({ set: 'pll', scope: 'nd', filter: 'new', times: {} }, saved && typeof saved === 'object' ? saved : {});
   const params = new URLSearchParams(location.search);
   const SETS = ['pll', 'oll', 'full'];
   if (SETS.includes(params.get('set'))) prefs.set = params.get('set');
@@ -71,7 +71,9 @@
   const saveFull = (change) => savePrefs({ full: Object.assign(fullPrefs(), change) });
   if (!SCOPES[prefs.scope]) prefs.scope = 'nd';
   if (!FILTERS.includes(prefs.filter)) prefs.filter = 'new';
-  if (!(prefs.threshold > 0 && prefs.threshold <= 120)) prefs.threshold = 8;
+  // 習得の目安は PLL・OLL で別々（prefs.thresholds = { pll, oll }。以前の共通の threshold は P.thresholdOf が引き継ぐ）
+  const threshold = (set) => P.thresholdOf(prefs, set || prefs.set);
+  const setThreshold = (v) => changeSettings({ thresholds: Object.assign({}, prefs.thresholds, { [prefs.set]: v }) }, false);
 
   // 練習の設定・タイムは保存し直す前に読み直す（一覧など別のページでの変更を消さないように）
   function savePrefs(change) {
@@ -225,26 +227,26 @@
         )
       )
     );
-    // 目安：よく使う秒数のボタンと、任意の秒数の入力欄（任意の秒数はボタンには足さず、入力欄を強調する）
-    const thresholds = THRESHOLDS;
-    const custom = el('input', 'form-control form-control-sm practice-seconds' + (THRESHOLDS.includes(prefs.threshold) ? '' : ' active'));
+    // 目安（今の種類の分）：よく使う秒数のボタンと、任意の秒数の入力欄（任意の秒数はボタンには足さず、入力欄を強調する）
+    const secs = threshold();
+    const custom = el('input', 'form-control form-control-sm practice-seconds' + (THRESHOLDS.includes(secs) ? '' : ' active'));
     custom.type = 'number';
     custom.min = '1';
     custom.max = '120';
     custom.step = '0.5';
-    custom.value = String(prefs.threshold);
+    custom.value = String(secs);
     I.set(custom, 'practice.customSeconds', null, 'aria-label');
     custom.addEventListener('change', () => {
       const v = Number(custom.value);
-      if (v > 0 && v <= 120) changeSettings({ threshold: v }, false);
-      else custom.value = String(prefs.threshold);
+      if (v > 0 && v <= 120) setThreshold(v);
+      else custom.value = String(secs);
     });
     const thresholdBox = el('div', 'd-flex align-items-center gap-2');
     thresholdBox.append(
       segment(
-        thresholds.map((t) => ({ value: t, key: 'practice.seconds', params: { n: t } })),
-        prefs.threshold,
-        (v) => changeSettings({ threshold: v }, false)
+        THRESHOLDS.map((t) => ({ value: t, key: 'practice.seconds', params: { n: t } })),
+        secs,
+        setThreshold
       ),
       custom
     );
@@ -540,7 +542,7 @@
     const { set, c } = current;
     const hinted = hintUsed;
     // ヒントを見たときは、目安以内でも習得済みにはしない（練習中）。タイムも最近の記録に入れない
-    const status = hinted ? 'learning' : P.judge(sec, prefs.threshold);
+    const status = hinted ? 'learning' : P.judge(sec, threshold(set));
     const beforeStatus = P.statusOf(set, c.name);
     const times = (prefs.times && prefs.times[set]) || {};
     const beforeTimes = times[c.name];
@@ -553,7 +555,7 @@
     // 日時付きの記録（記録のページ stats.html で使う）。ヒントを見たものも残す（hint: true）
     const logEntry = { at: Date.now(), set: set, name: c.name, sec: sec, status: status, hint: hinted };
     savePrefs({ log: P.addLog((S.get('practice') || {}).log, logEntry) });
-    const entry = { set, c, sec, status, threshold: prefs.threshold, hinted };
+    const entry = { set, c, sec, status, threshold: threshold(set), hinted };
     sessionHistory.unshift(entry);
     sessionHistory.length = Math.min(sessionHistory.length, HISTORY);
     showResult(entry, () => {
@@ -845,7 +847,7 @@
     renderSettings();
   });
 
-  savePrefs({ set: prefs.set, scope: prefs.scope, filter: prefs.filter, threshold: prefs.threshold });
+  savePrefs({ set: prefs.set, scope: prefs.scope, filter: prefs.filter, thresholds: { pll: threshold('pll'), oll: threshold('oll') } });
   // 以前の形（スクランブルの全文 rec.scramble）の通しの記録は、短い形（rec.s）に直して保存し直す（アカウントの容量を節約）
   (function shrinkFullLog() {
     const log = fullLog();
