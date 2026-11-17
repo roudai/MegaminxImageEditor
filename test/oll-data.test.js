@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const M = require('../js/megaminx-state.js');
 const OLL = require('../js/oll-data.js');
-const SRC = require('../oll/algs_info.json');
+const SRC = require('../data/oll/algs_info.json');
 const { build, check, OUT } = require('../tools/build-oll-data.js');
 
 const MASK = M.ollMask(M.DEFAULT_SCHEME);

@@ -1,12 +1,12 @@
-// pll/algs_info.json から js/pll-data.js を生成する。
+// data/pll/algs_info.json から js/pll-data.js を生成する。
 // 実行: node tools/build-pll-data.js（練習用のスクランブル js/pll-scrambles.js も作る。tools/scrambles-lib.js）
 // 仕様: reference/PLL_SPEC.md
-//   - AUF は pll/algs_info.json の a・s に括弧付きで直接書く（このスクリプトは足さない）
+//   - AUF は data/pll/algs_info.json の a・s に括弧付きで直接書く（このスクリプトは足さない）
 //       a: [前AUF] 手順              例: "(U') F' R' F R ..."（最後のAUF・持ち替え y は付けない）
 //       s: [AUF] setup [AUF]         例: "(U') R U R' ..."（a の前AUFを変えたら s の前後のAUFで合わせる）
 //   - 記法を読み替える（Br → BR, Bl → BL, Dfr → DR）
 //   - 確認処理は js/case-check.js（エディタの「自分の手順」と共通）
-//   - 覚える順番 pll/learn_order.json（段階ごとのケース名の配列）から、各ケースに
+//   - 覚える順番 data/pll/learn_order.json（段階ごとのケース名の配列）から、各ケースに
 //       stage（段階 1〜27）と order（覚える順の通し番号 1〜151）を付ける。全ケースがちょうど1回ずつ無ければエラー
 //   - 次を確認し、合わないケースがあれば直し方の候補を表示してエラーで止める
 //       a が s のケースを最後のAUFを除いて揃える（手順中の y による完成後の向きの違いは無視）
@@ -17,11 +17,11 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const SRC = path.join(ROOT, 'pll', 'algs_info.json');
+const SRC = path.join(ROOT, 'data', 'pll', 'algs_info.json');
 const OUT = path.join(ROOT, 'js', 'pll-data.js');
-const SCRAMBLES_SRC = path.join(ROOT, 'pll', 'scrambles.json');
+const SCRAMBLES_SRC = path.join(ROOT, 'data', 'pll', 'scrambles.json');
 const SCRAMBLES_OUT = path.join(ROOT, 'js', 'pll-scrambles.js');
-const ORDER_SRC = path.join(ROOT, 'pll', 'learn_order.json');
+const ORDER_SRC = path.join(ROOT, 'data', 'pll', 'learn_order.json');
 
 const C = require('../js/case-check.js');
 const { buildScrambles } = require('./scrambles-lib.js');
@@ -94,12 +94,12 @@ function buildAll() {
     const at = learn[c.name] || {};
     return { name: c.name, group: c.group, stage: at.stage, order: at.order, alg: alg, setup: setup };
   });
-  if (errors.length) throw new Error('pll/algs_info.json に問題があります:\n  ' + errors.join('\n  '));
+  if (errors.length) throw new Error('data/pll/algs_info.json に問題があります:\n  ' + errors.join('\n  '));
 
   const lines = cases.map((c) => '  ' + JSON.stringify(c) + ',');
   const data = [
     '// 自動生成ファイル。手で編集しないこと。',
-    '// 元データ: pll/algs_info.json / 生成: node tools/build-pll-data.js',
+    '// 元データ: data/pll/algs_info.json / 生成: node tools/build-pll-data.js',
     '(function (root, data) {',
     "  if (typeof module === 'object' && module.exports) module.exports = data;",
     '  else root.PLL_DATA = data;',

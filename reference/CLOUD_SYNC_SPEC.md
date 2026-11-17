@@ -80,9 +80,9 @@
 GitHub Pages（master）に公開するときに、あわせて次を行う。Facebook のアプリは今は開発モードなので、このままでは管理者・テスター以外は Facebook でログインできない。
 1. Facebook アプリ → 「アプリの設定」→「ベーシック」
    - アプリドメイン：`roudai.github.io`
-   - プライバシーポリシーの URL：`https://roudai.github.io/MegaminxImageEditor/privacy.html`
-   - ユーザーデータの削除：「データ削除の手順の URL」に `https://roudai.github.io/MegaminxImageEditor/privacy.html#delete`
-   - 利用規約の URL（任意）：`https://roudai.github.io/MegaminxImageEditor/terms.html`
+   - プライバシーポリシーの URL：`https://roudai.github.io/MegaminxImageEditor/privacy`
+   - ユーザーデータの削除：「データ削除の手順の URL」に `https://roudai.github.io/MegaminxImageEditor/privacy#delete`
+   - 利用規約の URL（任意）：`https://roudai.github.io/MegaminxImageEditor/terms`
    - アプリアイコン（1024×1024）・カテゴリ・連絡先メールアドレス
    - 「プラットフォームを追加」→ ウェブサイト：`https://roudai.github.io/MegaminxImageEditor/`
 2. 左のメニューの「公開」から、アプリをライブにする（`public_profile`・`email` だけなので、ふつうはアプリレビューは不要）

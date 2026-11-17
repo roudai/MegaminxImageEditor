@@ -10,7 +10,7 @@
 - 種類は `alg`（Algorithm to apply）/ `case`（Algorithm to solve case）/ `state`（Defines the puzzle state）
 - 記法は `megaminx-state.js` の先頭コメントのとおり（`U F R L BR BL DR DL DBR DBL B D y`、`'`、`2`、括弧）
 
-## 元データ：`pll/algs_info.json`
+## 元データ：`data/pll/algs_info.json`
 ```json
 "1": {
   "name": "A1+",
@@ -55,7 +55,7 @@ s = [AUF] setup [AUF]
 - 合っていなければ生成スクリプトが直し方の候補を表示する
 
 ## データファイル（生成）
-- 生成スクリプト `tools/build-pll-data.js`（node で実行）：`pll/algs_info.json` を読み、記法を読み替え、上記の条件を確認して `js/pll-data.js` を書き出す
+- 生成スクリプト `tools/build-pll-data.js`（node で実行）：`data/pll/algs_info.json` を読み、記法を読み替え、上記の条件を確認して `js/pll-data.js` を書き出す
 - 次の場合はエラーで止め、ケース名と理由を表示する（`js/pll-data.js` は書き出さない）
   - `a`・`s` が文字列でない
   - 手順が解釈できない（`x` を含むなど）
@@ -67,7 +67,7 @@ s = [AUF] setup [AUF]
   - `a` の最後のAUF・持ち替え（`y`）は外す。`a` を変えたときだけ「候補 a」も出す
   - 候補が複数あるときは `s` に付けるAUFが少ない → `s` の前にAUFを付けない を優先する
   ```
-  pll/algs_info.json に問題があります:
+  data/pll/algs_info.json に問題があります:
     A1+: a で s のケースが揃いません（最後の AUF を除いても揃わない）
       候補 s: (U') R U R' U2 R' U' R U' R U' R' U2 R' U R (U2')
   ```
@@ -151,7 +151,7 @@ PLLを選んでいる間は、種類に応じて入力欄 `#alg` に入れる手
 - 全151ケースの画像・名前・手順（`alg`）を、グループごとに見出し（例：`A (3 corner CP)`）を付けて並べる
 - 上部にグループのボタン（A〜Z）を置く。押すとそのグループだけを表示する（複数選べる。もう一度押すと外す。1つも選んでいなければすべて）。下に「選択を解除」。選んだものは `list-filter` の `pllGroups`（覚える順では `pllStages`）に保存する。選んだボタンはカードが無くても隠さない（外せるように）
 - 画像は solve case の状態。配色と Body Color はエディタで保存した設定（localStorage）を使う。OLL 配色のときは OLL を選ぶ前の配色（`beforeOll`）、それも無いときは Standard
-- ケースをクリックすると、そのケースを選んだ状態でエディタ（`index.html?pll=<名前>`）を開く。保存した配色が OLL 配色のときは、エディタでも Standard で表示する（一覧と同じ色）
+- ケースをクリックすると、そのケースを選んだ状態でエディタ（`./?pll=<名前>`）を開く。保存した配色が OLL 配色のときは、エディタでも Standard で表示する（一覧と同じ色）
 - エディタのナビバーに `PLL List`・`OLL List`、一覧ページのナビバーに `Editor` ともう一方の一覧へのリンクを置く
 - 並べる列の数は画面幅に合わせる（スマホ2列〜PC6列）
 - **覚えた度**（PLL・OLL 共通）
@@ -165,9 +165,9 @@ PLLを選んでいる間は、種類に応じて入力欄 `#alg` に入れる手
   - 見た目は `css/cases.css`（一覧ページ共通）
 - 描画は `js/megaminx-draw.js`（入力欄に依存しない描画。エディタの `megaminx.js` もこれを使う）、グループ名は `js/case-groups.js`（エディタと共通）、ページの処理は `js/cases.js`
 
-## 覚える順番（`pll/learn_order.json`）
+## 覚える順番（`data/pll/learn_order.json`）
 - 出典：さむぶろぐ「Megaminx PLL 全手順会議議事録」[前編](http://sumblog.net/archives/40859395.html)・[後編](http://sumblog.net/archives/40977418.html)。PLL を全部覚えた4人が「大体この順番で覚えたら良い」という順にケースを出していく記事で、出てくる順をそのまま覚える順番とする
-- `pll/learn_order.json` は段階ごとのケース名の配列（27 段階・151 件。`algs_info.json` の全ケースをちょうど1回ずつ。`test/pll-data.test.js` で確認）
+- `data/pll/learn_order.json` は段階ごとのケース名の配列（27 段階・151 件。`algs_info.json` の全ケースをちょうど1回ずつ。`test/pll-data.test.js` で確認）
 - `tools/build-pll-data.js` がこれを読み、`js/pll-data.js` の各ケースに `stage`（段階 1〜27）と `order`（通し番号 1〜151）を付ける（全ケースがちょうど1回ずつ無ければエラー）
 - 基本は + と − を続けて並べる。逆手順の組（F2/F3、F4/F5、J2/J3、V1/V2、V3/V4、R1/R2、R3/R4、P1/P2、P3/P4、I1/I2、I4/I5、L5/L6）は「2+ 3+ 2− 3−」のように4つまとめる。K2 は L との見分けに関わるので L の直前、K1 は L のあと
 - 前編（87 ケース）
@@ -212,7 +212,7 @@ PLLを選んでいる間は、種類に応じて入力欄 `#alg` に入れる手
   - `alg` を `case` として表示した状態（逆手順を適用）が `setup` を適用した状態と一致する
   - 上面11枚がすべてU色（＝PLLは向きを崩さない）
 - `js/pll-data.js` が最新（生成スクリプトを再実行しても変わらない）
-- 覚える順番（`pll/learn_order.json`）が全151ケースをちょうど1回ずつ含む
+- 覚える順番（`data/pll/learn_order.json`）が全151ケースをちょうど1回ずつ含む
 
 ## 変更するファイル
 | ファイル | 内容 |
@@ -235,5 +235,5 @@ PLLを選んでいる間は、種類に応じて入力欄 `#alg` に入れる手
 `megaminx.js`（描画）の描画処理そのものは `megaminx-draw.js` に切り出した（一覧ページ・一括ダウンロードでも使う）。`megaminx-state.js`（状態計算）には `applyAlg` の `cancelRotation` だけを足す。
 
 ## 補足
-- 名前は `pll/algs_info.json` の `name` をそのまま使う（元データの `Q1A` は、Q1- と対にするため `Q1+` に変えた）
+- 名前は `data/pll/algs_info.json` の `name` をそのまま使う（元データの `Q1A` は、Q1- と対にするため `Q1+` に変えた）
 - 将来の案：ケースをサムネイル画像の一覧から選べる折りたたみパネル（今回は対象外）

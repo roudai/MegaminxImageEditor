@@ -1,7 +1,7 @@
-// oll/algs_info.json から js/oll-data.js を生成する。
+// data/oll/algs_info.json から js/oll-data.js を生成する。
 // 実行: node tools/build-oll-data.js（練習用のスクランブル js/oll-scrambles.js も作る。tools/scrambles-lib.js）
 // 仕様: reference/OLL_SPEC.md
-//   - 形式は pll/algs_info.json と同じ（a・s は手順1本の文字列。AUF は括弧付きで直接書く）
+//   - 形式は data/pll/algs_info.json と同じ（a・s は手順1本の文字列。AUF は括弧付きで直接書く）
 //       a: [前AUF] 手順              例: "(U2') Br' R' U' R F U Br R U' R' F'"（最後のAUF・持ち替え y は付けない）
 //       s: [AUF] setup [AUF]         例: "F U2' F U2 R' U2' F' U2 R F' (U)"
 //   - 記法を読み替える（Br → BR, Bl → BL, Dfr → DR）。x（持ち替え）と LR のような同時回しには対応しない
@@ -17,9 +17,9 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const SRC = path.join(ROOT, 'oll', 'algs_info.json');
+const SRC = path.join(ROOT, 'data', 'oll', 'algs_info.json');
 const OUT = path.join(ROOT, 'js', 'oll-data.js');
-const SCRAMBLES_SRC = path.join(ROOT, 'oll', 'scrambles.json');
+const SCRAMBLES_SRC = path.join(ROOT, 'data', 'oll', 'scrambles.json');
 const SCRAMBLES_OUT = path.join(ROOT, 'js', 'oll-scrambles.js');
 
 const C = require('../js/case-check.js');
@@ -74,12 +74,12 @@ function buildAll() {
     }
     return { name: c.name, group: c.group, algset: c.algset, alg: alg, setup: setup };
   });
-  if (errors.length) throw new Error('oll/algs_info.json に問題があります:\n  ' + errors.join('\n  '));
+  if (errors.length) throw new Error('data/oll/algs_info.json に問題があります:\n  ' + errors.join('\n  '));
 
   const lines = cases.map((c) => '  ' + JSON.stringify(c) + ',');
   const data = [
     '// 自動生成ファイル。手で編集しないこと。',
-    '// 元データ: oll/algs_info.json / 生成: node tools/build-oll-data.js',
+    '// 元データ: data/oll/algs_info.json / 生成: node tools/build-oll-data.js',
     '(function (root, data) {',
     "  if (typeof module === 'object' && module.exports) module.exports = data;",
     '  else root.OLL_DATA = data;',

@@ -1,4 +1,4 @@
-// <pll|oll>/scrambles.json から練習用のスクランブルのファイル（js/<pll|oll>-scrambles.js）を作る。
+// data/<pll|oll>/scrambles.json から練習用のスクランブルのファイル（js/<pll|oll>-scrambles.js）を作る。
 // tools/build-pll-data.js・tools/build-oll-data.js から使う。仕様: reference/PRACTICE_SPEC.md
 //   - scrambles.json は { ケース番号: [スクランブル, ...] }（ケース番号は algs_info.json と同じ）
 //   - 各スクランブルで崩した状態が、そのケースになるか（そのケースの手順で AUF を除いて揃うか）を確かめる。
@@ -39,7 +39,7 @@ function buildScrambles(set, srcPath, scramblesPath, src, cases) {
   const lines = Object.keys(out).map((name) => '  ' + JSON.stringify(name) + ': ' + JSON.stringify(out[name]) + ',');
   return [
     '// 自動生成ファイル。手で編集しないこと。',
-    `// 元データ: ${set}/scrambles.json / 生成: node tools/build-${set}-data.js`,
+    `// 元データ: data/${set}/scrambles.json / 生成: node tools/build-${set}-data.js`,
     '(function (root, data) {',
     "  if (typeof module === 'object' && module.exports) module.exports = data;",
     `  else root.${varName} = data;`,

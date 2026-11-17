@@ -5,10 +5,10 @@
 //   - Body Color はエディタで保存した設定（localStorage）を使う。配色は
 //       PLL: 保存した配色。OLL 配色のときは OLL を選ぶ前の配色、それも無いときは Standard
 //       OLL: 保存した U の色だけを残した OLL 配色（他の面は dimgray）
-//   - ケースをクリックすると、そのケースを選んだ状態でエディタ（index.html?pll=… / ?oll=…）を開く
+//   - ケースをクリックすると、そのケースを選んだ状態でエディタ（./?pll=… / ?oll=…）を開く
 //   - 覚えた度：各カード右上のバッジをタップで 未着手 → 練習中 → 覚えた と切り替え、localStorage に保存する。
 //     上部に進み具合（積み上げバー・件数）と絞り込みチップ、グループ見出しに「覚えた数 / 全体」を出す
-//   - PLL は「グループ順 / 覚える順」を切り替えられる。覚える順は pll/learn_order.json の段階（27）ごとの見出しで、
+//   - PLL は「グループ順 / 覚える順」を切り替えられる。覚える順は data/pll/learn_order.json の段階（27）ごとの見出しで、
 //     段階の中も覚える順（区切りは case-sections.js。選んだ並びは 'list-filter' の pllOrder に保存し、練習ページと共通）
 //   - 上のグループ（覚える順なら段階）のボタンは、押すとそのグループだけを表示する（複数選べる。もう一度押すと外す。
 //     1つも選んでいなければすべて。「選択を解除」で戻す）。選んだものは 'list-filter' の <set>Groups（覚える順は <set>Stages）に保存
@@ -82,7 +82,7 @@
     col.dataset.name = c.name;
     const card = el('div', 'card h-100 case-card');
     const link = el('a', 'case-link d-block h-100');
-    link.href = `index.html?${SET}=${encodeURIComponent(c.name)}`;
+    link.href = `./?${SET}=${encodeURIComponent(c.name)}`;
     I.set(link, 'list.openTitle', { name: c.name }, 'title');
 
     const canvas = el('canvas', 'mx-auto mt-2 d-block');
@@ -318,7 +318,7 @@
       if (HAS_STAGES) q.set('order', byStage ? 'learn' : 'group');
       const picked = sections.filter((s) => chosen.has(s.key));
       q.set('groups', picked.map((s) => (byStage ? s.stage : s.key)).join(','));
-      practice.href = 'practice.html?' + q.toString();
+      practice.href = 'practice?' + q.toString();
     }
     const zip = $('downloadZip');
     if (!zip.disabled) {

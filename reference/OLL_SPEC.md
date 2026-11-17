@@ -3,8 +3,8 @@
 PLL（`reference/PLL_SPEC.md`）と同じ仕組みで、OLL を選ぶと手順が Algorithm 入力欄に入り、画像ができる。ここでは PLL との違いを中心に書く。
 
 ## データ
-- 元データ：`oll/algs_info.json`（259ケース、54グループ：`1`〜`53` と `1C`）
-- 形式は `pll/algs_info.json` と同じ
+- 元データ：`data/oll/algs_info.json`（259ケース、54グループ：`1`〜`53` と `1C`）
+- 形式は `data/pll/algs_info.json` と同じ
   ```json
   "1": { "name": "1A", "group": "1", "algset": "ND", "s": "F U2' F U2 R' U2' F' U2 R F' (U)", "a": "L R U R' U' R' F R F' L'" }
   ```
@@ -59,7 +59,7 @@ OLL  [Group ▼] [Case ▼] [‹ Prev][Next ›]
 - PLL の一覧ページ（`pll.html`、`reference/PLL_SPEC.md`）と同じ作り（`js/cases.js` を `<body data-set="oll">` で使う）
 - 全259ケースを、グループ名付きの見出し（例：`6 (Anchor)`）で並べる。上部にグループのボタン（押すとそのグループだけを表示する。PLL 一覧と同じ。保存は `list-filter` の `ollGroups`）
 - 画像は solve case の状態。配色は、エディタで保存した U の色だけを残した OLL 配色（他の面は dimgray）。Body Color も保存した設定
-- ケースをクリックすると、そのケースを選んだ状態でエディタ（`index.html?oll=<名前>`）を開く
+- ケースをクリックすると、そのケースを選んだ状態でエディタ（`./?oll=<名前>`）を開く
 - ナビバー：エディタは `PLL List`・`OLL List`、一覧ページは `Editor` ともう一方の一覧へのリンク
 - 覚えた度の印・進み具合・絞り込みも PLL 一覧と同じ（`reference/PLL_SPEC.md`。保存は PLL と別）
 - **No Dot / Dot の切り替え**：上部のセグメント型の切り替え（`No Dot 178` / `Dot 81` / `All 259`）で表示する範囲を選ぶ（既定は No Dot）

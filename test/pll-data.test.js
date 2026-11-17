@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const M = require('../js/megaminx-state.js');
 const PLL = require('../js/pll-data.js');
-const SRC = require('../pll/algs_info.json');
+const SRC = require('../data/pll/algs_info.json');
 const { build, OUT } = require('../tools/build-pll-data.js');
 
 const SOLVED = M.solved();
@@ -45,8 +45,8 @@ test('練習用のスクランブル js/pll-scrambles.js が最新で、全ケ�
   Object.values(scrambles).forEach((list) => assert.ok(list.length > 0));
 });
 
-test('覚える順番（pll/learn_order.json）は全151ケースをちょうど1回ずつ含み、pll-data.js の stage・order と合う', () => {
-  const stages = require('../pll/learn_order.json');
+test('覚える順番（data/pll/learn_order.json）は全151ケースをちょうど1回ずつ含み、pll-data.js の stage・order と合う', () => {
+  const stages = require('../data/pll/learn_order.json');
   const order = stages.flat();
   const names = Object.values(SRC).map((c) => c.name);
   assert.equal(stages.length, 27);

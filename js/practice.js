@@ -183,7 +183,7 @@
     // 「すべての記録を見る」は今の種類（OLL は範囲も）の記録を開く
     const statsQuery = new URLSearchParams({ set: prefs.set });
     if (prefs.set === 'oll') statsQuery.set('scope', prefs.scope);
-    $('allStatsLink').href = 'stats.html?' + statsQuery;
+    $('allStatsLink').href = 'stats?' + statsQuery;
     const box = $('practiceSettings');
     box.replaceChildren();
     document.body.classList.toggle('practice-full', isFull());

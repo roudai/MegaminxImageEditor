@@ -2,6 +2,11 @@
 // 広い画面では css/common.css で1行に並べるので、ここでは何もしない。i18n.js のあと、ほかのスクリプトより先に読み込む
 (function () {
   'use strict';
+  // 古い URL（pll.html・index.html など）で開いたときは、アドレスバーを .html なしの URL（pll・トップは ./）に書き換える。
+  // ページは読み込み直さない（GitHub Pages はどちらの URL でも同じページを返す）
+  const old = location.pathname.match(/^(.*\/)(?:index|([^/]+))\.html$/);
+  if (old && history.replaceState) history.replaceState(history.state, '', old[1] + (old[2] || '') + location.search + location.hash);
+
   const toggle = document.getElementById('navToggle');
   const menu = document.getElementById('navMenu');
   if (!toggle || !menu) return;

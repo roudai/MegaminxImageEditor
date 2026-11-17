@@ -5,7 +5,7 @@
 目安の時間（しきい値）以内に解けたケースは自動で「習得済み」、超えた・解けなかったケースは「練習中」にする。
 
 ## データ
-- 元データ：`pll/scrambles.json`・`oll/scrambles.json`（`{ ケース番号: [スクランブル, ...] }`。ケース番号は `algs_info.json` と同じ）
+- 元データ：`data/pll/scrambles.json`・`data/oll/scrambles.json`（`{ ケース番号: [スクランブル, ...] }`。ケース番号は `algs_info.json` と同じ）
 - 生成：`node tools/build-pll-data.js`・`node tools/build-oll-data.js` で、`js/pll-data.js` などと一緒に `js/pll-scrambles.js`・`js/oll-scrambles.js`（`window.PLL_SCRAMBLES = { "A1+": [...] }`）を作る（`tools/scrambles-lib.js`）
   - 各スクランブルで崩した状態が、そのケースになる（既定の手順で AUF を除いて揃う）かを確かめ、だめならエラーで止める（`js/case-check.js` の `fitSetup`）
   - 記法は読み替える（`Br` → `BR` など）
@@ -40,17 +40,17 @@
 
 ## ほかのページ
 - 3ページ（エディタ・PLL一覧・OLL一覧）とプライバシーポリシーのナビバーに「練習 / Practice」
-- PLL・OLL 一覧の上部に **練習する** ボタン：今の範囲・絞り込み・選んだグループのまま `practice.html?set=…&scope=…&filter=…&order=…&groups=…` を開く
+- PLL・OLL 一覧の上部に **練習する** ボタン：今の範囲・絞り込み・選んだグループのまま `practice?set=…&scope=…&filter=…&order=…&groups=…` を開く
   - `groups` は一覧で選んだグループ（`A,B`。覚える順なら段階の番号 `9,24`）。空ならすべて。練習ページはその選択で保存し直す（一覧で何も選んでいなければ、練習ページの選択も外れる）。`order`（PLL だけ）は並び（`learn` / `group`）
 - 画像の配色は一覧と同じ（`Progress.displaySettings`）
 
 ## 記録（`stats.html`・`js/stats.js`・`css/stats.css`）
 - 判定のたびに `practice.log` に `{ at: 日時(ms), set, name, sec(null=解けなかった), status, hint }` を足す（新しい順、最大 2000 件。「取り消す」でその1件も消す）。集計は `js/progress.js` の `addLog`・`summarize`・`daily`・`perCase`
-- ナビバーの「記録 / Stats」、練習ページの「すべての記録を見る」から開く。練習ページからは今の種類（OLL は範囲も）を URL（`stats.html?set=oll&scope=d`）で渡し、記録のページはその種類で開く（表示の設定として保存する）
+- ナビバーの「記録 / Stats」、練習ページの「すべての記録を見る」から開く。練習ページからは今の種類（OLL は範囲も）を URL（`stats?set=oll&scope=d`）で渡し、記録のページはその種類で開く（表示の設定として保存する）
 - 種類（PLL / OLL）・範囲（OLL の No Dot / Dot / All）・期間（7日 / 30日 / すべて）で絞る（`practice.stats` に保存）
 - 集計のカード：練習回数、平均（とベスト）、解けなかった回数、習得済みの数（今の覚えた度）
 - 日ごとの練習：棒＝回数、線＝平均タイム（練習した日だけを結ぶ）。期間が「すべて」のときは直近 90 日。棒にマウスを乗せると日付・回数・平均。ライブラリを使わず SVG で描く
-- ケースごとの表：画像・ケース・グループ・覚えた度・回数（解けなかった回数）・ベスト・平均・最後に練習した日。既定は平均の遅い順（苦手なケースが上）。見出しを押すと並べ替え。ケースを押すと、そのケースを最初に出題する練習ページ（`practice.html?set=…&case=…`）を開く
+- ケースごとの表：画像・ケース・グループ・覚えた度・回数（解けなかった回数）・ベスト・平均・最後に練習した日。既定は平均の遅い順（苦手なケースが上）。見出しを押すと並べ替え。ケースを押すと、そのケースを最初に出題する練習ページ（`practice?set=…&case=…`）を開く
 - 「CSV で書き出す」：期間内の記録（date, set, case, time（DNF）, status, hint）
 - 別のタブで練習したら、記録のページにも反映する（storage イベント）
 
