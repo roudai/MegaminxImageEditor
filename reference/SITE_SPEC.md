@@ -11,3 +11,9 @@
 ## ローカルでの確認
 - `node tools/serve.js`（ポートを変えるなら `node tools/serve.js 8080`）→ `http://localhost:8765/`
   - GitHub Pages と同じく `.html` なしの URL で各ページを返す（`python3 -m http.server` は `/pll` を返せないので使わない）
+- テストデータで動かす：`node tools/serve.js --demo`（既定のポート 8766）→ `http://localhost:8766/stats`
+  - 練習の記録（PLL 約 290 件・OLL 約 190 件・通し約 210 件。PLL は過去 45 日、OLL は 30 日、通しは 60 日ぶん）・ケースごとの最近のタイム・習得状況を入れた状態で開く（`tools/demo-data.js`。乱数の種は固定）
+  - ページを開いたときに、まだ入れていなければ入れる（印は localStorage の `megaminx-image-editor:demo-seeded`）。`/__demo/reset` でこのサイトの保存をすべて消して入れ直す
+  - ログインは使えなくする（`js/firebase-config.js` の代わりに `FIREBASE_CONFIG = null` を返す）。テストデータがアカウントに送られないように。ポートも普段と分けるので、普段の保存とは混ざらない
+  - 画面の右下に「テストデータ（ログインなし） · 入れ直す」を出す
+  - 本番（GitHub Pages）には関係しない（サーバーが返すときにだけ足す）
