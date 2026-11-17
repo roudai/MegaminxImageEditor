@@ -124,7 +124,9 @@
       badge.classList.remove('pop');
       void badge.offsetWidth; // アニメーションをやり直す
       badge.classList.add('pop');
+      if (resetState && !resetState.confirming) resetState = null; // 1枚変えたら「元に戻す」は消す
       updateSummary();
+      renderReset();
     });
 
     card.append(link, badge);
@@ -254,7 +256,101 @@
       });
       chips.append(b);
     });
-    box.append(bar, legend, chips);
+    // 絞り込みチップの右に「すべて未習得に戻す」。押すと確認を出し、戻したあとは「元に戻す」を出す
+    const row = el('div', 'd-flex flex-wrap align-items-center gap-2');
+    const reset = el('button', 'btn btn-link btn-sm p-0 ms-auto reset-progress');
+    reset.type = 'button';
+    reset.id = 'resetProgress';
+    I.set(reset, 'list.resetAll');
+    I.set(reset, 'list.resetAllTitle', { set: SET.toUpperCase() }, 'title');
+    reset.addEventListener('click', () => {
+      resetState = { confirming: true };
+      renderReset();
+    });
+    row.append(chips, reset);
+    const resetBar = el('div', 'reset-bar');
+    resetBar.id = 'resetBar';
+    resetBar.setAttribute('role', 'status');
+    box.append(bar, legend, row, resetBar);
+  }
+
+  // ---- すべて未習得に戻す ----
+  // 範囲（No Dot / Dot）・グループの選択に関係なく、この種類（PLL / OLL）のケースすべての覚えた度を消す。
+  // 間違って押しても困らないよう、押したらまず確認を出し、戻したあとも「元に戻す」で戻せるようにする（ブラウザの確認ダイアログは使わない）
+  let resetState = null; // null / { confirming: true } / { done: n, undo: 関数 } / { restored: n }
+
+  function resetAll() {
+    // まとめて1回で保存する（ケースごとに保存すると、ログイン中はそのたびにクラウドへ送るので）
+    const writeSet = (mine) => {
+      const all = window.Store.get('progress');
+      window.Store.set('progress', Object.assign({}, all && typeof all === 'object' ? all : {}, { [SET]: mine }));
+      progress = P.statuses(SET);
+    };
+    const before = Object.assign({}, P.statuses(SET));
+    const n = Object.keys(before).length;
+    writeSet({});
+    const undo = () => {
+      // 戻したあとに付けた覚えた度は残し、消したものだけを戻す
+      writeSet(Object.assign({}, before, P.statuses(SET)));
+      resetState = { restored: n };
+      refreshStatuses();
+    };
+    resetState = { done: n, undo: undo };
+    refreshStatuses();
+  }
+
+  // 全カードのバッジ・件数・絞り込みを今の覚えた度に合わせる
+  function refreshStatuses() {
+    document.querySelectorAll('#caseList .status-badge').forEach((b) => b.dispatchEvent(new Event('relabel')));
+    updateSummary();
+    applyFilter();
+    renderReset();
+  }
+
+  function renderReset() {
+    const bar = $('resetBar');
+    const button = $('resetProgress');
+    const n = counts(DATA);
+    const marked = n.learned + n.learning;
+    button.disabled = !marked;
+    bar.replaceChildren();
+    bar.hidden = !resetState;
+    if (!resetState) return;
+    if (resetState.confirming) {
+      if (!marked) {
+        resetState = null;
+        bar.hidden = true;
+        return;
+      }
+      const text = el('span', 'reset-confirm');
+      I.set(text, 'list.resetConfirm', { set: SET.toUpperCase(), learned: n.learned, learning: n.learning });
+      const yes = el('button', 'btn btn-danger btn-sm');
+      yes.type = 'button';
+      I.set(yes, 'list.resetYes');
+      yes.addEventListener('click', resetAll);
+      const no = el('button', 'btn btn-outline-secondary btn-sm');
+      no.type = 'button';
+      I.set(no, 'stats.cancel');
+      no.addEventListener('click', () => {
+        resetState = null;
+        renderReset();
+      });
+      bar.append(text, yes, no);
+      no.focus();
+      return;
+    }
+    const msg = el('span', 'text-muted');
+    if (resetState.undo) {
+      I.set(msg, 'list.resetDone', { n: resetState.done });
+      const undo = el('button', 'btn btn-link btn-sm p-0');
+      undo.type = 'button';
+      I.set(undo, 'stats.undo');
+      undo.addEventListener('click', resetState.undo);
+      bar.append(msg, undo);
+    } else {
+      I.set(msg, 'list.resetRestored', { n: resetState.restored });
+      bar.append(msg);
+    }
   }
 
   // 件数・バー・グループの「覚えた数 / 全体」を今の状態に合わせる（絞り込みはやり直さない。
@@ -424,6 +520,7 @@
     buildSummary();
     updateSummary();
     applyFilter();
+    renderReset();
   }
 
   // 全ケースを PNG にして zip にまとめ、ダウンロードする。ファイル名は <pll|oll>-<名前>.png
