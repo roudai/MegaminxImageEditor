@@ -106,6 +106,8 @@
     const stage = byStage(set);
     return inScope(set).filter((c) => !chosen || chosen.has(CS.keyOf(c, stage)));
   };
+  // URL で指定した種類・範囲・絞り込みは保存する（以降の savePrefs が保存済みの前回の値で prefs を上書きしないように）
+  if (['set', 'scope', 'filter'].some((k) => params.has(k))) savePrefs({ set: prefs.set, scope: prefs.scope, filter: prefs.filter });
   // 一覧ページから開いたとき（?order=…&groups=…）：並びと選んだグループを引き継いで保存する
   if (params.has('order') && CS.hasStages(DATA[prefs.set]) && ['learn', 'group'].includes(params.get('order'))) {
     const f = S.get('list-filter');
