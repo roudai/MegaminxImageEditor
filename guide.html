@@ -86,19 +86,20 @@
         <h2>練習</h2>
         <ul>
           <li>PLL・OLL・通しから選びます。PLL・OLL は、対象（未習得・練習中・習得済み・すべて）とグループで出すケースを絞れます。</li>
-          <li>スクランブルの通りに回してから、スペースキー（スマホはタイマーをタップ）でスタートし、解けたらもう一度押して止めます。Esc で中止できます。</li>
+          <li>スクランブルの通りに回してから、スペースキー（スマホはタイマーをタップ）でスタートし、解けたらもう一度押して止めます。Esc で中止できます。止めてから2秒はタイムが赤くなり、その間は押しても次がスタートしません（続けて押してしまったときのため）。</li>
           <li>「習得の目安」の秒数以内に解けたケースは習得済み、超えたケースは練習中になります。目安は PLL と OLL で別々に決められます。</li>
+          <li>「出題」が「苦手を多めに」のときは、最近のタイムが遅いケースや解けなかったケース、まだ解いたことのないケースが出やすくなります（苦手な順に出るのではなく、ランダムの中で出やすくなります）。「ランダム」にすると、どのケースも同じ確率で出ます。</li>
           <li>わからないときは、スタート前に「ヒント」で手順の最初の3手を見られます。ヒントを見たときは、目安以内でも練習中になります。</li>
           <li>解けなかったときは「解けなかった」、飛ばしたいときは「スキップ」を押します。結果の「取り消す」で、記録を取り消せます。</li>
-          <li>通しは WCA と同じ形のスクランブルで計ります。インスペクション（15秒）のあり・なしを選べ、+2・DNF をつけられます。ao5・ao12 も出ます。</li>
+          <li>通しは WCA と同じ形のスクランブルで計ります。スペース（スマホはタイマー）を長押しして、数字が緑になったら離すとスタートします。インスペクション（15秒）のあり・なしを選べ、+2・DNF をつけられます。ao5・ao12 も出ます。</li>
         </ul>
 
         <h2>記録</h2>
         <ul>
           <li>上のボタンで PLL・OLL・通しと期間を選びます。</li>
           <li>グラフは1回ごとのタイムです。通しには ao5・ao12 の線が、PLL・OLL には習得の目安の線が出ます。</li>
-          <li>「ケースごと」の表では、ケースごとの回数・ベスト・平均・最近（直近10回の平均）を見られます。「苦手順」にすると、最近のタイムが遅いケースから並びます。ケースを押すと、そのケースを練習できます。</li>
-          <li>「記録の一覧」では、記録を1件ずつ、または選んでまとめて削除できます。削除したあとも「元に戻す」で取り消せます。</li>
+          <li>PLL・OLL の「ケースごと」の表では、ケースごとの回数・ベスト・平均・最近（直近10回の平均）を見られます。並びは「苦手順」（最近のタイムが遅いケースから）・「グループ順」・「覚える順」（PLL のみ）から選べます。ケースを押すと、そのケースを練習できます。</li>
+          <li>「記録の一覧」では、記録を1件ずつ、または選んでまとめて削除できます。「すべての記録を削除」で、その種類（PLL・OLL・通し）の記録を期間に関係なくすべて消せます。どれも削除したあとに「元に戻す」で取り消せます。記録を消しても、習得状況は変わりません。</li>
         </ul>
 
         <h2>保存とログイン</h2>
@@ -145,19 +146,20 @@
         <h2>Practice</h2>
         <ul>
           <li>Choose PLL, OLL or Full solve. For PLL and OLL, narrow down the cases by target (To learn, Learning, Learned or All) and by group.</li>
-          <li>Apply the scramble, then press Space (or tap the timer on a phone) to start, and press again when you're done. Press Esc to cancel.</li>
+          <li>Apply the scramble, then press Space (or tap the timer on a phone) to start, and press again when you're done. Press Esc to cancel. For 2 seconds after you stop, the time turns red and the timer won't start again, so an extra key press doesn't begin a new solve.</li>
           <li>Cases solved within the "Learned within" time are marked Learned; slower ones are marked Learning. PLL and OLL each have their own time.</li>
+          <li>With "Picks" set to "Favor weak", cases with slow recent times, failed solves, or no solves yet come up more often (still at random, not in order). With "Random", every case is equally likely.</li>
           <li>Stuck? Before starting, press "Hint" to see the first three moves. If you use a hint, the case stays Learning even if you're fast enough.</li>
           <li>Press "Couldn't solve" if you can't solve it, or "Skip" to move on. "Undo" in the result removes the solve.</li>
-          <li>Full solves use WCA-style scrambles. Inspection (15s) can be turned on or off, and you can add +2 or DNF. ao5 and ao12 are shown too.</li>
+          <li>Full solves use WCA-style scrambles. Hold Space (or the timer on a phone) until the numbers turn green, then release to start. Inspection (15s) can be turned on or off, and you can add +2 or DNF. ao5 and ao12 are shown too.</li>
         </ul>
 
         <h2>Stats</h2>
         <ul>
           <li>Choose PLL, OLL or Full solve and a time period at the top.</li>
           <li>The chart shows each solve. Full solves also show ao5 and ao12 lines; PLL and OLL show a line for your "Learned within" time.</li>
-          <li>The "By case" table shows the count, best, average and recent average (last 10 solves) for each case. "Weakest first" puts the cases with the slowest recent times on top. Click a case to practice it.</li>
-          <li>In "Solves", you can delete solves one at a time or select several at once. You can undo a deletion.</li>
+          <li>For PLL and OLL, the "By case" table shows the count, best, average and recent average (last 10 solves) for each case. Sort by "Weakest first" (slowest recent times on top), "By group", or "Learning order" (PLL only). Click a case to practice it.</li>
+          <li>In "Solves", you can delete solves one at a time or select several at once. "Delete all solves" removes every solve of that type (PLL, OLL or Full solve), whatever the period. You can undo any deletion. Deleting solves doesn't change your progress.</li>
         </ul>
 
         <h2>Saving and signing in</h2>
