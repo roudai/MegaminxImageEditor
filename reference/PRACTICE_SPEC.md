@@ -41,7 +41,7 @@
 - URL `?set=oll&scope=nd&filter=new` で設定の初期値を指定できる（その値で保存し直す）
 
 ## ほかのページ
-- 3ページ（エディタ・PLL一覧・OLL一覧）とプライバシーポリシーのナビバーに「練習 / Practice」
+- 3ページ（エディタ・PLL・OLL の一覧ページ）とプライバシーポリシーのナビバーに「練習 / Practice」
 - PLL・OLL 一覧の上部に **練習する** ボタン：今の範囲・絞り込み・選んだグループのまま `practice?set=…&scope=…&filter=…&order=…&groups=…` を開く
   - `groups` は一覧で選んだグループ（`A,B`。覚える順なら段階の番号 `9,24`）。空ならすべて。練習ページはその選択で保存し直す（一覧で何も選んでいなければ、練習ページの選択も外れる）。`order`（PLL だけ）は並び（`learn` / `group`）
 - 画像の配色は一覧と同じ（`Progress.displaySettings`）
