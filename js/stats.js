@@ -72,6 +72,7 @@
       b.type = 'button';
       if (item.key) I.set(b, item.key, item.params);
       else b.textContent = item.text;
+      if (item.title) I.set(b, item.title, null, 'title'); // マウスを乗せたときの説明
       b.classList.toggle('active', item.value === current);
       b.setAttribute('aria-pressed', String(item.value === current));
       b.addEventListener('click', () => onPick(item.value));
@@ -431,10 +432,10 @@
     box.hidden = !show;
     if (!show) return;
     const items = [
-      { value: 'weak', key: 'stats.sortWeak' },
-      { value: 'group', key: 'list.orderGroup' },
+      { value: 'weak', key: 'stats.sortWeak', title: 'stats.sortWeakTitle' },
+      { value: 'group', key: 'list.orderGroup', title: 'list.orderGroupTitle' },
     ];
-    if (hasStages()) items.push({ value: 'learn', key: 'list.orderLearn' });
+    if (hasStages()) items.push({ value: 'learn', key: 'list.orderLearn', title: 'list.orderLearnTitle' });
     const current = view.sort === 'learn' && !hasStages() ? 'weak' : view.sort;
     const seg = segment(items, current, (v) => change({ sort: v, desc: v === 'weak' }));
     I.set(seg, 'list.orderAria', null, 'aria-label');

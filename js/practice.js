@@ -139,6 +139,7 @@
       if (item.key) I.set(label, item.key, item.params);
       else label.textContent = item.text;
       b.append(label);
+      if (item.title) I.set(b, item.title, null, 'title'); // マウスを乗せたときの説明
       if (item.count != null) b.append(el('span', 'count', String(item.count)));
       b.classList.toggle('active', item.value === current);
       b.setAttribute('aria-pressed', String(item.value === current));
@@ -303,8 +304,8 @@
     if (CS.hasStages(DATA[set])) {
       const order = segment(
         [
-          { value: false, key: 'list.orderGroup' },
-          { value: true, key: 'list.orderLearn' },
+          { value: false, key: 'list.orderGroup', title: 'list.orderGroupTitle' },
+          { value: true, key: 'list.orderLearn', title: 'list.orderLearnTitle' },
         ],
         stage,
         (v) => setOrder(set, v)
