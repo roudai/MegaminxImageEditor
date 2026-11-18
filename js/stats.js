@@ -35,9 +35,13 @@
     return p && typeof p === 'object' ? p : {};
   };
   const saved = practice().stats || {};
+  // 種類（PLL / OLL / 通し）と OLL の範囲は練習ページと共通（practice.set・practice.scope）。
+  // 練習と記録を行き来しても、選んでいた種類のまま開く（無ければ以前の記録のページだけの値）
+  const SETS = ['pll', 'oll', 'full'];
+  const shared = practice();
   const view = {
-    set: ['pll', 'oll', 'full'].includes(saved.set) ? saved.set : ['oll', 'full'].includes(practice().set) ? practice().set : 'pll',
-    scope: SCOPES[saved.scope] ? saved.scope : 'nd',
+    set: SETS.includes(shared.set) ? shared.set : SETS.includes(saved.set) ? saved.set : 'pll',
+    scope: SCOPES[shared.scope] ? shared.scope : SCOPES[saved.scope] ? saved.scope : 'nd',
     period: Object.prototype.hasOwnProperty.call(PERIODS, saved.period) ? saved.period : '30',
     // 並びの既定は苦手順。苦手順を足す前（sortV が無い）に保存した並び（平均の遅い順）は使わず、苦手順にする
     sort: saved.sortV === 2 && saved.sort ? saved.sort : 'weak',
@@ -47,11 +51,11 @@
   };
   // 練習ページの「すべての記録を見る」から開いたとき（?set=oll&scope=d など）は、その種類を出す（表示の設定として保存する）
   const params = new URLSearchParams(location.search);
-  if (['pll', 'oll', 'full'].includes(params.get('set'))) view.set = params.get('set');
+  if (SETS.includes(params.get('set'))) view.set = params.get('set');
   if (SCOPES[params.get('scope')]) view.scope = params.get('scope');
   if (params.has('set')) saveView();
   function saveView() {
-    S.set('practice', Object.assign({}, practice(), { stats: Object.assign({}, view) }));
+    S.set('practice', Object.assign({}, practice(), { set: view.set, scope: view.scope, stats: Object.assign({}, view) }));
   }
 
   const fmt = (sec) => (typeof sec === 'number' ? P.formatTime(sec) : '–'); // 60 秒以上は分表記（1:05.23）
