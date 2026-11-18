@@ -391,21 +391,19 @@
     const per = P.perCase(log, { from: from() });
     // 苦手順：直近 RECENT 回の平均。解けなかった回は習得の目安の 2 倍のタイムとして数える
     const threshold = P.thresholdOf(practice(), view.set);
-    const recent = P.recentPerCase(log, { from: from(), n: RECENT, dnfAs: threshold * 2 });
+    const opts = { from: from(), n: RECENT, dnfAs: threshold * 2 };
+    const recent = P.recentPerCase(log, opts);
     const index = {};
     DATA[view.set].forEach((c, i) => (index[c.name] = i));
     // 回数の少ないケースがたまたまの1回で上に来ないよう、並べるときは全体の平均に寄せる
-    // （そのケースの回数に、全体の平均のタイムで PRIOR 回を足した平均）。表に出すのは寄せる前の平均
-    const all = Object.values(recent);
-    const total = all.reduce((sum, x) => sum + x.attempts, 0);
-    const overall = total ? all.reduce((sum, x) => sum + x.score * x.attempts, 0) / total : 0;
-    const weakScore = (x) => (x ? (x.score * x.attempts + overall * PRIOR) / (x.attempts + PRIOR) : null);
+    // （そのケースの回数に、全体の平均のタイムで PRIOR 回を足した平均。P.weakScores）。表に出すのは寄せる前の平均
+    const weak = P.weakScores(log, Object.assign({ prior: PRIOR }, opts)).scores;
     return casesInScope()
       .filter((c) => per[c.name])
       .map((c) =>
         Object.assign({ c: c, name: c.name, group: c.group, index: index[c.name], status: P.statusOf(view.set, c.name) }, per[c.name], {
           recent: recent[c.name],
-          weak: weakScore(recent[c.name]),
+          weak: c.name in weak ? weak[c.name] : null,
         })
       );
   }
