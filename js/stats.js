@@ -913,7 +913,7 @@
     const allText = el('span');
     I.set(allText, 'stats.selectAllShort');
     allLabel.append(allBox, allText);
-    if (view.set === 'full') bar.append(allLabel);
+    bar.append(allLabel); // 広い画面では CSS で隠す（見出しのチェックを使う）
     const del = el('button', 'btn btn-outline-secondary btn-sm');
     del.type = 'button';
     I.set(del, 'stats.deleteSelected', { n: n });
