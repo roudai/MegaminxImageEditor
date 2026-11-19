@@ -85,12 +85,11 @@
     link.href = `./?${SET}=${encodeURIComponent(c.name)}`;
     I.set(link, 'list.openTitle', { name: c.name }, 'title');
 
-    const canvas = el('canvas', 'mx-auto mt-2 d-block');
+    // 描く解像度は IMAGE_SIZE × devicePixelRatio。表示の大きさは CSS（.case-image：カードの幅に合わせて縮み、最大 IMAGE_SIZE）
+    const canvas = el('canvas', 'case-image mx-auto mt-2 d-block');
     const ratio = window.devicePixelRatio || 1;
     canvas.width = Math.round(IMAGE_SIZE * ratio);
     canvas.height = canvas.width;
-    canvas.style.width = IMAGE_SIZE + 'px';
-    canvas.style.height = IMAGE_SIZE + 'px';
     const colors = caseColors(c, settings);
     D.draw(canvas, colors.ucolor, colors.scolor, { border: settings.border });
 
@@ -482,7 +481,7 @@
       const heading = el('h2', 'h5 border-bottom pb-1 d-flex justify-content-between align-items-baseline', sectionTitle(s));
       heading.append(el('span', 'group-count'));
       section.append(heading);
-      const row = el('div', 'row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-2');
+      const row = el('div', 'row row-cols-3 row-cols-md-4 row-cols-lg-6 g-2'); // スマホでも 1 行 3 枚
       s.cases.forEach((c) => row.append(CARDS[c.name]));
       section.append(row);
       list.insertBefore(section, empty);

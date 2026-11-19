@@ -27,6 +27,12 @@
   color: inherit;
   text-decoration: none;
 }
+/* ケースの画像：カードの幅に合わせて縮む（最大 120px。js/cases.js の IMAGE_SIZE）。width・height の属性が同じなので正方形のまま */
+.case-image {
+  width: calc(100% - 1rem);
+  max-width: 120px;
+  height: auto;
+}
 
 /* 自分の手順のケースの印 */
 .custom-tag {
@@ -112,6 +118,37 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .status-badge.pop::before { animation: none; }
+}
+
+/* スマホ（1 行 3 枚）：カードの中を詰め、文字とバッジを小さくする */
+@media (max-width: 575.98px) {
+  .case-card .card-body {
+    padding: .35rem .3rem .45rem !important;
+  }
+  .case-card .card-body .fw-bold {
+    font-size: .85rem;
+  }
+  .case-card .card-body .font-monospace {
+    font-size: .66rem;
+    line-height: 1.35;
+  }
+  .case-image {
+    margin-top: .4rem !important;
+  }
+  .status-badge {
+    top: 1px;
+    right: 1px;
+    width: 28px;
+    height: 28px;
+  }
+  .status-badge::before {
+    width: 18px;
+    height: 18px;
+  }
+  .status-badge svg {
+    width: 11px;
+    height: 11px;
+  }
 }
 
 /* ---- 上部の進み具合 ---- */
