@@ -11,6 +11,8 @@
 //   - ログイン中は store-change を受けて、少しまとめてからクラウドに書く。ページを離れるときはすぐ書く
 //   - ログアウトしても手元のデータは消さない
 //   - ログイン中はアイコンの右上に、ログインに使ったサービス（Google / GitHub）のロゴを小さく出す
+//   - メニューのアイコンの行と保存の状態の行のあいだに、称号の札（titles.js の段位、または選んだバッジ）と
+//     習得したケースの数、記録のページのバッジの一覧へのリンクを出す。メニューを開いたときに Titles.update() でバッジを付ける
 //   - window.CloudSync：ほかのページ（privacy.html のデータ削除）から使う
 //       CloudSync.state()        { available, known, signedIn, name }
 //       CloudSync.deleteAccount() アカウントのデータ（users/{uid}/apps の全アプリの文書）とログインのアカウントを削除する
@@ -329,6 +331,7 @@ async function main() {
     if (menuOpen) closeMenu();
     else {
       menuOpen = true;
+      if (window.Titles) window.Titles.update(); // ほかのページで条件を満たしたバッジも、開いたときに付ける
       render();
     }
   }
@@ -361,6 +364,26 @@ async function main() {
     });
     return b;
   }
+
+  // ---- 称号の札（titles.js）。アイコンの行と「アカウントに保存済み」の行のあいだに出す。バッジの一覧は記録のページ ----
+  function titleCard() {
+    const T = window.Titles;
+    if (!T) return null;
+    const wrap = el('div', 'account-title');
+    const link = el('a', 'account-title-link');
+    link.href = 'stats#titles';
+    link.textContent = I.t('titles.badges', { n: Object.keys(T.read().earned).length, total: T.BADGES.length });
+    const unseen = T.unseenCount(); // まだ一覧で見ていないバッジ
+    if (unseen) link.append(el('span', 'title-badge-new', I.t('titles.newCount', { n: unseen })));
+    link.append(' ›');
+    wrap.append(T.renderCard(I), link);
+    return wrap;
+  }
+  // 習得状況・バッジが変わったら、開いているメニューの札を作り直す
+  window.addEventListener('store-change', (e) => {
+    const name = e.detail && e.detail.name;
+    if (menuOpen && user && !user.pending && (name === 'progress' || name === 'titles')) render();
+  });
 
   function render() {
     window.dispatchEvent(new CustomEvent('cloud-sync-change'));
@@ -451,7 +474,10 @@ async function main() {
       code.textContent = errorCode.replace(/^firestore\//, '');
       state.append(code);
     }
-    menu.append(head, state);
+    const title = titleCard();
+    menu.append(head);
+    if (title) menu.append(title);
+    menu.append(state);
     if (message) menu.append(messageBox());
     menu.append(
       el('div', 'account-menu-divider'),

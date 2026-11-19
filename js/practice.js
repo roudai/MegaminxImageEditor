@@ -23,6 +23,7 @@
 //     +2 / DNF（インスペクションの超過で自動、結果からも変えられる）、ao5・ao12・ベスト（progress.js の average など）。
 //     記録は practice.full = { inspection, log: [{ at, sec, penalty, s }] }（s はスクランブルの短い形）。習得状況は変えない。
 //     通しのタイマーは長押し（0.3 秒で準備完了）して離したときにスタートする
+//   - 称号とバッジ（titles.js）：記録したあと、段位が上がった・バッジを取ったら画面の下に数秒知らせる。ページを開いたときは知らせずに付ける
 (function () {
   'use strict';
   const S = window.Store;
@@ -590,9 +591,37 @@
   // ---- 記録と判定 ----
   const sessionHistory = [];
 
+  // ---- 称号とバッジ（titles.js）：段位が上がったとき・バッジを取ったときに、画面の下に数秒知らせる ----
+  const T = window.Titles;
+  const rankIndex = () => (T ? T.rankOf(S.get('progress')).index : 0);
+  let toastTimer = null;
+  function toast(lines) {
+    if (!lines.length) return;
+    let box = $('practiceToast');
+    if (!box) {
+      box = el('div', 'practice-toast');
+      box.id = 'practiceToast';
+      box.setAttribute('role', 'status');
+      document.body.append(box);
+    }
+    box.replaceChildren(...lines.map((text) => el('div', 'practice-toast-line', text)));
+    box.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => box.classList.remove('show'), 4000);
+  }
+  function celebrate(beforeRank) {
+    if (!T) return;
+    const lines = [];
+    const after = T.rankOf(S.get('progress'));
+    if (beforeRank !== undefined && after.index > beforeRank) lines.push(I.t('titles.rankUp', { name: I.t('titles.rank.' + after.id) }));
+    T.update().forEach((id) => lines.push(I.t('titles.badgeEarned', { name: I.t('titles.badge.' + id) })));
+    toast(lines);
+  }
+
   function record(sec) {
     const { set, c } = current;
     const hinted = hintUsed;
+    const rankBefore = rankIndex();
     // ヒントを見たときは、目安以内でも習得済みにはしない（練習中）。タイムも最近の記録に入れない
     const status = hinted ? 'learning' : P.judge(sec, threshold(set));
     const beforeStatus = P.statusOf(set, c.name);
@@ -607,6 +636,9 @@
     // 日時付きの記録（記録のページ stats.html で使う）。ヒントを見たものも残す（hint: true）
     const logEntry = { at: Date.now(), set: set, name: c.name, sec: sec, status: status, hint: hinted };
     savePrefs({ log: P.addLog((S.get('practice') || {}).log, logEntry) });
+    // 累計の回数・続けて練習した日数・「すべて」で出会ったケース（取り消しても減らさない）
+    if (T) T.record('case', logEntry.at, prefs.filter === 'all' ? { set, name: c.name } : null);
+    celebrate(rankBefore); // 取り消しても、取ったバッジはそのまま残す
     const entry = { set, c, sec, status, threshold: threshold(set), hinted };
     sessionHistory.unshift(entry);
     sessionHistory.length = Math.min(sessionHistory.length, HISTORY);
@@ -696,6 +728,8 @@
       ? { at: Date.now(), sec: sec, penalty: pen || '', s: code }
       : { at: Date.now(), sec: sec, penalty: pen || '', scramble: current.scramble };
     saveFull({ log: P.addLog(fullLog(), rec) });
+    if (T) T.record('full', rec.at);
+    celebrate();
     showFullResult(rec);
     renderHistory();
     next(true);
@@ -967,6 +1001,9 @@
       }),
     });
   })();
+
+  // これまでの記録で条件を満たしているバッジは、知らせずに付けておく
+  if (T) T.update();
 
   renderSettings();
   next();

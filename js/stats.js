@@ -8,6 +8,8 @@
 //     グラフは「推移 / 分布」で切り替え（分布＝期間内のタイムを区間ごとに数えた棒グラフ。選んだものは practice.stats.chart に保存）、
 //     ケースごとの表（並び：苦手順（既定。直近 10 回の平均の遅い順）/ グループ順 / 覚える順（PLL）。見出しでも並べ替え。
 //     ケースを押すとそのケースを練習ページで出題）
+//   - 集計のカードとタイムの推移のあいだに称号の札とバッジの一覧（titles.js の renderCard・renderBadges。取ったバッジを押すと称号として表示）。
+//     バッジの一覧は開け閉めできる（既定は閉じる。practice.stats.badges に保存。stats#titles で開いたときは開く）
 (function () {
   'use strict';
   const S = window.Store;
@@ -50,6 +52,7 @@
     sortV: 2,
     tab: saved.tab === 'solves' ? 'solves' : 'cases', // PLL・OLL の表：ケースごと / 記録の一覧
     chart: saved.chart === 'dist' ? 'dist' : 'trend', // グラフ：推移（折れ線） / 分布（棒グラフ）
+    badges: saved.badges === true, // バッジの一覧を開いているか（既定は閉じる）
   };
   // 練習ページの「すべての記録を見る」から開いたとき（?set=oll&scope=d など）は、その種類を出す（表示の設定として保存する）
   const params = new URLSearchParams(location.search);
@@ -1183,10 +1186,59 @@
       if (w !== lastWidth) render();
     }, 150);
   });
-  I.onChange(render);
+  // ---- 称号とバッジ（titles.js）。期間・種類に関係なく、今の習得状況と取ったバッジを出す ----
+  const T = window.Titles;
+  // ページを開いたときより後に取ったバッジに NEW の印を付ける（一覧を開いたら見たことにするが、このページを開いている間は印を残す）
+  const newSince = T ? T.read().seenAt : 0;
+  function renderTitles() {
+    if (!T) return;
+    const box = $('statsTitles');
+    const head = el('div', 'stats-titles-head');
+    const toggle = el('button', 'stats-titles-toggle');
+    toggle.type = 'button';
+    toggle.setAttribute('aria-expanded', String(view.badges));
+    toggle.setAttribute('aria-controls', 'statsBadges');
+    const n = Object.keys(T.read().earned).length;
+    const unseen = T.unseenCount();
+    const count = el('span', 'stats-titles-count', I.t('titles.badges', { n: n, total: T.BADGES.length }));
+    if (unseen && !view.badges) count.append(el('span', 'title-badge-new', I.t('titles.newCount', { n: unseen })));
+    toggle.append(
+      count,
+      el('span', 'stats-titles-action', (view.badges ? '▾ ' : '▸ ') + I.t(view.badges ? 'titles.badgesHide' : 'titles.badgesShow'))
+    );
+    toggle.addEventListener('click', () => {
+      view.badges = !view.badges;
+      saveView();
+      renderTitles();
+    });
+    head.append(T.renderCard(I, { streak: true }), toggle);
+    box.replaceChildren(head);
+    if (view.badges) {
+      const list = T.renderBadges(I, renderTitles, { newSince: newSince });
+      T.markSeen();
+      list.id = 'statsBadges';
+      box.append(list);
+    }
+  }
+
+  I.onChange(() => {
+    render();
+    renderTitles();
+  });
   // ログインしてクラウドの記録が入ったとき（ページの読み直し）以外にも、別タブで練習したら反映する
   window.addEventListener('storage', (e) => {
-    if (e.key && e.key.indexOf('megaminx-image-editor:') === 0) render();
+    if (!e.key || e.key.indexOf('megaminx-image-editor:') !== 0) return;
+    render();
+    if (T) T.update();
+    renderTitles();
   });
+  if (T) T.update(); // これまでの記録で条件を満たしているバッジを付ける
   render();
+  renderTitles();
+  // アカウントメニューの「バッジ」から開いたとき（stats#titles）：作ったあとの位置へ移る
+  if (location.hash === '#titles') {
+    view.badges = true;
+    renderTitles();
+    $('titles').scrollIntoView();
+  }
 })();

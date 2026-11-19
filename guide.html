@@ -103,6 +103,14 @@
           <li>「記録の一覧」では、記録を1件ずつ、または選んでまとめて削除できます。「すべての記録を削除」で、その種類（PLL・OLL・通し）の記録を期間に関係なくすべて消せます。どれも削除したあとに「元に戻す」で取り消せます。記録を消しても、習得状況は変わりません。</li>
         </ul>
 
+        <h2>称号とバッジ</h2>
+        <ul>
+          <li>記録のページの、集計のカードとグラフのあいだに称号が出ます。ログイン中は、右上のアイコンを押したメニューにも出ます。称号は PLL と OLL を合わせて習得したケースの数（410 ケース中）で上がっていき、「手順表をブックマークした」から始まって、すべて習得すると「歩く手順書」になります。習得状況を戻すと称号も下がります。</li>
+          <li>称号にマウスを乗せると、次の称号まであと何ケースかが出ます。記録のページの称号の下には、続けて練習している日数といちばん長く続いた日数が出ます（今日まだ練習していなくても、昨日まで続いていれば数えます）。</li>
+          <li>練習の回数や続けて練習した日数、通しの記録などでバッジがもらえます。バッジは全部で 40 個あり、記録のページの称号の右の「バッジ」を押すと一覧を開け閉めできます。取ったバッジを押すと、そのバッジを称号の代わりに表示できます（もう一度押すと戻ります）。一度取ったバッジは、記録や習得状況を消しても残ります。</li>
+          <li>練習で称号が上がったときやバッジを取ったときは、画面の下に知らせが出ます。まだ一覧で見ていない新しいバッジには「NEW」の印が付きます（右上のメニューの「バッジ」の横にも出ます）。</li>
+        </ul>
+
         <h2>保存とログイン</h2>
         <ul>
           <li>ログインしなくても、設定・習得状況・練習の記録はこのブラウザに保存されます。</li>
@@ -164,6 +172,14 @@
           <li>In "Solves", you can delete solves one at a time or select several at once. "Delete all solves" removes every solve of that type (PLL, OLL or Full solve), whatever the period. You can undo any deletion. Deleting solves doesn't change your progress.</li>
         </ul>
 
+        <h2>Titles and badges</h2>
+        <ul>
+          <li>Your title is shown on the Stats page between the summary cards and the chart, and also in the menu under your icon at the top right while you are signed in. Your title goes up with the number of cases you have learned across PLL and OLL (out of 410), starting at "Bookmarked the Alg Sheet" and ending at "Walking Alg Sheet" when you have learned them all. If you set cases back, your title goes down too.</li>
+          <li>Hover over your title to see how many more cases you need for the next one. On the Stats page, your current practice streak (days in a row) and your best streak are shown under your title. A streak still counts if you practiced yesterday but not yet today.</li>
+          <li>You earn badges for things like how often you practice, practicing several days in a row, and full solves. There are 40 badges. On the Stats page, click "Badges" next to your title to show or hide them, and click a badge you have earned to show it instead of your title (click it again to switch back). Badges stay even if you delete solves or reset your progress.</li>
+          <li>When your title goes up or you earn a badge during practice, a message appears at the bottom of the screen. New badges you haven't looked at yet are marked "NEW" (also next to "Badges" in the menu at the top right).</li>
+        </ul>
+
         <h2>Saving and signing in</h2>
         <ul>
           <li>Without signing in, your settings, progress and practice data are saved in this browser.</li>
@@ -180,6 +196,7 @@
   <script type="text/javascript" src="js/i18n.js"></script>
   <script type="text/javascript" src="js/navbar.js"></script>
   <script type="text/javascript" src="js/legal.js"></script>
+  <script type="text/javascript" src="js/titles.js"></script>
   <script type="text/javascript" src="js/firebase-config.js"></script>
   <script type="module" src="js/cloud-sync.js"></script>
 </body>

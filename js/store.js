@@ -9,6 +9,8 @@
  *   Store.merge(local, remote, { union })
  *                                手元とクラウドの snapshot を合わせた snapshot を返す（DOM 非依存）
  *                                  - 名前ごとに更新時刻の新しい方を使う
+ *                                  - 取ったバッジ（titles.earned）はいつも両方を合わせる（日時は早い方。shown は新しい方）。
+ *                                    練習の累計（titles.stats）は回数・日数・最長の連続は大きい方、最後に練習した日と連続の日数は新しい日の方
  *                                  - union: true（この端末で初めてそのアカウントと合わせるとき）は、習得状況（progress）と
  *                                    自分の手順（custom-algs）をケースごとに合わせる（両方にあれば新しい方、片方だけなら残す）
  *
@@ -35,8 +37,8 @@
 
   const PREFIX = 'megaminx-image-editor:';
   // settings: 配色・画像の設定 / progress: 習得状況 / list-filter: 一覧の絞り込み / custom-algs: 自分の手順 / lang: 言語
-  // practice: 練習の設定と最近のタイム（practice.js）
-  const NAMES = ['settings', 'progress', 'list-filter', 'custom-algs', 'lang', 'practice'];
+  // practice: 練習の設定と最近のタイム（practice.js） / titles: 取ったバッジと表示する称号（titles.js）
+  const NAMES = ['settings', 'progress', 'list-filter', 'custom-algs', 'lang', 'practice', 'titles'];
   const PER_CASE = ['progress', 'custom-algs']; // { pll: { name: … }, oll: { … } } の形で、ケースごとに合わせられるもの
   const UPDATED = PREFIX + 'updated';
 
@@ -122,6 +124,38 @@
     return out;
   }
 
+  // 取ったバッジ（titles.earned）は両方を合わせる（別の端末で取ったものを消さない。日時は早い方）。shown は newer のもの
+  function mergeTitles(older, newer) {
+    const out = Object.assign({}, isObject(older) ? older : {}, isObject(newer) ? newer : {});
+    const earned = {};
+    [older, newer].forEach((src) => {
+      if (!isObject(src) || !isObject(src.earned)) return;
+      Object.keys(src.earned).forEach((id) => {
+        const t = src.earned[id];
+        if (typeof t === 'number' && !(earned[id] <= t)) earned[id] = t;
+      });
+    });
+    out.earned = earned;
+    // バッジの一覧を見た日時（NEW の印）は遅い方
+    const seen = Math.max(Number(isObject(older) && older.seenAt) || 0, Number(isObject(newer) && newer.seenAt) || 0);
+    if (seen) out.seenAt = seen;
+    // 練習の累計（titles.js の track）：回数・日数・最長の連続は大きい方、最後に練習した日と連続の日数は新しい日の方
+    const a = isObject(older) && isObject(older.stats) ? older.stats : null;
+    const b = isObject(newer) && isObject(newer.stats) ? newer.stats : null;
+    if (a && b) {
+      const max = (k) => Math.max(Number(a[k]) || 0, Number(b[k]) || 0);
+      const later = String(a.lastDay || '') > String(b.lastDay || '') ? a : b;
+      // 「すべて」で出会ったケース（met）は和集合
+      const met = {};
+      ['pll', 'oll'].forEach((set) => {
+        const list = (s) => (isObject(s.met) && Array.isArray(s.met[set]) ? s.met[set] : []);
+        met[set] = [...new Set(list(a).concat(list(b)))];
+      });
+      out.stats = { reps: max('reps'), days: max('days'), lastDay: later.lastDay || null, run: Number(later.run) || 0, bestRun: max('bestRun'), met };
+    }
+    return out;
+  }
+
   function merge(local, remote, options) {
     const union = !!(options && options.union);
     const l = local || { data: {}, updated: {} };
@@ -136,6 +170,12 @@
       if (inL && inR && union && PER_CASE.includes(name)) {
         const localNewer = tl >= tr;
         out.data[name] = localNewer ? mergePerCase(r.data[name], l.data[name]) : mergePerCase(l.data[name], r.data[name]);
+        out.updated[name] = Math.max(tl, tr);
+        return;
+      }
+      if (inL && inR && name === 'titles') {
+        const localNewer = tl >= tr;
+        out.data[name] = localNewer ? mergeTitles(r.data[name], l.data[name]) : mergeTitles(l.data[name], r.data[name]);
         out.updated[name] = Math.max(tl, tr);
         return;
       }
