@@ -112,9 +112,9 @@
 
   | id | ケース数 | 日本語 | 英語 |
   |---|---|---|---|
-  | bookmark | 1 | 手順表をブックマークした | Bookmarked the Alg Sheet |
-  | catching | 20 | 指が手順を覚え始めた | Fingers Are Catching On |
-  | lookalikes | 40 | 似たケースにまだ惑わされる | Still Fooled by Lookalikes |
+  | eye | 1 | 十二面体と目が合った | Caught the Dodecahedron's Eye |
+  | sheet | 20 | 手順表が手放せない | Can't Let Go of the Alg Sheet |
+  | hooked | 40 | 沼にはまり始めた | Starting to Get Hooked |
   | faces | 76（PLL の半分） | ケースの顔が見分けられる | Knows Cases by Face |
   | autopilot | 114（PLL の 3/4） | 手が勝手に動き出す | Hands Move on Their Own |
   | done | 151（PLL の数） | もう全部覚えた気でいる | Thinks They're Done |
@@ -125,9 +125,9 @@
   | dreams | 328（80%） | 夢に手順が出てくる | Dreams in Algorithms |
   | pentagon | 369（90%） | 五角形を見ると回したくなる | Wants to Turn Every Pentagon |
   | whisperer | 390（95%） | 十二面体と話せる | Dodecahedron Whisperer |
-  | walking | 410（100%） | 歩く手順書 | Walking Alg Sheet |
+  | reborn | 410（100%） | 十二面体の生まれ変わり | Reincarnated Dodecahedron |
 
-- 札の色：bookmark〜autopilot は銅、done〜family は銀（PLL の数で銀になる）、dreams〜whisperer は金、walking は虹色の枠
+- 札の色：eye〜autopilot は銅、done〜family は銀（PLL の数で銀になる）、dreams〜whisperer は金、reborn は虹色の枠
 - バッジ（40 個。習得 5・練習 10・継続 5・PLL・OLL の速さ 5・ソルブ 15。一度取ったら残る。分類の中はおおよそ取りやすい順に並べる）。`titles = { earned: { id: 日時(ms) }, shown: id | null, stats, seenAt }` に保存する。`seenAt` は記録のページでバッジの一覧を開いて見たことにしたバッジの、いちばん新しい取得日時（今の時刻にはしない。新しいバッジが無ければ書かないので、描き直すたびに呼んでも保存が続かない＝別のタブの storage で書き合いにならない）
   - `stats` は練習の累計 `{ reps, days, lastDay, run, bestRun, met }`（`Titles.track`）。記録は最新 2000 件までなので、それを超える回数・日数はここで数える。練習ページで PLL・OLL を記録するたびに reps を 1 足し、PLL・OLL・ソルブを記録した日を数える（端末の時刻の日付。1 日空くと連続は 1 から。結果の「取り消す」でも減らさない）。判定は stats と記録から数えたものの大きい方。`met` は練習の対象が「すべて」のときに記録した（解いた・解けなかった。スキップは数えない）ケースの名前 `{ pll: [...], oll: [...] }`
   - 習得（5）：はじめの一手（1 ケース）・PLL 折り返し地点（76）・PLL 全制覇（151）・OLL 折り返し地点（130）・OLL 全制覇（259）

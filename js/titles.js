@@ -50,9 +50,9 @@
   // 前半は PLL を先に覚える人に合わせて、PLL の進み具合で区切る（151 ＝ PLL をすべて習得）。後半は全体の割合
   const RANKS = [
     { id: 'none', need: 0 },
-    { id: 'bookmark', need: 1 },
-    { id: 'catching', need: 20 },
-    { id: 'lookalikes', need: 40 },
+    { id: 'eye', need: 1 },
+    { id: 'sheet', need: 20 },
+    { id: 'hooked', need: 40 },
     { id: 'faces', need: Math.ceil(TOTALS.pll / 2) }, // 76
     { id: 'autopilot', need: Math.ceil((TOTALS.pll * 3) / 4) }, // 114
     { id: 'done', need: TOTALS.pll }, // 151
@@ -63,13 +63,13 @@
     { id: 'dreams', need: need(0.8) },
     { id: 'pentagon', need: need(0.9) },
     { id: 'whisperer', need: need(0.95) },
-    { id: 'walking', need: TOTALS.all },
+    { id: 'reborn', need: TOTALS.all },
   ];
 
   function tierOf(id) {
     const i = RANKS.findIndex((r) => r.id === id);
     if (i <= 0) return null;
-    if (id === 'walking') return 'rainbow';
+    if (id === 'reborn') return 'rainbow';
     if (i <= 5) return 'bronze';
     if (i <= 10) return 'silver';
     return 'gold';

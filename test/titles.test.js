@@ -38,9 +38,9 @@ test('TOTALS はケースのデータの数と同じ', () => {
 
 test('段位の境目：PLL と OLL を合わせた習得済みの数で決まる（ちょうどで上がり、1 つ手前では上がらない）', () => {
   const expected = {
-    bookmark: 1,
-    catching: 20,
-    lookalikes: 40,
+    eye: 1,
+    sheet: 20,
+    hooked: 40,
     faces: 76,
     autopilot: 114,
     done: 151,
@@ -51,7 +51,7 @@ test('段位の境目：PLL と OLL を合わせた習得済みの数で決ま�
     dreams: 328,
     pentagon: 369,
     whisperer: 390,
-    walking: 410,
+    reborn: 410,
   };
   assert.deepEqual(
     T.RANKS.slice(1).map((r) => [r.id, r.need]),
@@ -72,20 +72,20 @@ test('rankOf：数え方・次の段位までの数・何も無いとき', () =>
   assert.deepEqual(r.learned, { pll: 76, oll: 130, all: 206 });
   assert.deepEqual(r.next, { id: 'bag', need: 40 });
   assert.equal(T.rankOf(null).id, 'none');
-  assert.deepEqual(T.rankOf(null).next, { id: 'bookmark', need: 1 });
+  assert.deepEqual(T.rankOf(null).next, { id: 'eye', need: 1 });
   assert.equal(T.rankOf(progressOf(151, 259)).next, null);
 });
 
 test('tierOf：銅・銀・金・虹', () => {
   assert.equal(T.tierOf('none'), null);
-  assert.equal(T.tierOf('bookmark'), 'bronze');
+  assert.equal(T.tierOf('eye'), 'bronze');
   assert.equal(T.tierOf('autopilot'), 'bronze');
   assert.equal(T.tierOf('done'), 'silver');
   assert.equal(T.tierOf('hums'), 'silver');
   assert.equal(T.tierOf('family'), 'silver');
   assert.equal(T.tierOf('dreams'), 'gold');
   assert.equal(T.tierOf('whisperer'), 'gold');
-  assert.equal(T.tierOf('walking'), 'rainbow');
+  assert.equal(T.tierOf('reborn'), 'rainbow');
 });
 
 // その日の d 日目（端末の時刻）の正午

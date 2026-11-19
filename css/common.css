@@ -372,7 +372,7 @@
   color: #6c757d;
   font-size: .75rem;
 }
-/* 称号の札（js/titles.js の renderCard。アカウントメニューと記録のページ）：銅 → 銀 → 金 → 歩く手順書は虹色の枠 */
+/* 称号の札（js/titles.js の renderCard。アカウントメニューと記録のページ）：銅 → 銀 → 金 → 十二面体の生まれ変わり（すべて習得）は虹色の枠 */
 .title-empty {
   color: #6c757d;
   font-size: .75rem;
