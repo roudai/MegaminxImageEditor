@@ -101,7 +101,10 @@
   display: flex;
   align-items: center;
   gap: .4rem;
-  width: 19rem; /* ラベルと同じ行に収める（狭い画面では折り返して幅いっぱい） */
+  /* 広い画面では、グループの要約が最大幅（.practice-groups-toggle の 12rem）になっても、
+     グループ・対象・習得の目安・出題の 4 つの欄が 1 行に収まる幅（狭い画面では折り返して幅いっぱい）。
+     細かい調整は「−」「＋」でできるので、スライドバーは短めでよい */
+  width: 16rem;
   max-width: 100%;
 }
 .practice-threshold-track {
@@ -241,7 +244,7 @@
   display: inline-flex;
   align-items: center;
   gap: .35rem;
-  max-width: 14rem;
+  max-width: 12rem; /* 長いときは「…」で切る（マウスを乗せると title で全部出す） */
   padding: .2rem .7rem;
   border: 1px solid #dee2e6;
   border-radius: 50rem;

@@ -356,6 +356,7 @@
       });
       const names = [...chosen].map((k) => labels[k] || k);
       label.textContent = names.length <= 4 ? names.join(', ') : `${names.slice(0, 4).join(', ')} … (${names.length})`;
+      button.title = names.join(', '); // 要約が「…」で切れても、マウスを乗せると選んだものが全部見えるように
     }
     button.append(label, el('span', 'practice-groups-caret', groupsOpen ? '▴' : '▾'));
     button.addEventListener('click', () => {
