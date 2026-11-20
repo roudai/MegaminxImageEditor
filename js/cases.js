@@ -470,6 +470,8 @@
     sections = CS.list(DATA, byStage);
     const nav = $('groupNav');
     nav.replaceChildren();
+    // 2 文字の名前（OLL の 10〜53・1C、段階の F1 など）があるか。スマホではそれに合わせてそろえる幅を決める（css/cases.css）
+    nav.classList.toggle('two-char', sections.some((s) => s.label.length === 2));
     sections.forEach((s) => {
       const b = el('button', 'btn btn-outline-secondary btn-sm group-nav-btn', s.label);
       b.type = 'button';
