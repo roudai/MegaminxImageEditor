@@ -103,6 +103,8 @@
         (v) => change({ set: v })
       )
     );
+    // スマホ（幅 576px 未満）：種類は見出しの横、範囲（OLL）と期間（プルダウン）は次の 1 行（css/stats.css で出し分け）
+    box.append(el('div', 'stats-controls-break'));
     if (view.set === 'oll') {
       box.append(
         segment(
@@ -116,17 +118,26 @@
         )
       );
     }
-    box.append(
-      segment(
-        [
-          { value: '7', key: 'stats.days', params: { n: 7 } },
-          { value: '30', key: 'stats.days', params: { n: 30 } },
-          { value: 'all', key: 'stats.allTime' },
-        ],
-        view.period,
-        (v) => change({ period: v })
-      )
-    );
+    const periods = [
+      { value: '7', key: 'stats.days', params: { n: 7 } },
+      { value: '30', key: 'stats.days', params: { n: 30 } },
+      { value: 'all', key: 'stats.allTime' },
+    ];
+    const periodSeg = segment(periods, view.period, (v) => change({ period: v }));
+    periodSeg.classList.add('stats-period-segment');
+    // スマホでは期間をプルダウンにする（範囲と 1 行に収めるため）
+    const select = el('select', 'form-select form-select-sm stats-period-select');
+    I.set(select, 'stats.period', null, 'aria-label');
+    periods.forEach((item) => {
+      const option = el('option');
+      option.value = item.value;
+      // 「すべて」は範囲の「すべて」と並ぶので、プルダウンでは「全期間」
+      I.set(option, item.value === 'all' ? 'stats.allTimeSelect' : item.key, item.params);
+      option.selected = item.value === view.period;
+      select.append(option);
+    });
+    select.addEventListener('change', () => change({ period: select.value }));
+    box.append(periodSeg, select);
   }
 
   function change(next) {
