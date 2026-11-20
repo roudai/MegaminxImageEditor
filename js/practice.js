@@ -157,6 +157,19 @@
     return f;
   }
 
+  // OLL の範囲の切り替え（No Dot / Dot / すべて）。見出しの横（広い画面）と設定の中（スマホ）の両方で使う
+  function scopeSegment() {
+    return segment(
+      [
+        { value: 'nd', key: 'list.scopeNd', count: DATA.oll.filter(SCOPES.nd).length },
+        { value: 'd', key: 'list.scopeD', count: DATA.oll.filter(SCOPES.d).length },
+        { value: 'all', key: 'list.scopeAll', count: DATA.oll.length },
+      ],
+      prefs.scope,
+      (v) => changeSettings({ scope: v })
+    );
+  }
+
   // マウスが無く、指で操作する画面か（操作の説明をタップの文にする）
   const TOUCH = window.matchMedia('(hover: none) and (pointer: coarse)');
   TOUCH.addEventListener('change', () => renderSettings());
@@ -176,18 +189,12 @@
         (v) => changeSettings({ set: v })
       )
     );
+    // OLL の範囲：広い画面は見出しの横、スマホは設定の中の「範囲」の欄（下の box）。
+    // スマホで見出しの横に出すと、OLL のときだけ次の行に落ちて設定・タイマーが下にずれるため（css/practice.css で出し分け）
     if (prefs.set === 'oll') {
-      setBox.append(
-        segment(
-          [
-            { value: 'nd', key: 'list.scopeNd', count: DATA.oll.filter(SCOPES.nd).length },
-            { value: 'd', key: 'list.scopeD', count: DATA.oll.filter(SCOPES.d).length },
-            { value: 'all', key: 'list.scopeAll', count: DATA.oll.length },
-          ],
-          prefs.scope,
-          (v) => changeSettings({ scope: v })
-        )
-      );
+      const head = scopeSegment();
+      head.classList.add('practice-scope-head');
+      setBox.append(head);
     }
     // 「すべての記録を見る」は今の種類（OLL は範囲も）の記録を開く
     const statsQuery = new URLSearchParams({ set: prefs.set });
@@ -224,6 +231,11 @@
         )
       );
       return;
+    }
+    if (prefs.set === 'oll') {
+      const scopeField = field('practice.scope', scopeSegment());
+      scopeField.classList.add('practice-scope-field');
+      box.append(scopeField);
     }
     box.append(field(byStage(prefs.set) ? 'practice.stages' : 'practice.groups', groupSummary()));
     const cases = inSelection(prefs.set);
@@ -267,6 +279,8 @@
     if (isFull()) {
       parts.push(I.t('practice.inspection') + ' ' + I.t(fullPrefs().inspection ? 'practice.on' : 'practice.off'));
     } else {
+      // OLL の範囲（スマホでは見出しの横に出さないので、要約の先頭に出す）
+      if (prefs.set === 'oll') parts.push(I.t({ nd: 'list.scopeNd', d: 'list.scopeD', all: 'list.scopeAll' }[prefs.scope] || 'list.scopeAll'));
       const chosen = chosenGroups(prefs.set);
       if (chosen) parts.push(I.t('practice.groupsCount', { n: chosen.size }));
       parts.push(I.t('practice.target') + ' ' + I.t(prefs.filter === 'all' ? 'list.filterAll' : 'status.' + prefs.filter));

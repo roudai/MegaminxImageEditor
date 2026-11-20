@@ -299,6 +299,26 @@
   text-decoration: none;
 }
 
+/* 見出しの横の種類（PLL / OLL / ソルブ）と範囲（OLL の No Dot / Dot / すべて）：
+   箱ごと折り返すと、OLL に切り替えたときに種類の切り替えまで次の行に落ちてチラつくので、箱をなくして
+   見出しの行に直接並べる。入りきらないときは範囲だけが次の行に落ち、種類は見出しの横から動かない */
+.practice-set-box {
+  display: contents;
+}
+/* OLL の範囲：広い画面は見出しの横、スマホは設定の中の「範囲」の欄（OLL のときだけ見出しの下に 1 行増えて、
+   設定・タイマーが下にずれないように。スマホの設定は 1 行の要約にたたまれ、範囲は要約の先頭に出る） */
+.practice-scope-field {
+  display: none;
+}
+@media (max-width: 575.98px) {
+  .practice-scope-head {
+    display: none;
+  }
+  .practice-scope-field {
+    display: flex;
+  }
+}
+
 /* ---- 出題とタイマー ---- */
 .practice-stage {
   /* カード全体がタイマーの押す範囲（js/practice.js）。カードの上ではスクロール・文字選択・長押しのメニューを出さない */
