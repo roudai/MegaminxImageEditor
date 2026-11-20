@@ -115,7 +115,7 @@
     <input id="fname" class="form-control" type="text" value="megaminx.png">
 
     <label class="form-label" for="imageSize" data-i18n="editor.imageSize">Image Size (px)</label>
-    <input onchange="imageChange();" id="imageSize" class="form-control" name="size" type="number" value="200" min="1" max="1024" step="1">
+    <input onchange="imageChange();" id="imageSize" class="form-control" name="size" type="number" value="200" min="100" max="1000" step="1"><!-- max は js/megaminx.js が画面の幅で決め直す -->
 
     <hr>
     <label class="form-label" for="alg" data-i18n="editor.algorithm">Algorithm</label>

@@ -525,7 +525,8 @@
       if (HEX.test(faceColors[face])) faceInputs[face].value = faceColors[face].toLowerCase();
     });
     if ([...preset.options].some((o) => o.value === settings.preset)) preset.value = settings.preset;
-    if (/^\d+$/.test(settings.imageSize)) $('imageSize').value = settings.imageSize;
+    // 画像サイズは今の画面の範囲（megaminx.js の clampImageSize。上限は画面の幅で決まる）に収めてから入れる
+    if (/^\d+$/.test(settings.imageSize)) $('imageSize').value = window.clampImageSize(settings.imageSize);
     ['border', 'bgColor'].forEach((id) => {
       if (HEX.test(settings[id])) $(id).value = settings[id];
     });
