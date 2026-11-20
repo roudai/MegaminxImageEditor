@@ -5,10 +5,11 @@ rules_version = '2';
 // （例：users/{uid}/apps/megaminx-image-editor）。本人の文書だけを読み書き・削除できる。
 // 作る・書き換えるのは appIds() に書いたアプリ名だけ（名前を変えて文書をいくらでも作られないように）。
 // アプリを増やしたら appIds() に名前を足して貼り直す。読む・削除するのはどの名前でもよい（アカウントのデータ削除で全部消せるように）。
+// Megaminx Image Editor は練習の記録を種類ごとの文書（megaminx-image-editor-log-pll・-log-oll）にも分けて保存する。
 service cloud.firestore {
   match /databases/{database}/documents {
     function appIds() {
-      return ['megaminx-image-editor', 'visualcube-editor'];
+      return ['megaminx-image-editor', 'megaminx-image-editor-log-pll', 'megaminx-image-editor-log-oll', 'visualcube-editor'];
     }
     match /users/{userId}/apps/{appId} {
       allow read, delete: if request.auth != null && request.auth.uid == userId;

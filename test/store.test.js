@@ -111,3 +111,45 @@ test('merge：外したバッジ（titles.revoked）は、それより前に取�
   assert.deepEqual(t.earned, { first: 1, fullSub30: 50 });
   assert.deepEqual(t.revoked, { fullSub60: 40, fullSub30: 30 });
 });
+
+test('toCloud / fromCloud：PLL・OLL の記録を種類ごとの短い形に分け、読んだら元に戻す', () => {
+  const log = [
+    { at: 5, set: 'oll', name: '16B+', sec: 12.34, status: 'learned', hint: false },
+    { at: 4, set: 'pll', name: 'A1+', sec: null, status: 'learning', hint: true },
+    { at: 3, set: 'pll', name: 'H1-', sec: 7.28, status: 'learned', hint: false },
+  ];
+  const snap = { data: { practice: { set: 'pll', log: log, full: { log: [{ at: 1, sec: 50, penalty: '', s: 'x' }] } }, lang: 'ja' }, updated: { practice: 9, lang: 1 } };
+  const cloud = Store.toCloud(snap);
+  // 本体には記録を入れない（ソルブの記録は本体のまま）
+  assert.equal(cloud.main.logsSplit, true);
+  assert.equal('log' in cloud.main.data.practice, false);
+  assert.deepEqual(cloud.main.data.practice.full, snap.data.practice.full);
+  assert.deepEqual(cloud.logs.pll, [[4, 'A1+', null, 1, 1], [3, 'H1-', 7.28, 2]]);
+  assert.deepEqual(cloud.logs.oll, [[5, '16B+', 12.34, 2]]);
+  // 手元の snapshot は変えない
+  assert.equal(snap.data.practice.log.length, 3);
+  // JSON を通して読み戻すと同じ
+  const back = Store.fromCloud(JSON.parse(JSON.stringify(cloud.main)), JSON.parse(JSON.stringify(cloud.logs)));
+  assert.deepEqual(back, snap);
+});
+
+test('fromCloud：以前の形（logsSplit の無い本体）はそのまま。種類ごとの文書が無ければ記録は空', () => {
+  const old = { data: { practice: { log: [{ at: 1, set: 'pll', name: 'A1+', sec: 3, status: 'learned', hint: false }] } }, updated: { practice: 1 } };
+  assert.deepEqual(Store.fromCloud(old, { pll: [[9, 'Z', 1, 2]] }), old);
+  const split = { data: { practice: { set: 'oll' } }, updated: { practice: 2 }, logsSplit: true };
+  assert.deepEqual(Store.fromCloud(split, {}).data.practice, { set: 'oll', log: [] });
+  assert.equal(Store.fromCloud(null, {}), null);
+});
+
+test('toCloud：記録が多いときも 1 文書の上限に収める。本体だけに書く以前の形（inline）は最新 2000 件', () => {
+  const log = [];
+  for (let i = 0; i < 10000; i++) log.push({ at: 1795158456787 - i * 1000, set: i % 2 ? 'pll' : 'oll', name: '16B+', sec: 12.34, status: 'learned', hint: false });
+  const cloud = Store.toCloud({ data: { practice: { log: log } }, updated: {} });
+  assert.equal(cloud.logs.pll.length, 5000);
+  assert.ok(JSON.stringify({ rows: cloud.logs.pll }).length < 500000);
+  assert.equal(cloud.inline.data.practice.log.length, 2000);
+  assert.equal(cloud.inline.data.practice.log[0].at, log[0].at);
+  // 知らない項目のある記録はそのまま残す
+  const odd = { at: 1, set: 'pll', name: 'A1+', sec: 1, status: 'learned', extra: 1 };
+  assert.deepEqual(Store.toCloud({ data: { practice: { log: [odd] } }, updated: {} }).logs.pll, [odd]);
+});

@@ -101,14 +101,18 @@ test('wrapAuf：全スクランブルで、前後に AUF を足しても同じ�
   }
 });
 
-test('addLog：新しい順に足し、最大件数（既定 2000）を超えた古いものは捨てる', () => {
-  const e = (i) => ({ at: i, set: 'pll', name: 'A1+', sec: 1, status: 'learned' });
+test('addLog：新しい順に足し、種類ごとの最大件数（既定 10000）を超えた古いものは捨てる', () => {
+  const e = (i, set) => ({ at: i, set: set || 'pll', name: 'A1+', sec: 1, status: 'learned' });
   assert.deepEqual(P.addLog(undefined, e(1)), [e(1)]);
   assert.deepEqual(P.addLog([e(2), e(1)], e(3), 2), [e(3), e(2)]);
+  // PLL をたくさん足しても OLL の記録は押し出されない
+  assert.deepEqual(P.addLog([e(3), e(2, 'oll'), e(1)], e(4), 2), [e(4), e(3), e(2, 'oll')]);
   let log = [];
-  for (let i = 0; i < 2005; i++) log = P.addLog(log, e(i));
-  assert.equal(log.length, 2000);
-  assert.equal(log[0].at, 2004);
+  for (let i = 0; i < 10005; i++) log = P.addLog(log, e(i));
+  log = P.addLog(log, e(10005, 'oll'));
+  assert.equal(log.length, 10001);
+  assert.equal(log[1].at, 10004);
+  assert.equal(log[log.length - 1].at, 5);
 });
 
 test('summarize / perCase：種類・期間で絞って集計し、解けなかった（null）は平均に入れない', () => {

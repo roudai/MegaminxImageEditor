@@ -8,10 +8,15 @@
 - サイトは GitHub Pages（静的ページ）のまま。Firebase（Authentication + Firestore）をブラウザの JS から直接使う（SDK は gstatic の CDN から ES モジュールで読み込む。バージョン固定）
 - ログイン：Google / Facebook / GitHub（ポップアップ。メニューもこの順）
 - 保存先：Firestore の `users/{uid}/apps/megaminx-image-editor` の1文書 `{ json, savedAt }`。`json` は下の snapshot を JSON にした文字列
+  - PLL・OLL の練習の記録（`practice.log`。各最大 10000 件、約 90 万文字ずつ）は 1 文書（50 万文字未満）に入らないので、種類ごとの文書 `users/{uid}/apps/megaminx-image-editor-log-pll`・`-log-oll`（同じ `{ json, savedAt }`）に分ける（`Store.toCloud`・`fromCloud`）
+    - 種類ごとの文書の `json` は `{ rows: [[日時, ケース, タイム（null＝解けなかった）, 判定（0 未習得・1 練習中・2 習得済み）, 1（ヒントを見たときだけ）], …] }`（新しい順。1 件 約 30 文字で 10000 件 約 31 万文字。48 万文字を超えるときは古い記録を捨てる）
+    - 本体の `json` は記録を抜いた snapshot に `logsSplit: true` を付けたもの（ソルブの記録 `practice.full.log` は本体のまま）。読むときは `logsSplit` があれば種類ごとの文書の記録を戻し、無ければ（以前の形・古いページが書いた本体）本体の記録をそのまま使う
+    - 書くときは、中身が変わった種類ごとの文書を先に書いてから本体を書く（1 回の練習で書くのは本体とその種類の文書だけ）
+    - 種類ごとの文書に書けなかったとき（Firebase コンソールのルールが古いなど）は、記録を本体に入れた以前の形（PLL・OLL 合わせて最新 2000 件）で本体だけ書き、保存の状態はエラーにする（ほかの変更は失わない）
 - 同じ Firebase プロジェクトで、ほかのアプリ（別リポジトリの VisualCube Editor など）も同じアカウントで使う。各アプリは `users/{uid}/apps/<アプリ名>` に保存し、互いの保存先はぶつからない
   - ほかのアプリも同じ形（`{ json, savedAt }`）で保存すれば、`firestore.rules` は変えなくてよい
   - GitHub Pages の同じドメイン（`roudai.github.io`）に置くアプリは localStorage を共有するので、ほかのアプリは別のキーの頭（`megaminx-image-editor:` 以外）を使う
-- `firestore.rules`：本人の `users/{uid}/apps/{アプリ名}` だけ読み書きでき、中身は `json`（50万文字未満の文字列）と `savedAt` だけ（プロジェクト共通のルール）。作る・書き換えるのはルールの `appIds()` に書いたアプリ名（`megaminx-image-editor`・`visualcube-editor`）だけ。アプリを増やしたら名前を足して Firebase コンソールに貼り直す
+- `firestore.rules`：本人の `users/{uid}/apps/{アプリ名}` だけ読み書きでき、中身は `json`（50万文字未満の文字列）と `savedAt` だけ（プロジェクト共通のルール）。作る・書き換えるのはルールの `appIds()` に書いた名前（`megaminx-image-editor`・`megaminx-image-editor-log-pll`・`megaminx-image-editor-log-oll`・`visualcube-editor`）だけ。アプリを増やしたら名前を足して Firebase コンソールに貼り直す
 
 ## 保存の窓口（`js/store.js`）
 - エディタ・一覧ページの保存はすべて `Store.get(name)` / `Store.set(name, value)` を通す（localStorage のキーは `megaminx-image-editor:<name>`。今までと同じ形式なので既存のデータはそのまま読める）
@@ -63,7 +68,7 @@
 
 ## 利用規約（`terms.html`）
 - 本文は日本語・英語（言語の切り替えは `js/legal.js`。プライバシーポリシーと共通）。制定日（利用規約は改定日も）・運営（roudai.net）・問い合わせ（GitHub の Issues）はプライバシーポリシーと同じ
-- 内容：適用、無料、アカウント（各サービスの規約にも従う）、禁止事項、作った画像は自由に使える、保存できる記録の量（PLL・OLL の練習の記録は合わせて最新 2000 件、ケースごとの最近のタイムは各 10 件、ソルブは最新 2000 件。超えると古い順に自動で削除・元に戻せない・上限は予告なく変わることがある）、無保証・免責（故意・重大な過失を除く）、予告なしの変更・停止・終了、規約の変更、準拠法（日本法）、個人情報はプライバシーポリシー
+- 内容：適用、無料、アカウント（各サービスの規約にも従う）、禁止事項、作った画像は自由に使える、保存できる記録の量（PLL・OLL の練習の記録はそれぞれ最新 10000 件、ケースごとの最近のタイムは各 10 件、ソルブは最新 2000 件。超えると古い順に自動で削除・元に戻せない・上限は予告なく変わることがある）、無保証・免責（故意・重大な過失を除く）、予告なしの変更・停止・終了、規約の変更、準拠法（日本法）、個人情報はプライバシーポリシー
 - ログインのメニュー（ログイン前・ログイン中とも）の「プライバシーポリシー」の下に「利用規約」。プライバシーポリシーの本文の最後からもリンク
 
 ## 使い方（`guide.html`）

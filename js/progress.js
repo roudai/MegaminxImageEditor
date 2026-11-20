@@ -16,7 +16,7 @@
  *                                     PLL：保存した配色（OLL 配色のときは OLL を選ぶ前の配色、無ければ Standard）
  *                                     OLL：保存した U の色だけを残した OLL 配色
  *   caseColors(c, scheme)           solve case（alg の逆手順を適用、持ち替え y は打ち消す）の状態の画像の色
- *   addLog(log, entry, max)         練習の記録（日時付き）の配列に足した新しい配列（新しい順、最大 max 件。既定 2000）
+ *   addLog(log, entry, max)         練習の記録（日時付き）の配列に足した新しい配列（新しい順、種類（PLL・OLL）ごとに最大 max 件。既定 10000）
  *                                     entry = { at: 日時(ms), set, name, sec(null=解けなかった), status, hint }
  *   summarize(log, { set, from })   期間（from 以降。無ければすべて）の集計 { count, solved, dnf, avg, best }
  *   daily(log, { set, days, now })  直近 days 日の日ごとの { day: 'YYYY-MM-DD', count, avg }（古い順。練習していない日も 0 で入る）
@@ -130,9 +130,17 @@
   }
 
   // ---- 練習の記録（日時付き） ----
+  // 最大件数は種類（PLL・OLL）ごと（片方をたくさん練習しても、もう片方の記録が押し出されないように）
+  const LOG_MAX = 10000;
   function addLog(log, entry, max) {
     const prev = Array.isArray(log) ? log : [];
-    return [entry].concat(prev).slice(0, max || 2000);
+    const limit = max || LOG_MAX;
+    const count = {};
+    return [entry].concat(prev).filter((e) => {
+      const set = e && e.set;
+      count[set] = (count[set] || 0) + 1;
+      return count[set] <= limit;
+    });
   }
 
   // 記録を種類・期間で絞る（壊れた記録は除く）

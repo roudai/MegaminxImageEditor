@@ -17,7 +17,7 @@
  *                                               run: lastDay まで続けて練習した日数, bestRun: 続けて練習した日数のいちばん長いもの,
  *                                               met: 練習の対象「すべて」で出会ったケース { pll: [名前], oll: [名前] } }
  *                                     meet = { set, name }（練習の対象が「すべて」のときだけ渡す。ほかは null）
- *                                     （記録 practice.log は最新 2000 件までなので、それを超える回数・日数はここで数える）
+ *                                     （記録 practice.log は PLL・OLL それぞれ最新 10000 件までなので、それを超える回数・日数はここで数える）
  *   read()                          store.js の 'titles'（{ earned: { id: 日時(ms) }, shown: id | null, stats, seenAt }）を形を整えて読む
  *                                     seenAt は一覧で見たことにしたバッジのいちばん新しい取得日時（ms。それより後に取ったバッジが NEW）
  *   record(kind, at, meet)          （ブラウザ用）track した stats を 'titles' に保存する（練習ページで記録したとき）
