@@ -798,7 +798,20 @@
 .stats-titles-action {
   color: #6c757d;
   font-size: .75rem;
-}.title-badge-groups {
+}
+/* スマホ（幅 576px 未満）：カードの下の 1 行いっぱいのボタンにする（左に「バッジ 11 / 40 NEW 11」、右に「▸ バッジを見る」）。
+   広い画面はカードの右に 2 行で置く */
+@media (max-width: 575.98px) {
+  .stats-titles-toggle {
+    flex: 1 1 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: .55rem .75rem;
+    background: #f8f9fa;
+  }
+}
+.title-badge-groups {
   margin-top: .75rem;
 }
 .title-badge-group + .title-badge-group {
