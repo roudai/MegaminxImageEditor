@@ -71,6 +71,20 @@
     .case-alg-bar.is-empty > * {
       visibility: hidden;
     }
+    /* 手順の入力のボタン：スマホ（幅 576px 未満）は 6 列の同じ幅の格子（面の 12 個がちょうど 2 行、y ' 2 ( ) が 3 行目）。
+       不ぞろいに折り返さず、押しやすい大きさにする（js/alg-input.js の BUTTONS） */
+    @media (max-width: 575.98px) {
+      #algButtons {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: .3rem;
+      }
+      #algButtons .btn {
+        margin: 0 !important;
+        padding-left: 0;
+        padding-right: 0;
+      }
+    }
   </style>
 </head>
 <body>
