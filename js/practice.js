@@ -676,6 +676,12 @@
     if (isFull()) recordFull(sec, penalty);
     else record(sec);
   }
+  // 結果の欄の短い知らせ（言語を切り替えたら訳し直す）
+  function note(key, params) {
+    const d = el('div', 'text-muted small');
+    I.set(d, key, params);
+    return d;
+  }
   // ソルブで MIN_FULL_SEC 秒未満で止めたとき：押し間違いとみなして記録しない（累計・バッジも数えない）。
   // タイマーを 0.00 に戻し、スクランブルはそのまま（同じスクランブルでやり直せる）。
   // js/titles.js のバッジの判定でも、同じ秒数未満の記録は数えない（MIN_FULL_SEC）
@@ -687,7 +693,7 @@
     resetTimer();
     const result = $('practiceResult');
     result.hidden = false;
-    result.replaceChildren(el('div', 'text-muted small', I.t('practice.tooFast', { time: format(sec), sec: MIN_FULL_SEC })));
+    result.replaceChildren(note('practice.tooFast', { time: format(sec), sec: MIN_FULL_SEC }));
     tooFastShown = true;
   }
   function clearTooFast() {
@@ -703,6 +709,7 @@
   const T = window.Titles;
   const rankIndex = () => (T ? T.rankOf(S.get('progress')).index : 0);
   let toastTimer = null;
+  // lines：文を作る関数の配列（言語を切り替えたら、出ている間も訳し直す。I.live）
   function toast(lines) {
     if (!lines.length) return;
     let box = $('practiceToast');
@@ -712,17 +719,24 @@
       box.setAttribute('role', 'status');
       document.body.append(box);
     }
-    box.replaceChildren(...lines.map((text) => el('div', 'practice-toast-line', text)));
+    box.replaceChildren(
+      ...lines.map((make) => {
+        const line = el('div', 'practice-toast-line');
+        I.live(line, make);
+        return line;
+      })
+    );
     box.classList.add('show');
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => box.classList.remove('show'), 4000);
   }
+  const earnedLine = (id) => () => I.t('titles.badgeEarned', { name: I.t('titles.badge.' + id) });
   function celebrate(beforeRank) {
     if (!T) return;
     const lines = [];
     const after = T.rankOf(S.get('progress'));
-    if (beforeRank !== undefined && after.index > beforeRank) lines.push(I.t('titles.rankUp', { name: I.t('titles.rank.' + after.id) }));
-    T.update().forEach((id) => lines.push(I.t('titles.badgeEarned', { name: I.t('titles.badge.' + id) })));
+    if (beforeRank !== undefined && after.index > beforeRank) lines.push(() => I.t('titles.rankUp', { name: I.t('titles.rank.' + after.id) }));
+    T.update().forEach((id) => lines.push(earnedLine(id)));
     toast(lines);
   }
   // 記録を取り消した・削除した・ペナルティを変えたあと：記録だけで決まるバッジ（タイムなど）を判定し直し、
@@ -730,10 +744,8 @@
   function recheckBadges() {
     if (!T) return;
     const lost = T.recheck();
-    const lines = lost.length
-      ? [I.t('titles.badgeRevoked', { names: lost.map((id) => I.t('titles.badge.' + id)).join(I.t('titles.listSep')) })]
-      : [];
-    T.update().forEach((id) => lines.push(I.t('titles.badgeEarned', { name: I.t('titles.badge.' + id) })));
+    const lines = lost.length ? [() => T.revokedText(I, lost)] : [];
+    T.update().forEach((id) => lines.push(earnedLine(id)));
     if (lines.length) toast(lines);
   }
 
@@ -775,7 +787,7 @@
       renderHistory();
       renderSettings();
       const result = $('practiceResult');
-      result.replaceChildren(el('div', 'text-muted small', I.t('practice.undone')));
+      result.replaceChildren(note('practice.undone'));
     });
     renderHistory();
     renderSettings(); // 対象の件数を更新
@@ -809,15 +821,12 @@
     const head = el('div', 'd-flex flex-wrap align-items-baseline gap-2');
     head.append(el('span', 'practice-result-time', sec === null ? 'DNF' : `${format(sec)}`));
     const verdict = el('span', 'practice-verdict ' + status);
-    verdict.textContent =
-      sec === null
-        ? I.t('practice.verdict.dnf')
-        : hinted
-          ? I.t('practice.verdict.hint')
-          : I.t('practice.verdict.' + status, { t: threshold });
+    if (sec === null) I.set(verdict, 'practice.verdict.dnf');
+    else if (hinted) I.set(verdict, 'practice.verdict.hint');
+    else I.set(verdict, 'practice.verdict.' + status, { t: threshold });
     const undoButton = el('button', 'btn btn-link practice-undo');
     undoButton.type = 'button';
-    undoButton.textContent = I.t('practice.undo');
+    I.set(undoButton, 'practice.undo');
     undoButton.addEventListener('click', undo);
     head.append(verdict, undoButton);
 
@@ -828,7 +837,7 @@
     if (times.length) {
       const best = Math.min(...times);
       const avg = times.reduce((a, b) => a + b, 0) / times.length;
-      stats.textContent = I.t('practice.caseStats', { best: format(best), avg: format(avg), n: times.length });
+      I.set(stats, 'practice.caseStats', { best: format(best), avg: format(avg), n: times.length });
     }
     body.append(head, name, alg, stats);
     result.append(canvas, body);
@@ -905,7 +914,7 @@
       saveFull({ log: fullLog().filter((r) => r.at !== rec.at) });
       recheckBadges();
       if (state === 'idle' && shownRecAt === rec.at) resetTimer();
-      result.replaceChildren(el('div', 'text-muted small', I.t('practice.deleted')));
+      result.replaceChildren(note('practice.deleted'));
       renderHistory();
     });
     head.append(seg, del);

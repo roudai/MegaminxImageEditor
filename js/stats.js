@@ -951,8 +951,7 @@
       I.set(msg, deleteMessage.key, deleteMessage.params);
       bar.append(msg);
       if (deleteMessage.lost && deleteMessage.lost.length) {
-        const names = deleteMessage.lost.map((id) => I.t('titles.badge.' + id)).join(I.t('titles.listSep'));
-        bar.append(el('span', 'stats-delete-message', I.t('titles.badgeRevoked', { names: names })));
+        bar.append(el('span', 'stats-delete-message', T.revokedText(I, deleteMessage.lost)));
       }
       if (deleteMessage.undo) {
         const undo = el('button', 'btn btn-link btn-sm p-0 stats-undo');

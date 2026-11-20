@@ -476,6 +476,11 @@
     return lost;
   }
 
+  // 「条件を満たさなくなったバッジを外しました：…」（練習ページの知らせ・記録のページの削除のメッセージ）
+  function revokedText(I, ids) {
+    return I.t('titles.badgeRevoked', { names: ids.map((id) => I.t('titles.badge.' + id)).join(I.t('titles.listSep')) });
+  }
+
   // バッジの一覧を見たことにする（これより後に取ったバッジに NEW の印を付ける）。
   // 今の時刻ではなく、取ったバッジのいちばん新しい日時を seenAt にする。新しいバッジが無ければ何も書かないので、
   // 描き直すたびに呼んでも保存（store-change・別のタブの storage）が続かない
@@ -630,6 +635,7 @@
     record: record,
     update: update,
     recheck: recheck,
+    revokedText: revokedText,
     setShown: setShown,
     markSeen: markSeen,
     unseenCount: unseenCount,

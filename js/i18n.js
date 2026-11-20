@@ -863,6 +863,26 @@
     render(el, a);
   }
 
+  // いくつかの文をつないだ文・訳した名前を入れた文など、1 つのキーで書けない文：作る関数を覚えておき、
+  // 言語を切り替えたら作り直す（set と同じく、その場で一度書く）。ページから外れた要素は忘れる
+  const lives = new Map(); // 要素 → { 属性（'text' / 'title' など）: 書く関数 }
+  function live(el, make, attr) {
+    const a = attr || 'text';
+    const write = () => {
+      const text = make();
+      if (a === 'text') el.textContent = text;
+      else el.setAttribute(a, text);
+    };
+    lives.set(el, Object.assign(lives.get(el) || {}, { [a]: write }));
+    write();
+  }
+  function applyLive() {
+    lives.forEach((writes, el) => {
+      if (el.isConnected) Object.values(writes).forEach((write) => write());
+      else lives.delete(el);
+    });
+  }
+
   function apply(root) {
     const base = root || document;
     Object.keys(ATTRS).forEach((attr) => {
@@ -880,6 +900,7 @@
     lang = next;
     if (window.Store) window.Store.set('lang', next);
     apply();
+    applyLive();
     listeners.forEach((fn) => fn(lang));
   }
 
@@ -928,6 +949,7 @@
     },
     t: t,
     set: set,
+    live: live,
     apply: apply,
     setLang: setLang,
     onChange: (fn) => listeners.push(fn),
