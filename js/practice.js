@@ -538,6 +538,8 @@
 
   function setState(next) {
     state = next;
+    // 称号・バッジの知らせは、次の計測を始めるまで出したまま（インスペクションも始めたうちに入る）
+    if (next === 'running' || next === 'inspecting') hideToast();
     $('practiceStage').classList.toggle('running', next === 'running');
     $('practiceStage').classList.toggle('inspecting', next === 'inspecting');
     if (next !== 'inspecting') timerEl.classList.remove('warn8', 'warn12', 'over');
@@ -721,8 +723,14 @@
   // ---- 称号とバッジ（titles.js）：段位が上がったとき・バッジを取ったときに、画面の下に数秒知らせる ----
   const T = window.Titles;
   const rankIndex = () => (T ? T.rankOf(S.get('progress')).index : 0);
-  let toastTimer = null;
-  // lines：文を作る関数の配列（言語を切り替えたら、出ている間も訳し直す。I.live）
+  function hideToast() {
+    const box = $('practiceToast');
+    if (!box) return;
+    box.classList.remove('show');
+    // × を押したあと、スペースキーが隠れた × を押してしまわないようにフォーカスを外す
+    if (box.contains(document.activeElement)) document.activeElement.blur();
+  }
+  // lines：文を作る関数、または { head, name }（見出しと名前）の配列（言語を切り替えたら、出ている間も訳し直す。I.live）
   function toast(lines) {
     if (!lines.length) return;
     let box = $('practiceToast');
@@ -732,24 +740,47 @@
       box.setAttribute('role', 'status');
       document.body.append(box);
     }
+    // 次の計測を始めるまで出したまま（setState）。× で先に閉じることもできる
+    const close = el('button', 'practice-toast-close', '×');
+    close.type = 'button';
+    I.set(close, 'practice.toastClose', null, 'aria-label');
+    close.addEventListener('click', hideToast);
     box.replaceChildren(
+      close,
       ...lines.map((make) => {
         const line = el('div', 'practice-toast-line');
-        I.live(line, make);
+        if (typeof make === 'function') {
+          I.live(line, make);
+          return line;
+        }
+        // 名前は「、」でつなぐ。スマホは「、」を出さず、名前を 1 つずつ次の行に並べる（css/practice.css）
+        const live = (cls, fn) => {
+          const span = el('span', cls);
+          I.live(span, fn);
+          return span;
+        };
+        const names = el('span', 'practice-toast-names');
+        make.names.forEach((fn, i) => {
+          if (i) names.append(live('practice-toast-sep', () => I.t('practice.toastNameSep')));
+          names.append(live('practice-toast-name', fn));
+        });
+        line.append(live('practice-toast-head', make.head), live('practice-toast-sep', () => I.t('practice.toastSep')), names);
         return line;
       })
     );
     box.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => box.classList.remove('show'), 4000);
   }
-  const earnedLine = (id) => () => I.t('titles.badgeEarned', { name: I.t('titles.badge.' + id) });
+  // 「称号が上がりました」「バッジを手に入れました」と名前に分ける（スマホは名前を次の行に。css/practice.css）
+  // 名前は複数でもよい（同時に取ったバッジは「バッジを手に入れました」を 1 回にまとめる）
+  const namedLine = (key, nameKeys) => ({ head: () => I.t(key), names: [].concat(nameKeys).map((k) => () => I.t(k)) });
+  const earnedLine = (ids) => namedLine('titles.badgeEarned', ids.map((id) => 'titles.badge.' + id));
   function celebrate(beforeRank) {
     if (!T) return;
     const lines = [];
     const after = T.rankOf(S.get('progress'));
-    if (beforeRank !== undefined && after.index > beforeRank) lines.push(() => I.t('titles.rankUp', { name: I.t('titles.rank.' + after.id) }));
-    T.update().forEach((id) => lines.push(earnedLine(id)));
+    if (beforeRank !== undefined && after.index > beforeRank) lines.push(namedLine('titles.rankUp', 'titles.rank.' + after.id));
+    const earned = T.update();
+    if (earned.length) lines.push(earnedLine(earned));
     toast(lines);
   }
   // 記録を取り消した・削除した・ペナルティを変えたあと：記録だけで決まるバッジ（タイムなど）を判定し直し、
@@ -758,7 +789,8 @@
     if (!T) return;
     const lost = T.recheck();
     const lines = lost.length ? [() => T.revokedText(I, lost)] : [];
-    T.update().forEach((id) => lines.push(earnedLine(id)));
+    const earned = T.update();
+    if (earned.length) lines.push(earnedLine(earned));
     if (lines.length) toast(lines);
   }
 

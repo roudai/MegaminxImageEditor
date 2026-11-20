@@ -745,6 +745,7 @@ body:not(.practice-full) .practice-stage.running #dnfButton,
   left: 50%;
   bottom: 1.5rem;
   z-index: 1060;
+  width: max-content;
   max-width: calc(100vw - 2rem);
   padding: .6rem 1rem;
   border: 1px solid #ecd17f;
@@ -755,6 +756,7 @@ body:not(.practice-full) .practice-stage.running #dnfButton,
   font-size: .9rem;
   font-weight: 600;
   text-align: center;
+  padding-right: 2rem;
   opacity: 0;
   pointer-events: none;
   transform: translate(-50%, 1rem);
@@ -762,7 +764,41 @@ body:not(.practice-full) .practice-stage.running #dnfButton,
 }
 .practice-toast.show {
   opacity: 1;
+  pointer-events: auto;
   transform: translate(-50%, 0);
+}
+/* 先に閉じる × （次の計測を始めても消える） */
+.practice-toast-close {
+  position: absolute;
+  top: .15rem;
+  right: .3rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: #a07a1c;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+.practice-toast-close:hover {
+  background: rgba(0, 0, 0, .06);
+}
+/* スマホ（幅 576px 未満）：「称号が上がりました」の次の行に名前（区切りの「：」「、」は出さず、名前を 1 つずつ 1 行に） */
+@media (max-width: 575.98px) {
+  .practice-toast-sep {
+    display: none;
+  }
+  .practice-toast-names,
+  .practice-toast-name {
+    display: block;
+    font-size: 1rem;
+  }
+}
+/* 名前の途中では折り返さない（「、」のあとで折り返す） */
+.practice-toast-name {
+  white-space: nowrap;
 }
 .practice-toast-line + .practice-toast-line {
   margin-top: .2rem;
