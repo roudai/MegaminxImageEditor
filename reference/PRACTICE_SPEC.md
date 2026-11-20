@@ -121,11 +121,11 @@
   | eye | 1 | 十二面体と目が合った | Caught the Dodecahedron's Eye |
   | sheet | 20 | 手順表が手放せない | Can't Let Go of the Alg Sheet |
   | hooked | 40 | 沼にはまり始めた | Starting to Get Hooked |
-  | faces | 76（PLL の半分） | ケースの顔が見分けられる | Knows Cases by Face |
+  | faces | 76（PLL の半分） | 十二面体の顔色がわかる | Reads the Dodecahedron's Mood |
   | autopilot | 114（PLL の 3/4） | 手が勝手に動き出す | Hands Move on Their Own |
   | done | 151（PLL の数） | もう全部覚えた気でいる | Thinks They're Done |
   | hums | 180 | 手順を口ずさむ | Hums Algorithms |
-  | names | 205（50%） | ケース名で会話できる | Speaks Fluent Case Names |
+  | names | 205（50%） | メガミンクス語で喋り出す | Starts Speaking Megaminx |
   | bag | 246（60%） | カバンにいつもメガミンクス | Never Leaves Home Without It |
   | family | 287（70%） | 家族に心配され始めた | Family Is Getting Worried |
   | dreams | 328（80%） | 夢に手順が出てくる | Dreams in Algorithms |
