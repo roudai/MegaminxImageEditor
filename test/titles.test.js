@@ -244,13 +244,13 @@ test('バッジ：PLL・OLL の速さ（ヒントを見た回は数えない）�
   assert.deepEqual(ids([caseEntry(dayAt(0), { sec: 1.5 })]), ['sub2']);
   assert.deepEqual(ids([caseEntry(dayAt(0), { sec: 1, hint: true, status: 'learning' })]), []);
   assert.deepEqual(ids([caseEntry(dayAt(0), { sec: 0.98 })]), ['sub2']);
-  // 集中タイム：どの時点からでも 30 分のうちに 50 回（タイム・判定は問わない。日付の区切りは使わない）
+  // 集中タイム：どの時点からでも 30 分のうちに 100 回（タイム・判定は問わない。日付の区切りは使わない）
   const every = (n, gap, from) => Array.from({ length: n }, (_, i) => caseEntry((from == null ? dayAt(0) : from) + i * gap));
-  assert.deepEqual(ids(newestFirst(every(49, 1000))), []);
-  assert.deepEqual(ids(newestFirst(every(50, 36000))), ['focus']); // 49 × 36 秒 ＝ 29 分 24 秒
-  assert.deepEqual(ids(newestFirst(every(50, 37000))), []); // 49 × 37 秒 ＝ 30 分 13 秒
-  assert.deepEqual(ids(newestFirst(every(50, 36000, dayAt(1, 0) - 15 * MIN))), ['focus']); // 夜中の 0 時をまたいでもよい
-  assert.deepEqual(ids(newestFirst(every(25, 1000).concat(every(25, 1000, dayAt(0) + 31 * MIN)))), []);
+  assert.deepEqual(ids(newestFirst(every(99, 1000))), []);
+  assert.deepEqual(ids(newestFirst(every(100, 18000))), ['day100', 'focus']); // 99 × 18 秒 ＝ 29 分 42 秒（同じ日に 100 回なので day100 も）
+  assert.deepEqual(ids(newestFirst(every(100, 18300))), ['day100']); // 99 × 18.3 秒 ＝ 30 分 12 秒（集中タイムは無し）
+  assert.deepEqual(ids(newestFirst(every(100, 18000, dayAt(1, 0) - 15 * MIN))), ['focus']); // 夜中の 0 時をまたいでもよい（1 日 100 回にはならない）
+  assert.deepEqual(ids(newestFirst(every(50, 1000).concat(every(50, 1000, dayAt(0) + 31 * MIN)))), ['day100']); // 30 分のうちには 50 回まで（1 日では 100 回）
   const run = (n) => Array.from({ length: n }, (_, i) => caseEntry(dayAt(0, 9) + i * MIN, { sec: 5, status: 'learned' }));
   assert.deepEqual(ids(newestFirst(run(9))), []);
   assert.deepEqual(ids(newestFirst(run(10))), ['perfect10']);
@@ -429,7 +429,7 @@ test('badgeProgress：数えられるバッジだけ、今の数と目標（目�
   assert.deepEqual(p.reps300, { value: 300, goal: 300 }); // 320 回でも目標で頭打ち
   assert.deepEqual(p.reps1000, { value: 320, goal: 1000 });
   assert.deepEqual(p.allMet, { value: 3, goal: 410 });
-  assert.deepEqual(p.focus, { value: 30, goal: 50 }); // 1 分おき：30 分未満に 30 回
+  assert.deepEqual(p.focus, { value: 30, goal: 100 }); // 1 分おき：30 分未満に 30 回
   assert.deepEqual(p.full100, { value: 0, goal: 100 });
   // タイム・はじめての・週末のバッジには数を出さない
   ['first', 'weekend', 'sub2', 'fullFirst', 'fullAo12', 'fullSub120', 'fullSub30', 'ao100Sub60'].forEach((id) =>

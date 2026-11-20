@@ -379,7 +379,7 @@
     // 瞬殺：1.5 秒以内（id は以前の 2 秒のときの名前のまま。取ったバッジの保存に使っているので変えない）
     { id: 'sub2', byLog: true, group: 'speed', test: (d) => caseWithin(d, 1.5) },
     counted('perfect10', 'speed', perfectRun, 10, true),
-    counted('focus', 'speed', casesIn30min, 50),
+    counted('focus', 'speed', casesIn30min, 100),
     counted('perfect50', 'speed', perfectRun, 50, true),
     counted('perfect100', 'speed', perfectRun, 100, true),
     // 通し
