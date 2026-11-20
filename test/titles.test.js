@@ -240,8 +240,8 @@ test('track：回数・日数・続けた日数を数える（同じ日は 1 日
 
 test('バッジ：PLL・OLL の速さ（ヒントを見た回は数えない）・集中タイム・続けて目安以内', () => {
   const ids = (log) => T.evaluate({ practice: { log } }, {});
-  assert.deepEqual(ids([caseEntry(dayAt(0), { sec: 2.01 })]), []);
-  assert.deepEqual(ids([caseEntry(dayAt(0), { sec: 2 })]), ['sub2']);
+  assert.deepEqual(ids([caseEntry(dayAt(0), { sec: 1.51 })]), []);
+  assert.deepEqual(ids([caseEntry(dayAt(0), { sec: 1.5 })]), ['sub2']);
   assert.deepEqual(ids([caseEntry(dayAt(0), { sec: 1, hint: true, status: 'learning' })]), []);
   assert.deepEqual(ids([caseEntry(dayAt(0), { sec: 0.98 })]), ['sub2']);
   // 集中タイム：どの時点からでも 30 分のうちに 50 回（タイム・判定は問わない。日付の区切りは使わない）
