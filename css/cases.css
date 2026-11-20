@@ -157,19 +157,6 @@
     margin-left: .2rem;
     font-size: .68rem;
   }
-}
-/* とても狭い画面（幅 340px 未満）：名前の右に入らないので、逆手順は名前の下の行の真ん中に */
-@media (max-width: 339.98px) {
-  .case-name {
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  }
-  .case-name-side.right {
-    grid-column: 1 / -1;
-    text-align: center;
-  }
-  .case-name-side.right .case-inverse {
-    margin-left: 0;
-  }
   .case-card .card-body .font-monospace {
     font-size: .66rem;
     line-height: 1.35;
@@ -190,6 +177,16 @@
   .status-badge svg {
     width: 11px;
     height: 11px;
+  }
+}
+/* とても狭い画面（幅 340px 未満）：名前の右に入らないので、逆手順は名前の下の行の真ん中に */
+@media (max-width: 339.98px) {
+  .case-name-side.right {
+    grid-column: 1 / -1;
+    text-align: center;
+  }
+  .case-name-side.right .case-inverse {
+    margin-left: 0;
   }
 }
 
