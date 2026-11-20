@@ -102,3 +102,12 @@ test('resolveLogin：手元のデータの持ち主によって合わせ方を�
   assert.deepEqual(Store.resolveLogin(local, remote, { owner: 'A', uid: 'B' }), remote);
   assert.deepEqual(Store.resolveLogin(local, null, { owner: 'A', uid: 'B' }), { data: {}, updated: {} });
 });
+
+test('merge：外したバッジ（titles.revoked）は、それより前に取った別の端末のバッジで戻らない。後で取り直したものは残す', () => {
+  const local = { data: { titles: { earned: { first: 1, fullSub30: 50 }, revoked: { fullSub60: 40 } } }, updated: { titles: 60 } };
+  const remote = { data: { titles: { earned: { first: 2, fullSub60: 10, fullSub30: 10 }, revoked: { fullSub30: 30 } } }, updated: { titles: 20 } };
+  const t = Store.merge(local, remote).data.titles;
+  // fullSub60：10 に取ったが 40 に外した → 戻らない。fullSub30：30 に外したが 50 に取り直した → 残す
+  assert.deepEqual(t.earned, { first: 1, fullSub30: 50 });
+  assert.deepEqual(t.revoked, { fullSub60: 40, fullSub30: 30 });
+});

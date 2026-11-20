@@ -337,9 +337,12 @@
   }
 
   const GROUPS = ['learn', 'reps', 'streak', 'speed', 'full'];
+  // byLog：記録のタイム・判定・ペナルティだけで決まるバッジ（タイム・自己ベストの更新・続けて正解・DNF なしの連続）。
+  // 記録を個別・選択して削除したり、取り消し・ペナルティを変えたりしたら判定し直し、満たさなくなっていれば外す（recheck）。
+  // 回数・日数・出会ったケースは累計（stats）でも数えるので、記録を消しても外さない
   // 数えられるバッジは count（今の数）と goal（目標）を持ち、count >= goal で取る。
   // バッジの一覧では、まだ取っていないものに「count / goal」とバーを出す（badgeProgress）
-  const counted = (id, group, count, goal) => ({ id, group, count, goal, test: (d) => count(d) >= goal });
+  const counted = (id, group, count, goal, byLog) => ({ id, group, count, goal, byLog: !!byLog, test: (d) => count(d) >= goal });
   const learned = (set) => (d) => learnedCount(d.progress, set);
   const fullCount = (d) => fullLog(d.practice).length;
   const perfectRun = (d) => bestPerfectRun(d.practice);
@@ -368,27 +371,27 @@
     counted('streak100', 'streak', bestRun, 100),
     counted('streak365', 'streak', bestRun, 365),
     // PLL・OLL の速さ・正確さ
-    { id: 'sub2', group: 'speed', test: (d) => caseWithin(d, 2) },
+    { id: 'sub2', byLog: true, group: 'speed', test: (d) => caseWithin(d, 2) },
     counted('perfect10', 'speed', perfectRun, 10, true),
     counted('focus', 'speed', casesIn30min, 50),
     counted('perfect50', 'speed', perfectRun, 50, true),
     counted('perfect100', 'speed', perfectRun, 100, true),
     // 通し
     { id: 'fullFirst', group: 'full', test: (d) => fullLog(d.practice).length >= 1 },
-    { id: 'fullAo12', group: 'full', test: (d) => bestFullAverage(d, 12) < Infinity },
+    { id: 'fullAo12', byLog: true, group: 'full', test: (d) => bestFullAverage(d, 12) < Infinity },
     counted('clean50', 'full', bestCleanRun, 50, true),
     counted('full100', 'full', fullCount, 100),
-    { id: 'fullSub120', group: 'full', test: (d) => bestFullSingle(d) < 120 },
+    { id: 'fullSub120', byLog: true, group: 'full', test: (d) => bestFullSingle(d) < 120 },
     counted('day50', 'full', fullIn24h, 50),
     counted('clean100', 'full', bestCleanRun, 100, true),
     counted('pb10', 'full', pbCount, 10, true),
     counted('full1000', 'full', fullCount, 1000),
-    { id: 'fullSub60', group: 'full', test: (d) => bestFullSingle(d) < 60 },
-    { id: 'ao12Sub60', group: 'full', test: (d) => bestFullAverage(d, 12) < 60 },
-    { id: 'fullSub45', group: 'full', test: (d) => bestFullSingle(d) < 45 },
-    { id: 'ao100Sub60', group: 'full', test: (d) => bestFullAverage(d, 100) < 60 },
+    { id: 'fullSub60', byLog: true, group: 'full', test: (d) => bestFullSingle(d) < 60 },
+    { id: 'ao12Sub60', byLog: true, group: 'full', test: (d) => bestFullAverage(d, 12) < 60 },
+    { id: 'fullSub45', byLog: true, group: 'full', test: (d) => bestFullSingle(d) < 45 },
+    { id: 'ao100Sub60', byLog: true, group: 'full', test: (d) => bestFullAverage(d, 100) < 60 },
     counted('day300', 'full', fullIn24h, 300),
-    { id: 'fullSub30', group: 'full', test: (d) => bestFullSingle(d) < 30 },
+    { id: 'fullSub30', byLog: true, group: 'full', test: (d) => bestFullSingle(d) < 30 },
   ];
 
   const dataOf = (data) => ({ progress: data && data.progress, practice: data && data.practice, stats: data && data.stats });
@@ -413,15 +416,23 @@
 
   function read() {
     const t = S ? S.get('titles') : null;
+    // 外したバッジ { id: 外した日時 }（クラウドで別の端末の earned と合わせたときに戻ってこないように残す。store.js の mergeTitles）
+    const revoked = {};
+    if (isObject(t) && isObject(t.revoked)) {
+      Object.keys(t.revoked).forEach((id) => {
+        if (BADGES.some((b) => b.id === id) && typeof t.revoked[id] === 'number') revoked[id] = t.revoked[id];
+      });
+    }
     const earned = {};
     if (isObject(t) && isObject(t.earned)) {
       Object.keys(t.earned).forEach((id) => {
-        if (BADGES.some((b) => b.id === id) && typeof t.earned[id] === 'number') earned[id] = t.earned[id];
+        const at = t.earned[id];
+        if (BADGES.some((b) => b.id === id) && typeof at === 'number' && !(revoked[id] >= at)) earned[id] = at;
       });
     }
     const shown = isObject(t) && typeof t.shown === 'string' && earned[t.shown] ? t.shown : null;
     const seenAt = isObject(t) ? num(t.seenAt) : 0;
-    return { earned: earned, shown: shown, stats: normalizeStats(isObject(t) ? t.stats : null), seenAt: seenAt };
+    return { earned: earned, shown: shown, stats: normalizeStats(isObject(t) ? t.stats : null), seenAt: seenAt, revoked: revoked };
   }
 
   function record(kind, at, meet) {
@@ -436,10 +447,28 @@
     if (!got.length) return [];
     const at = typeof now === 'number' ? now : Date.now();
     got.forEach((id) => {
-      t.earned[id] = at;
+      t.earned[id] = Math.max(at, (t.revoked[id] || 0) + 1); // 外した日時より後にする（read で外したままにならないように）
     });
     S.set('titles', t);
     return got;
+  }
+
+  // 記録を個別・選択して削除したあと（取り消し・ペナルティの変更も）、記録だけで決まるバッジ（byLog）を判定し直し、
+  // 今の記録で条件を満たさなくなったものを外す。外したバッジの id を返す。
+  // 「すべての記録を削除」では呼ばない（記録の整理とみなし、取ったバッジは残す）
+  function recheck(now) {
+    const t = read();
+    const d = { progress: S.get('progress'), practice: S.get('practice'), stats: t.stats };
+    const lost = BADGES.filter((b) => b.byLog && t.earned[b.id] && !b.test(d)).map((b) => b.id);
+    if (!lost.length) return [];
+    const at = Math.max(typeof now === 'number' ? now : Date.now(), ...lost.map((id) => t.earned[id]));
+    lost.forEach((id) => {
+      delete t.earned[id];
+      t.revoked[id] = at;
+      if (t.shown === id) t.shown = null;
+    });
+    S.set('titles', t);
+    return lost;
   }
 
   // バッジの一覧を見たことにする（これより後に取ったバッジに NEW の印を付ける）。
@@ -595,6 +624,7 @@
     read: read,
     record: record,
     update: update,
+    recheck: recheck,
     setShown: setShown,
     markSeen: markSeen,
     unseenCount: unseenCount,

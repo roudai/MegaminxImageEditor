@@ -822,8 +822,11 @@
   const allKey = (key) => key + (view.set === 'full' ? 'Full' : '');
   const setName = (kind) => kind.toUpperCase();
 
-  // 表示中の種類の ats の記録を削除し、元に戻す関数を返す
-  function deleteRecords(ats) {
+  // 表示中の種類の ats の記録を削除し、元に戻す関数を返す。
+  // 個別・選択の削除（recheck）では、記録だけで決まるバッジを判定し直し、満たさなくなったものを外す（Titles.recheck）。
+  // 「すべての記録を削除」は記録の整理とみなし、バッジは残す
+  let lostBadges = []; // 直前の削除で外したバッジ（削除のメッセージに添える）
+  function deleteRecords(ats, recheck) {
     const set = new Set(ats);
     const store = logStore(view.set); // 元に戻すときも同じ種類に戻す（そのあとに種類を切り替えても）
     const hit = (r) => store.mine(r) && set.has(r.at);
@@ -831,12 +834,15 @@
     const removed = before.filter(hit);
     store.write(before.filter((r) => !hit(r)));
     ats.forEach((at) => selected.delete(at));
+    lostBadges = recheck && T ? T.recheck() : [];
     return () => {
       // 削除したあとに増えた記録も残し、消したものを日時の順（新しい順）に戻す
       const now = store.read();
       const have = new Set(now.map(store.id));
       const merged = now.concat(removed.filter((r) => !have.has(store.id(r)))).sort((x, y) => y.at - x.at);
       store.write(merged);
+      if (T) T.update(); // 外したバッジは、戻した記録で条件を満たせばまた付ける
+      renderTitles();
       deleteMessage = { key: 'stats.restored', params: { n: removed.length } };
       render();
     };
@@ -845,8 +851,10 @@
   function afterDelete(n, undo) {
     confirmingDelete = false;
     confirmingAll = false;
-    deleteMessage = { key: 'stats.deletedN', params: { n: n }, undo: undo };
+    deleteMessage = { key: 'stats.deletedN', params: { n: n }, undo: undo, lost: lostBadges };
+    lostBadges = [];
     render();
+    renderTitles();
   }
 
   // recs：期間内の記録すべて、shown：今のページに出している記録
@@ -888,7 +896,7 @@
       const yes = el('button', 'btn btn-danger btn-sm');
       yes.type = 'button';
       I.set(yes, 'stats.deleteYes');
-      yes.addEventListener('click', () => afterDelete(n, deleteRecords([...selected])));
+      yes.addEventListener('click', () => afterDelete(n, deleteRecords([...selected], true)));
       const no = el('button', 'btn btn-outline-secondary btn-sm');
       no.type = 'button';
       I.set(no, 'stats.cancel');
@@ -942,6 +950,10 @@
       const msg = el('span', 'stats-delete-message');
       I.set(msg, deleteMessage.key, deleteMessage.params);
       bar.append(msg);
+      if (deleteMessage.lost && deleteMessage.lost.length) {
+        const names = deleteMessage.lost.map((id) => I.t('titles.badge.' + id)).join(I.t('titles.listSep'));
+        bar.append(el('span', 'stats-delete-message', I.t('titles.badgeRevoked', { names: names })));
+      }
       if (deleteMessage.undo) {
         const undo = el('button', 'btn btn-link btn-sm p-0 stats-undo');
         undo.type = 'button';
@@ -1031,7 +1043,7 @@
         del.textContent = '×';
         I.set(del, 'stats.deleteRow', { date: date }, 'aria-label');
         I.set(del, 'stats.deleteRow', { date: date }, 'title');
-        del.addEventListener('click', () => afterDelete(1, deleteRecords([r.at])));
+        del.addEventListener('click', () => afterDelete(1, deleteRecords([r.at], true)));
         delTd.append(del);
         tr.append(
           checkTd,
@@ -1120,7 +1132,7 @@
         del.textContent = '×';
         I.set(del, 'stats.deleteRow', { date: date }, 'aria-label');
         I.set(del, 'stats.deleteRow', { date: date }, 'title');
-        del.addEventListener('click', () => afterDelete(1, deleteRecords([r.at])));
+        del.addEventListener('click', () => afterDelete(1, deleteRecords([r.at], true)));
         delTd.append(del);
         tr.append(checkTd, el('td', 'text-muted stats-shrink cell-date', date), el('td', 'stats-shrink fw-semibold cell-case', r.name), timeTd, statusTd, delTd);
         return tr;

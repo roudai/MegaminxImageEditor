@@ -345,7 +345,7 @@ test('update / record / setShown / read：取ったバッジと累計を保存�
     assert.deepEqual(T.read().earned, { first: 5 }); // 累計を書いてもバッジは消えない
     // 知らない id・壊れた値は読み飛ばす
     Store.set('titles', { earned: { first: 1, nope: 2, pllAll: 'x' }, shown: 'nope', stats: { reps: 'x', lastDay: 'bad' } });
-    assert.deepEqual(T.read(), { earned: { first: 1 }, shown: null, stats: { reps: 0, days: 0, lastDay: null, run: 0, bestRun: 0, met: { pll: [], oll: [] } }, seenAt: 0 });
+    assert.deepEqual(T.read(), { earned: { first: 1 }, shown: null, stats: { reps: 0, days: 0, lastDay: null, run: 0, bestRun: 0, met: { pll: [], oll: [] } }, seenAt: 0, revoked: {} });
   });
 });
 
@@ -438,4 +438,32 @@ test('badgeProgress：数えられるバッジだけ、今の数と目標（目�
   // 判定と同じ目標：数が目標に届いたバッジだけを取る
   const got = T.evaluate({ progress: progressOf(10, 3), practice: { log }, stats: { met: { pll: ['A1+', 'A2+'], oll: ['1'] } } }, {});
   Object.keys(p).forEach((id) => assert.equal(got.includes(id), p[id].value >= p[id].goal, id));
+});
+
+test('recheck：記録だけで決まるバッジを判定し直し、満たさなくなったものを外す（回数のバッジ・取り直しは別）', () => {
+  withStorage({}, () => {
+    const fast = { at: 1000, sec: 5, penalty: '' };
+    const slow = { at: 900, sec: 90, penalty: '' };
+    Store.set('practice', { full: { log: [fast, slow] } });
+    const got = T.update(10);
+    assert.ok(got.includes('fullSub30') && got.includes('fullSub120') && got.includes('fullFirst'));
+    T.setShown('fullSub30');
+    // 5 秒の記録を消す：30 秒未満・45 秒未満・1:00 未満は外し、2:00 未満・はじめてのソルブは残す
+    Store.set('practice', { full: { log: [slow] } });
+    assert.deepEqual(T.recheck(20).sort(), ['fullSub30', 'fullSub45', 'fullSub60']);
+    const t = T.read();
+    assert.equal(t.shown, null); // 表示していたバッジを外したら段位に戻す
+    assert.ok(t.earned.fullSub120 && t.earned.fullFirst && !t.earned.fullSub30);
+    assert.deepEqual(t.revoked, { fullSub30: 20, fullSub45: 20, fullSub60: 20 });
+    assert.deepEqual(T.recheck(21), []); // もう外すものは無い
+    // 取り直したら、外した日時より後の日時で付く
+    Store.set('practice', { full: { log: [{ at: 2000, sec: 25, penalty: '' }, slow] } });
+    assert.ok(T.update(15).includes('fullSub30'));
+    assert.equal(T.read().earned.fullSub30, 21);
+    // 回数のバッジ（累計でも数える）は記録を消しても外さない
+    Store.set('titles', { earned: { full100: 5 } });
+    Store.set('practice', { full: { log: [] } });
+    assert.deepEqual(T.recheck(30), []);
+    assert.deepEqual(Object.keys(T.read().earned), ['full100']);
+  });
 });

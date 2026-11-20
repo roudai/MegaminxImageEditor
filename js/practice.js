@@ -703,6 +703,17 @@
     T.update().forEach((id) => lines.push(I.t('titles.badgeEarned', { name: I.t('titles.badge.' + id) })));
     toast(lines);
   }
+  // 記録を取り消した・削除した・ペナルティを変えたあと：記録だけで決まるバッジ（タイムなど）を判定し直し、
+  // 条件を満たさなくなったものを外して知らせる。満たすようになったもの（DNF を OK に戻したなど）は付ける
+  function recheckBadges() {
+    if (!T) return;
+    const lost = T.recheck();
+    const lines = lost.length
+      ? [I.t('titles.badgeRevoked', { names: lost.map((id) => I.t('titles.badge.' + id)).join(I.t('titles.listSep')) })]
+      : [];
+    T.update().forEach((id) => lines.push(I.t('titles.badgeEarned', { name: I.t('titles.badge.' + id) })));
+    if (lines.length) toast(lines);
+  }
 
   function record(sec) {
     const { set, c } = current;
@@ -724,7 +735,7 @@
     savePrefs({ log: P.addLog((S.get('practice') || {}).log, logEntry) });
     // 累計の回数・続けて練習した日数・「すべて」で出会ったケース（取り消しても減らさない）
     if (T) T.record('case', logEntry.at, prefs.filter === 'all' ? { set, name: c.name } : null);
-    celebrate(rankBefore); // 取り消しても、取ったバッジはそのまま残す
+    celebrate(rankBefore); // 取り消したら、記録だけで決まるバッジは判定し直す（recheckBadges）
     const entry = { set, c, sec, status, threshold: threshold(set), hinted };
     sessionHistory.unshift(entry);
     sessionHistory.length = Math.min(sessionHistory.length, HISTORY);
@@ -737,6 +748,7 @@
       const log = ((S.get('practice') || {}).log || []).filter((e) => e.at !== logEntry.at || e.name !== logEntry.name);
       savePrefs({ times: allTimes, log: log });
       sessionHistory.splice(sessionHistory.indexOf(entry), 1);
+      recheckBadges();
       if (state === 'idle' && shownEntry === entry) resetTimer(); // タイマーに出したままのタイムも 0.00 に戻す
       renderHistory();
       renderSettings();
@@ -855,6 +867,7 @@
       b.classList.toggle('active', rec.penalty === value);
       b.addEventListener('click', () => {
         const updated = updateFull(rec, { penalty: value });
+        recheckBadges();
         if (updated) showFullResult(updated);
         if (updated && state === 'idle' && shownRecAt === rec.at) showFullTime(updated);
         renderHistory();
@@ -866,6 +879,7 @@
     I.set(del, 'practice.delete');
     del.addEventListener('click', () => {
       saveFull({ log: fullLog().filter((r) => r.at !== rec.at) });
+      recheckBadges();
       if (state === 'idle' && shownRecAt === rec.at) resetTimer();
       result.replaceChildren(el('div', 'text-muted small', I.t('practice.deleted')));
       renderHistory();

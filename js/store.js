@@ -10,6 +10,7 @@
  *                                手元とクラウドの snapshot を合わせた snapshot を返す（DOM 非依存）
  *                                  - 名前ごとに更新時刻の新しい方を使う
  *                                  - 取ったバッジ（titles.earned）はいつも両方を合わせる（日時は早い方。shown は新しい方）。
+ *                                    外したバッジ（titles.revoked）は遅い方で、それより前の取得は合わせない。
  *                                    練習の累計（titles.stats）は回数・日数・最長の連続は大きい方、最後に練習した日と連続の日数は新しい日の方
  *                                  - union: true（この端末で初めてそのアカウントと合わせるとき）は、習得状況（progress）と
  *                                    自分の手順（custom-algs）をケースごとに合わせる（両方にあれば新しい方、片方だけなら残す）
@@ -127,15 +128,27 @@
   // 取ったバッジ（titles.earned）は両方を合わせる（別の端末で取ったものを消さない。日時は早い方）。shown は newer のもの
   function mergeTitles(older, newer) {
     const out = Object.assign({}, isObject(older) ? older : {}, isObject(newer) ? newer : {});
+    // 外したバッジ（titles.revoked。記録を削除して条件を満たさなくなったもの）は遅い方。
+    // 外した日時より前に取ったものは合わせない（別の端末に残っていた古い取得で戻らないように）。後で取り直したものは残す
+    const revoked = {};
+    [older, newer].forEach((src) => {
+      if (!isObject(src) || !isObject(src.revoked)) return;
+      Object.keys(src.revoked).forEach((id) => {
+        const t = src.revoked[id];
+        if (typeof t === 'number' && !(revoked[id] >= t)) revoked[id] = t;
+      });
+    });
     const earned = {};
     [older, newer].forEach((src) => {
       if (!isObject(src) || !isObject(src.earned)) return;
       Object.keys(src.earned).forEach((id) => {
         const t = src.earned[id];
-        if (typeof t === 'number' && !(earned[id] <= t)) earned[id] = t;
+        if (typeof t === 'number' && !(revoked[id] >= t) && !(earned[id] <= t)) earned[id] = t;
       });
     });
     out.earned = earned;
+    if (Object.keys(revoked).length) out.revoked = revoked;
+    else delete out.revoked;
     // バッジの一覧を見た日時（NEW の印）は遅い方
     const seen = Math.max(Number(isObject(older) && older.seenAt) || 0, Number(isObject(newer) && newer.seenAt) || 0);
     if (seen) out.seenAt = seen;
