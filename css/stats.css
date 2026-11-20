@@ -920,7 +920,6 @@
 @media (max-width: 575.98px) {
   .stats-head {
     row-gap: .5rem !important;
-    column-gap: .6rem !important; /* PLL・ソルブで「記録 [PLL OLL ソルブ] [30日間▾]」を幅 354px（文字を大きくした Pixel）でも 1 行に */
   }
   .stats-head .stats-controls {
     display: contents !important;
@@ -930,8 +929,8 @@
   }
   /* 英語（Stats [PLL OLL Full solve] [30 days▾]）も 1 行に収まるよう、切り替えのボタンの左右の余白を少し詰める */
   .stats-head .stats-segment button {
-    padding-left: .5rem;
-    padding-right: .5rem;
+    padding-left: .45rem;
+    padding-right: .45rem;
   }
   /* 期間のプルダウン：切り替えと同じ灰色の丸い形・同じ高さ（3px の縁 ＋ ボタンと同じ文字・余白） */
   .stats-period-select {
@@ -940,9 +939,9 @@
     margin-left: auto;
     border: 3px solid #eef0f3;
     border-radius: 50rem;
-    padding: .2rem 1.75rem .2rem .75rem;
+    padding: .2rem 1.5rem .2rem .65rem;
     background-color: #eef0f3;
-    background-position: right .55rem center;
+    background-position: right .45rem center;
     color: #212529;
     font-size: .82rem;
     font-weight: 500;
