@@ -156,11 +156,11 @@ test('バッジ：気づけば朝・通し漬けの一日（通しだけを数�
   const dnf = solves(300, dayAt(0), 60000);
   dnf.full.log = dnf.full.log.map((r) => Object.assign({}, r, { penalty: 'DNF' }));
   assert.equal(has(dnf), true);
-  // 通し漬けの一日：同じ数え方で 50 回
+  // ソルブ漬けの一日：同じ数え方で 100 回（id は day50 のまま）
   const has50 = (practice) => T.evaluate({ practice }, {}).includes('day50');
-  assert.equal(has50(solves(50, dayAt(0, 22), 5 * 60000)), true); // 夜 22 時から 4 時間ほど（日付をまたぐ）
-  assert.equal(has50(solves(49, dayAt(0, 22), 5 * 60000)), false);
-  assert.equal(has50(solves(50, dayAt(0), (24 * HOUR) / 49)), false);
+  assert.equal(has50(solves(100, dayAt(0, 22), 3 * 60000)), true); // 夜 22 時から 5 時間ほど（日付をまたぐ）
+  assert.equal(has50(solves(99, dayAt(0, 22), 3 * 60000)), false);
+  assert.equal(has50(solves(100, dayAt(0), (24 * HOUR) / 99)), false);
   // PLL・OLL は数えない
   assert.equal(T.evaluate({ practice: { log: Array.from({ length: 60 }, (_, i) => caseEntry(dayAt(0, 9) + i * MIN)) } }, {}).includes('day50'), false);
 });

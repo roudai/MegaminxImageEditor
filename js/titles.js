@@ -391,7 +391,8 @@
     counted('clean50', 'full', bestCleanRun, 50, true),
     counted('full100', 'full', fullCount, 100),
     { id: 'fullSub120', byLog: true, group: 'full', test: (d) => bestFullSingle(d) < 120 },
-    counted('day50', 'full', fullIn24h, 50),
+    // ソルブ漬けの一日：24 時間のうちに 100 回（id は以前の 50 回のときの名前のまま。取ったバッジの保存に使っているので変えない）
+    counted('day50', 'full', fullIn24h, 100),
     counted('clean100', 'full', bestCleanRun, 100, true),
     counted('pb10', 'full', pbCount, 10, true),
     counted('full1000', 'full', fullCount, 1000),
