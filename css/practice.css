@@ -341,7 +341,9 @@
   text-transform: uppercase;
 }
 .practice-scramble {
-  min-height: 2.6em;
+  /* 行数の分の高さをいつも取る（長さの違うスクランブルでタイマーの位置が上下しないように）。
+     広い画面は PLL・OLL とも 2 行まで、スマホは PLL が 3 行になることがあるので 3 行分（下の @media） */
+  min-height: 3em; /* line-height 1.5 × 2 行 */
   margin: .35rem auto 0;
   max-width: 44rem;
   font-family: var(--bs-font-monospace);
@@ -661,6 +663,9 @@ body:not(.practice-full) .practice-stage.running #dnfButton,
   /* 設定は 1 行の要約にたたむ（押すと開く）。開いているときは要約が見出しになる */
   .practice-settings-summary {
     display: flex;
+  }
+  .practice-scramble:not(.full) {
+    min-height: 4.5em; /* line-height 1.5 × 3 行（PLL は 3 行になることがある。OLL は 2 行まで） */
   }
   .practice-settings:not(.open) > :not(.practice-settings-summary) {
     display: none;
