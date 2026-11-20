@@ -751,6 +751,78 @@
 }
 
 /* 称号とバッジ（js/titles.js の renderCard・renderBadges） */
+/* スマホで閉じているとき（.compact。js/stats.js）：パネルの枠・見出しを出さず、札だけを 2 段の小さな形に。札のどこを押しても開く。
+   広い画面は今までどおりのパネル（大きな札と「バッジ n / 40」の開け閉め） */
+.stats-titles.compact {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.stats-titles.compact .stats-title {
+  display: none;
+}
+/* 1 段目：称号（長ければ折り返す）と連続の日数、2 段目：バーとバッジ。バッジの欄が広くても称号の幅を取られないよう、
+   連続の日数の列（3 列目）だけを 1 段目と共有する */
+.stats-titles .title-card.stats-titles-compact,
+.title-empty.stats-titles-compact {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas: 'name name streak' 'bar badges badges';
+  align-items: center;
+  column-gap: 1rem;
+  row-gap: .3rem;
+  max-width: none;
+  padding: .45rem .8rem;
+  cursor: pointer;
+}
+.title-empty.stats-titles-compact {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: 'name name' 'streak badges';
+  border: 1px solid #e9ecef;
+  border-radius: .6rem;
+  background: #f8f9fa;
+}
+.stats-titles-compact:hover {
+  filter: brightness(.98);
+}
+.stats-titles-compact:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .25);
+}
+.stats-titles .stats-titles-compact .title-card-name {
+  grid-area: name;
+  min-width: 0;
+  font-size: .9rem;
+}
+.stats-titles-compact .title-card-bar {
+  grid-area: bar;
+  margin-top: 0;
+}
+.stats-titles-compact .title-card-breakdown {
+  display: none;
+}
+.stats-titles-compact .title-streak {
+  grid-area: streak;
+  margin-top: 0;
+  white-space: nowrap;
+}
+.stats-titles-badges {
+  grid-area: badges;
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  justify-self: end;
+  color: #495057;
+  font-size: .8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.stats-titles-chevron {
+  color: #adb5bd;
+  font-size: 1rem;
+  line-height: 1;
+}
 .stats-titles .title-card {
   max-width: 26rem;
   padding: .75rem 1rem .65rem;
@@ -762,16 +834,45 @@
 .stats-titles .title-card-breakdown {
   font-size: .78rem;
 }
-.stats-titles-head {
+/* 「バッジ n / 40 ▸ バッジを見る」は札の中のいちばん下の行の右（左は連続の日数。js/stats.js） */
+.stats-titles .stats-titles-card {
+  max-width: 28rem;
+}
+.stats-titles-foot {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: .75rem;
+  gap: .25rem .75rem;
+  margin-top: .3rem;
 }
-.stats-titles-head .title-card,
-.stats-titles-head .title-empty {
-  flex: 1 1 18rem;
+.stats-titles-foot .title-streak {
+  margin-top: 0;
+}
+/* 広い画面：1 行（「バッジ 11 / 40 NEW 11 ›」。開いているときは › を下向き）。「バッジを見る」の文は読み上げだけ */
+.stats-titles-foot .stats-titles-toggle {
+  flex-direction: row;
+  align-items: center;
+  gap: .35rem;
+  margin: -.2rem -.45rem -.2rem auto; /* ボタンの余白の分だけ札の右下の角に寄せる */
+  padding: .2rem .45rem;
+}
+.stats-titles-foot .stats-titles-action {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.stats-titles-toggle[aria-expanded='true'] .stats-titles-chevron {
+  transform: rotate(90deg);
+}
+.title-empty.stats-titles-card {
+  padding: .6rem .8rem;
+  border: 1px solid #e9ecef;
+  border-radius: .6rem;
+  background: #f8f9fa;
 }
 .stats-titles-toggle {
   display: flex;
@@ -785,7 +886,7 @@
   color: #495057;
 }
 .stats-titles-toggle:hover {
-  background: #f1f3f5;
+  background: rgba(0, 0, 0, .05);
 }
 .stats-titles-toggle:focus-visible {
   outline: none;
@@ -800,16 +901,24 @@
   color: #6c757d;
   font-size: .75rem;
 }
-/* スマホ（幅 576px 未満）：カードの下の 1 行いっぱいのボタンにする（左に「バッジ 11 / 40 NEW 11」、右に「▸ バッジを見る」）。
-   広い画面はカードの右に 2 行で置く */
+/* スマホ（幅 576px 未満。開いたとき）：札のいちばん下の 1 行いっぱいのボタン（左に「バッジ 11 / 40」、右に「▾ バッジを閉じる」） */
 @media (max-width: 575.98px) {
-  .stats-titles-toggle {
+  .stats-titles-foot .stats-titles-toggle {
     flex: 1 1 100%;
-    flex-direction: row;
-    align-items: center;
     justify-content: space-between;
-    padding: .55rem .75rem;
-    background: #f8f9fa;
+    margin: .2rem 0 0;
+    padding: .45rem .65rem;
+    background: rgba(255, 255, 255, .6);
+  }
+  .stats-titles-foot .stats-titles-action {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+  }
+  .stats-titles-foot .stats-titles-chevron {
+    display: none;
   }
 }
 .title-badge-groups {

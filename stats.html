@@ -53,13 +53,14 @@
       <div id="statsControls" class="stats-controls d-flex flex-wrap align-items-center gap-2"></div>
     </div>
 
-    <section id="statsCards" class="stats-cards"></section>
-
-    <!-- 称号とバッジ（js/stats.js・js/titles.js）。アカウントメニューの「バッジ」から stats#titles で開く -->
-    <section id="titles" class="stats-panel stats-titles mt-3">
+    <!-- 称号とバッジ（js/stats.js・js/titles.js）。PLL・OLL・ソルブや期間に関係なく同じなので、切り替えの下のいちばん上に置く。
+         ふだんは 1〜2 行の小さな札（.compact。押すと開く）、開くと大きな札とバッジの一覧。アカウントメニューの「バッジ」から stats#titles で開く -->
+    <section id="titles" class="stats-panel stats-titles mb-3">
       <h2 class="stats-title" data-i18n="stats.titles">Title and badges</h2>
       <div id="statsTitles"></div>
     </section>
+
+    <section id="statsCards" class="stats-cards"></section>
 
     <section class="stats-panel mt-3">
       <div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2">

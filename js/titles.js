@@ -28,7 +28,7 @@
  *   streakOf(data, now)             { current: 今続けて練習している日数（今日か昨日に練習していれば続いている）, best: いちばん長い日数 }
  *                                     data = { practice, stats }。記録から数えたものと stats の大きい方
  *   renderCard(I, options)          （ブラウザ用）称号の札の要素（I は I18N）。アカウントメニューと記録のページで使う
- *                                     options.streak なら続けて練習した日数の行も出す（記録のページ）
+ *                                     options.streak なら続けて練習した日数の行も出す（記録のページ。'short' なら「連続 n 日」だけの短い形）
  *   renderBadges(I, onChange, options) （ブラウザ用）分類ごとのバッジの一覧の要素。取ったバッジを押すと表示する称号にして onChange() を呼ぶ
  *                                     options.newSince より後に取ったバッジに NEW の印を付ける
  *
@@ -534,19 +534,21 @@
   // 称号の札：称号（選んだバッジがあればその名前）・習得したケースの数のバー・PLL / OLL の内訳。
   // まだ 1 ケースも習得していなければ「ケースを習得すると称号がもらえます」。I は i18n.js の I18N
   // 続けて練習した日数の行（options.streak のとき。記録のページ）。まだ 1 日も練習していなければ出さない
-  function streakLine(I) {
+  // short：記録のページの小さな札用。続いていれば「連続 n 日」、途切れていれば「最長 m 日」だけ
+  function streakLine(I, short) {
     const st = streakOf({ practice: S.get('practice'), stats: read().stats });
     if (!st.best) return null;
     const line = make('div', 'title-streak' + (st.current ? ' active' : ''));
     const icon = make('span', 'title-streak-icon');
     icon.innerHTML = FLAME;
-    line.append(icon, make('span', null, I.t('titles.streak', { n: st.current, best: st.best })));
+    const key = !short ? 'titles.streak' : st.current ? 'titles.streakShort' : 'titles.streakBestShort';
+    line.append(icon, make('span', null, I.t(key, { n: st.current, best: st.best })));
     return line;
   }
   function renderCard(I, options) {
     const rank = rankOf(S.get('progress'));
     const shown = read().shown;
-    const streak = options && options.streak ? streakLine(I) : null;
+    const streak = options && options.streak ? streakLine(I, options.streak === 'short') : null;
     if (rank.id === 'none' && !shown) {
       const empty = make('div', 'title-empty', I.t('titles.empty'));
       if (streak) empty.append(streak);

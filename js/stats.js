@@ -8,8 +8,9 @@
 //     グラフは「推移 / 分布」で切り替え（分布＝期間内のタイムを区間ごとに数えた棒グラフ。選んだものは practice.stats.chart に保存）、
 //     ケースごとの表（並び：苦手順（既定。直近 10 回の平均の遅い順）/ グループ順 / 覚える順（PLL）。見出しでも並べ替え。
 //     ケースを押すとそのケースを練習ページで出題）
-//   - 集計のカードとタイムの推移のあいだに称号の札とバッジの一覧（titles.js の renderCard・renderBadges。取ったバッジを押すと称号として表示）。
-//     バッジの一覧は開け閉めできる（既定は閉じる。practice.stats.badges に保存。stats#titles で開いたときは開く）
+//   - 切り替えの下（集計のカードの上）に称号の札とバッジの一覧（titles.js の renderCard・renderBadges。取ったバッジを押すと称号として表示）。
+//     スマホではふだん小さな 2 段の札で、押すと大きな札とバッジの一覧を開く。広い画面は大きな札と「バッジ n / 40」の開け閉め
+//     （既定は閉じる。practice.stats.badges に保存。stats#titles で開いたときは開く）
 (function () {
   'use strict';
   const S = window.Store;
@@ -1224,9 +1225,42 @@
   const T = window.Titles;
   // ページを開いたときより後に取ったバッジに NEW の印を付ける（一覧を開いたら見たことにするが、このページを開いている間は印を残す）
   const newSince = T ? T.read().seenAt : 0;
+  const PHONE = window.matchMedia('(max-width: 575.98px)');
+  PHONE.addEventListener('change', () => renderTitles());
   function renderTitles() {
     if (!T) return;
     const box = $('statsTitles');
+    // スマホで閉じているとき：札を 2 段の小さな形にし、右下に「バッジ 11 / 40 NEW ›」。札のどこを押しても開く
+    // （広い画面は今までどおりの大きな札と開け閉めのボタン）
+    const compact = !view.badges && PHONE.matches;
+    $('titles').classList.toggle('compact', compact);
+    if (compact) {
+      const card = T.renderCard(I, { streak: 'short' });
+      card.classList.add('stats-titles-compact');
+      // まだ称号が無いときの文（「ケースを習得すると称号がもらえます」）も、札の名前と同じ場所に置く
+      if (card.firstChild && card.firstChild.nodeType === 3) card.replaceChild(el('span', 'title-card-name', card.firstChild.textContent), card.firstChild);
+      card.setAttribute('role', 'button');
+      card.tabIndex = 0;
+      card.setAttribute('aria-expanded', 'false');
+      const unseenN = T.unseenCount();
+      const summary = el('span', 'stats-titles-badges', I.t('titles.badges', { n: Object.keys(T.read().earned).length, total: T.BADGES.length }));
+      if (unseenN) summary.append(el('span', 'title-badge-new', I.t('titles.newCount', { n: unseenN })));
+      summary.append(el('span', 'stats-titles-chevron', '›'));
+      card.append(summary);
+      const open = () => {
+        view.badges = true;
+        saveView();
+        renderTitles();
+      };
+      card.addEventListener('click', open);
+      card.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault();
+        open();
+      });
+      box.replaceChildren(card);
+      return;
+    }
     const head = el('div', 'stats-titles-head');
     const toggle = el('button', 'stats-titles-toggle');
     toggle.type = 'button';
@@ -1238,14 +1272,25 @@
     if (unseen && !view.badges) count.append(el('span', 'title-badge-new', I.t('titles.newCount', { n: unseen })));
     toggle.append(
       count,
-      el('span', 'stats-titles-action', (view.badges ? '▾ ' : '▸ ') + I.t(view.badges ? 'titles.badgesHide' : 'titles.badgesShow'))
+      el('span', 'stats-titles-action', (view.badges ? '▾ ' : '▸ ') + I.t(view.badges ? 'titles.badgesHide' : 'titles.badgesShow')),
+      el('span', 'stats-titles-chevron', '›') // 広い画面は「バッジを見る」の文の代わりにこれだけ出す（1 行にして札を低く）
     );
+    toggle.title = I.t(view.badges ? 'titles.badgesHide' : 'titles.badgesShow');
     toggle.addEventListener('click', () => {
       view.badges = !view.badges;
       saveView();
       renderTitles();
     });
-    head.append(T.renderCard(I, { streak: true }), toggle);
+    // 開け閉めのボタンは札の中のいちばん下の行に入れる（左に連続の日数、右下にボタン。入らなければボタンを次の行の右に。
+    // スマホは 1 行いっぱい）
+    const card = T.renderCard(I, { streak: true });
+    card.classList.add('stats-titles-card');
+    const foot = el('div', 'stats-titles-foot');
+    const streak = card.querySelector('.title-streak');
+    if (streak) foot.append(streak);
+    foot.append(toggle);
+    card.append(foot);
+    head.append(card);
     box.replaceChildren(head);
     if (view.badges) {
       const list = T.renderBadges(I, renderTitles, { newSince: newSince });
