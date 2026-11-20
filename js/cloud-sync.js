@@ -14,7 +14,7 @@
 //   - ログアウトしても手元のデータは消さない
 //   - ログイン中はアイコンの右上に、ログインに使ったサービス（Google / GitHub）のロゴを小さく出す
 //   - メニューのアイコンの行と保存の状態の行のあいだに、称号の札（titles.js の段位、または選んだバッジ）と
-//     習得したケースの数、記録のページのバッジの一覧へのリンクを出す。メニューを開いたときに Titles.update() でバッジを付ける
+//     習得したケースの数を出す（バッジの一覧は記録のページ）。メニューを開いたときに Titles.update() でバッジを付ける
 //   - window.CloudSync：ほかのページ（privacy.html のデータ削除）から使う
 //       CloudSync.state()        { available, known, signedIn, name }
 //       CloudSync.deleteAccount() アカウントのデータ（users/{uid}/apps の全アプリの文書）とログインのアカウントを削除する
@@ -415,13 +415,7 @@ async function main() {
     const T = window.Titles;
     if (!T) return null;
     const wrap = el('div', 'account-title');
-    const link = el('a', 'account-title-link');
-    link.href = 'stats#titles';
-    link.textContent = I.t('titles.badges', { n: Object.keys(T.read().earned).length, total: T.BADGES.length });
-    const unseen = T.unseenCount(); // まだ一覧で見ていないバッジ
-    if (unseen) link.append(el('span', 'title-badge-new', I.t('titles.newCount', { n: unseen })));
-    link.append(' ›');
-    wrap.append(T.renderCard(I), link);
+    wrap.append(T.renderCard(I));
     return wrap;
   }
   // 習得状況・バッジが変わったら、開いているメニューの札を作り直す

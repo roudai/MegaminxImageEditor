@@ -497,18 +497,6 @@
 .account-title .title-empty {
   padding: .35rem .2rem 0;
 }
-.account-title-link {
-  display: inline-block;
-  margin-top: .3rem;
-  padding: .1rem .2rem;
-  color: #6c757d;
-  font-size: .72rem;
-  text-decoration: none;
-}
-.account-title-link:hover {
-  color: #212529;
-  text-decoration: underline;
-}
 .account-menu-code {
   margin-left: .35rem;
   font-family: var(--bs-font-monospace);

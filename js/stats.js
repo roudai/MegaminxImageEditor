@@ -10,7 +10,7 @@
 //     ケースを押すとそのケースを練習ページで出題）
 //   - 切り替えの下（集計のカードの上）に称号の札とバッジの一覧（titles.js の renderCard・renderBadges。取ったバッジを押すと称号として表示）。
 //     スマホではふだん小さな 2 段の札で、押すと大きな札とバッジの一覧を開く。広い画面は大きな札と「バッジ n / 40」の開け閉め
-//     （既定は閉じる。practice.stats.badges に保存。stats#titles で開いたときは開く）
+//     （既定は閉じる。practice.stats.badges に保存）
 (function () {
   'use strict';
   const S = window.Store;
@@ -1486,10 +1486,4 @@
   if (T) T.update(); // これまでの記録で条件を満たしているバッジを付ける
   render();
   renderTitles();
-  // アカウントメニューの「バッジ」から開いたとき（stats#titles）：作ったあとの位置へ移る
-  if (location.hash === '#titles') {
-    view.badges = true;
-    renderTitles();
-    $('titles').scrollIntoView();
-  }
 })();
