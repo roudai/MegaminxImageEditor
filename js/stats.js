@@ -118,8 +118,8 @@
     periods.forEach((item) => {
       const option = el('option');
       option.value = item.value;
-      // 「すべて」は範囲の「すべて」と並ぶので、プルダウンでは「全期間」
-      I.set(option, item.value === 'all' ? 'stats.allTimeSelect' : item.key, item.params);
+      // スマホの 1 行に収まるよう短い文にする（英語は 7d / 30d / All。日本語は「すべて」が範囲の「すべて」と並ぶので「全期間」）
+      I.set(option, item.value === 'all' ? 'stats.allTimeSelect' : 'stats.daysShort', item.params);
       option.selected = item.value === view.period;
       select.append(option);
     });
