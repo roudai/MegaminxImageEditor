@@ -154,8 +154,13 @@
 
   // ---- バッジの判定に使う集計 ----
   const caseLog = (practice) => (isObject(practice) && Array.isArray(practice.log) ? practice.log : []);
+  // ソルブの最短（js/practice.js の MIN_FULL_SEC と同じ）。これ未満の記録（DNF 以外）は押し間違いとみなし、バッジの判定に数えない
+  // （練習ページでは記録しないが、それより前に記録したものが残っていることがある）
+  const MIN_FULL_SEC = 15;
   const fullLog = (practice) =>
-    isObject(practice) && isObject(practice.full) && Array.isArray(practice.full.log) ? practice.full.log : [];
+    isObject(practice) && isObject(practice.full) && Array.isArray(practice.full.log)
+      ? practice.full.log.filter((r) => !(r && r.penalty !== 'DNF' && typeof r.sec === 'number' && r.sec < MIN_FULL_SEC))
+      : [];
   const allEntries = (practice) => caseLog(practice).concat(fullLog(practice)).filter((e) => e && typeof e.at === 'number');
 
   // 練習した日ごとの回数（PLL・OLL と通しを合わせる）

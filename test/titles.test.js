@@ -442,13 +442,13 @@ test('badgeProgress：数えられるバッジだけ、今の数と目標（目�
 
 test('recheck：記録だけで決まるバッジを判定し直し、満たさなくなったものを外す（回数のバッジ・取り直しは別）', () => {
   withStorage({}, () => {
-    const fast = { at: 1000, sec: 5, penalty: '' };
+    const fast = { at: 1000, sec: 20, penalty: '' };
     const slow = { at: 900, sec: 90, penalty: '' };
     Store.set('practice', { full: { log: [fast, slow] } });
     const got = T.update(10);
     assert.ok(got.includes('fullSub30') && got.includes('fullSub120') && got.includes('fullFirst'));
     T.setShown('fullSub30');
-    // 5 秒の記録を消す：30 秒未満・45 秒未満・1:00 未満は外し、2:00 未満・はじめてのソルブは残す
+    // 20 秒の記録を消す：30 秒未満・45 秒未満・1:00 未満は外し、2:00 未満・はじめてのソルブは残す
     Store.set('practice', { full: { log: [slow] } });
     assert.deepEqual(T.recheck(20).sort(), ['fullSub30', 'fullSub45', 'fullSub60']);
     const t = T.read();
@@ -466,4 +466,13 @@ test('recheck：記録だけで決まるバッジを判定し直し、満たさ�
     assert.deepEqual(T.recheck(30), []);
     assert.deepEqual(Object.keys(T.read().earned), ['full100']);
   });
+});
+
+test('15 秒未満のソルブ（DNF 以外）はバッジの判定に数えない（押し間違いとみなす）', () => {
+  const full = (log) => ({ practice: { full: { log } } });
+  assert.deepEqual(T.evaluate(full([{ at: 1, sec: 5, penalty: '' }]), {}), []);
+  assert.deepEqual(T.evaluate(full([{ at: 1, sec: 14.99, penalty: '+2' }]), {}), []);
+  assert.ok(T.evaluate(full([{ at: 1, sec: 15, penalty: '' }]), {}).includes('fullSub30'));
+  // DNF は短くても DNF として数える（はじめてのソルブ）
+  assert.deepEqual(T.evaluate(full([{ at: 1, sec: 3, penalty: 'DNF' }]), {}), ['fullFirst']);
 });

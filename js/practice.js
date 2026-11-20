@@ -626,6 +626,7 @@
   function inspect() {
     setState('inspecting');
     clearShown();
+    clearTooFast();
     inspectAt = performance.now();
     const tick = () => {
       const t = (performance.now() - inspectAt) / 1000;
@@ -648,6 +649,7 @@
     }
     setState('running');
     clearShown();
+    clearTooFast();
     startAt = performance.now();
     const tick = () => {
       timerEl.textContent = format((performance.now() - startAt) / 1000);
@@ -670,8 +672,28 @@
     const sec = Math.round((performance.now() - startAt) / 10) / 100; // 0.01 秒単位
     timerEl.textContent = format(sec);
     setState('idle');
+    if (isFull() && sec < MIN_FULL_SEC) return tooFast(sec);
     if (isFull()) recordFull(sec, penalty);
     else record(sec);
+  }
+  // ソルブで MIN_FULL_SEC 秒未満で止めたとき：押し間違いとみなして記録しない（累計・バッジも数えない）。
+  // タイマーを 0.00 に戻し、スクランブルはそのまま（同じスクランブルでやり直せる）。
+  // js/titles.js のバッジの判定でも、同じ秒数未満の記録は数えない（MIN_FULL_SEC）
+  // 知らせは止めたタイムを添え（続けて短く止めても、新しい知らせだと分かるように）、次のインスペクション・計測を始めたら消す
+  const MIN_FULL_SEC = 15;
+  let tooFastShown = false;
+  function tooFast(sec) {
+    penalty = '';
+    resetTimer();
+    const result = $('practiceResult');
+    result.hidden = false;
+    result.replaceChildren(el('div', 'text-muted small', I.t('practice.tooFast', { time: format(sec), sec: MIN_FULL_SEC })));
+    tooFastShown = true;
+  }
+  function clearTooFast() {
+    if (!tooFastShown) return;
+    tooFastShown = false;
+    $('practiceResult').hidden = true;
   }
 
   // ---- 記録と判定 ----
@@ -773,6 +795,7 @@
     const result = $('practiceResult');
     result.hidden = false;
     result.replaceChildren();
+    tooFastShown = false; // 結果を出したら、15 秒未満の知らせではない
 
     const display = P.displaySettings(set);
     const canvas = el('canvas');
@@ -850,6 +873,7 @@
     const result = $('practiceResult');
     result.hidden = false;
     result.replaceChildren();
+    tooFastShown = false; // 結果を出したら、15 秒未満の知らせではない
     const body = el('div', 'practice-result-body w-100');
     const head = el('div', 'd-flex flex-wrap align-items-center gap-2');
     head.append(el('span', 'practice-result-time', showTime(rec)));
