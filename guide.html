@@ -76,21 +76,23 @@
         <h2>PLL・OLL</h2>
         <ul>
           <li>画像を押すと、そのケースをエディタで開きます。</li>
+          <li>PLL は、ケース名の右に逆手順のケースが「⇄ A1-」のように出ます（自分自身が逆手順のケースには出ません）。</li>
           <li>右上の丸を押すたびに、未習得 → 練習中 → 習得済み と切り替わります。上のバーで進み具合がわかります。</li>
           <li>習得状況やグループで絞り込めます。PLL は「覚える順」にすると、覚えるとよい順番に段階に分けて並びます。OLL は No Dot・Dot で分けて見られます。</li>
           <li>「練習する」で、表示しているケースをそのまま練習できます。</li>
-          <li>「ZIP でダウンロード」で、すべてのケースの画像をまとめて保存できます（パソコンのみ）。</li>
+          <li>「ZIP でダウンロード」で、表示している範囲のケースの画像をまとめて保存できます（パソコンのみ）。押すと枚数・画像の大きさ・背景が出るので、確かめてから「ダウンロード」を押します。画像の大きさや色はエディタの設定を使います。</li>
           <li>「すべて未習得に戻す」で習得状況をまとめて消せます。押すと確認が出て、戻したあとも「元に戻す」で取り消せます。</li>
         </ul>
 
         <h2>練習</h2>
         <ul>
           <li>PLL・OLL・ソルブから選びます。PLL・OLL は、対象（未習得・練習中・習得済み・すべて）とグループで出すケースを絞れます。OLL は No Dot・Dot・すべてからも選べます。スマホでは設定が 1 行にまとまっているので、押して開きます。</li>
-          <li>スクランブルの通りに回してから、スペースキー（スマホはタイマーのカードのどこかをタップ）でスタートし、解けたらもう一度押して止めます。Esc で中止できます。続けて押してしまったときのため、スタートから0.5秒は止まらず、止めてから2秒はタイムが赤くなって次がスタートしません。</li>
+          <li>スクランブルの通りに回してから、スペースキー（スマホはタイマーのカードのどこかをタップ）でスタートし、解けたらもう一度押して止めます。Esc で中止できます。続けて押してしまったときのため、スタートから0.5秒は止まらず、止めてから2秒はタイムが赤くなって次がスタートしません。はじめのうちは、タイマーのカードに操作のヒント（Tips）が出ます（× で閉じられます）。</li>
           <li>「習得の目安」の秒数以内に解けたケースは習得済み、超えたケースは練習中になります。目安はスライドバーか「−」「＋」で、2〜20 秒のあいだを 0.5 秒刻みで決められます。PLL と OLL で別々に決められます。</li>
           <li>「出題」が「苦手優先」のときは、最近のタイムが遅いケースや解けなかったケース、まだ解いたことのないケースが出やすくなります（苦手な順に出るのではなく、ランダムの中で出やすくなります）。「ランダム」にすると、どのケースも同じ確率で出ます。</li>
           <li>わからないときは「ヒント」で手順の最初の3手を見られます。スタート前でも、解いている途中でも見られます（タイマーは止まりません）。ヒントを見たときは、目安以内でも練習中になります。</li>
-          <li>スタート前は「スキップ」で次の問題に飛ばせます。解いている途中は、解けなかったときは「解けなかった」、回し間違えたときなどは「中止」（Esc と同じ。記録せずに同じスクランブルでやり直す）を押します。結果の「取り消す」で、記録を取り消せます。</li>
+          <li>スタート前は「スキップ」で次の問題に飛ばせます。解いている途中は、解けなかったときは「解けなかった」、回し間違えたときなどは「中止」（Esc と同じ。記録せずに同じスクランブルでやり直す）を押します。結果の「取り消す」で、記録を取り消せます。目安以内で止めたけれど揃っていなかったときなどは、「練習中にする」でタイムはそのままにケースを練習中にできます。</li>
+          <li>PLL では、同じケースや、その逆手順のケースが続けて出ないようにしています。</li>
           <li>キーボードでは、S でスキップ、H でヒント、D で解けなかった、Esc で中止を押せます（解いている途中に H・D を押しても、タイマーは止まりません）。</li>
           <li>ソルブは WCA と同じ形のスクランブルで計ります。スペース（スマホはタイマーのカード）を長押しして、数字が緑になったら離すとスタートします。インスペクション（15秒）のあり・なしを選べます。ありのときは、まずスペース（タップ）で15秒のカウントダウンが始まり、その間に長押しして離すとスタートします（15秒を超えると +2、17秒を超えると DNF）。止めたあとの結果で +2・DNF をつけることもできます。ao5・ao12・ao100 と平均（DNF を除く）も出ます。ao100 は速い方・遅い方を 5 回ずつ除いた平均です。</li>
           <li>ソルブを 15 秒未満で止めたときは、押し間違いとみなして記録しません。同じスクランブルでやり直すか、「スクランブルを変える」で新しいスクランブルにできます。</li>
@@ -99,7 +101,7 @@
         <h2>記録</h2>
         <ul>
           <li>上のボタンで PLL・OLL・ソルブと期間を選びます。PLL・OLL・ソルブの選択は練習と共通で、練習と記録を行き来しても同じものが表示されます。OLL は No Dot・Dot を分けず、すべてのケースの記録を表示します。</li>
-          <li>グラフは1回ごとのタイムです。ソルブには ao5・ao12 の線が、PLL・OLL には習得の目安の線が出ます。記録が多いときは直近の数百回だけを出します。グラフを横にドラッグ（スマホはスワイプ）するか、下の ‹ › で前の記録を見られます。グラフの右上の「分布」に切り替えると、どのくらいのタイムが多いかを棒グラフで見られます。PLL・OLL では、習得の目安以内で解けた回が緑になります。</li>
+          <li>グラフは1回ごとのタイムです。ソルブには ao5・ao12 の線が、PLL・OLL には習得の目安の線が出ます。記録が多いときは直近の数百回だけを出します。グラフを横にドラッグ（スマホはスワイプ）するか、下の ‹ › で前の記録を見られます。下の細い帯はスクロールバーのように掴んで動かせるので、遠くの記録へ一気に移れます。グラフの右上の「分布」に切り替えると、どのくらいのタイムが多いかを棒グラフで見られます。PLL・OLL では、習得の目安以内で解けた回が緑になります。</li>
           <li>PLL・OLL の「ケースごと」の表では、ケースごとの回数・ベスト・平均・最近（直近10回の平均）を見られます。並びは「苦手順」（最近のタイムが遅いケースから）・「グループ順」・「覚える順」（PLL のみ）から選べます。ケースを押すと、そのケースを練習できます。</li>
           <li>「記録の一覧」では、記録を1件ずつ、または選んでまとめて削除できます。「すべての記録を削除」で、その種類（PLL・OLL・ソルブ）の記録を期間に関係なくすべて消せます。どれも削除したあとに「元に戻す」で取り消せます。記録を消しても、習得状況は変わりません。</li>
         </ul>
@@ -108,8 +110,8 @@
         <ul>
           <li>記録のページの上（集計のカードの上）に称号が出ます（スマホでは小さくまとめて出し、押すと大きな札とバッジの一覧が開きます）。ログイン中は、右上のアイコンを押したメニューにも出ます。称号は PLL と OLL を合わせて習得したケースの数（410 ケース中）で上がっていきます。どんな称号があるかは、習得を進めてのお楽しみです。習得状況を戻すと称号も下がります。</li>
           <li>称号にマウスを乗せると、次の称号まであと何ケースかが出ます。記録のページの称号の下には、続けて練習している日数といちばん長く続いた日数が出ます（今日まだ練習していなくても、昨日まで続いていれば数えます）。</li>
-          <li>練習の回数や続けて練習した日数、ソルブの記録などでバッジがもらえます。バッジは全部で 40 個あり、記録のページの称号の右の「バッジ」（スマホでは称号）を押すと一覧が開きます（「バッジを閉じる」で閉じます）。取ったバッジを押すと、そのバッジを称号の代わりに表示できます（もう一度押すと戻ります）。まだ取っていないバッジには、達成までの進み具合が出るものもあります。一度取ったバッジは、習得状況を消しても、「すべての記録を削除」しても残ります。ただし、タイムなど記録だけで決まるバッジは、記録を 1 件ずつ・選んで削除したり、練習の結果を「取り消す」したり、ソルブのペナルティを変えたりして条件を満たさなくなると外れます（間違えて止めたタイムで取ったバッジを残さないため）。</li>
-          <li>練習で称号が上がったときやバッジを取ったときは、画面の下に知らせが出ます。知らせは次の計測を始めるまで出ていて、右上の × で先に閉じることもできます。まだ一覧で見ていない新しいバッジには「NEW」の印が付きます（右上のメニューの「バッジ」の横にも出ます）。</li>
+          <li>練習の回数や続けて練習した日数、ソルブの記録などでバッジがもらえます。バッジは全部で 40 個あり、記録のページの称号の札の右下の「バッジ」（スマホでは称号）を押すと一覧が開きます（「バッジを閉じる」で閉じます）。取ったバッジを押すと、そのバッジを称号の代わりに表示できます（もう一度押すと戻ります）。まだ取っていないバッジには、達成までの進み具合が出るものもあります。一度取ったバッジは、習得状況を消しても、「すべての記録を削除」しても残ります。ただし、タイムなど記録だけで決まるバッジは、記録を 1 件ずつ・選んで削除したり、練習の結果を「取り消す」したり、ソルブのペナルティを変えたりして条件を満たさなくなると外れます（間違えて止めたタイムで取ったバッジを残さないため）。</li>
+          <li>練習で称号が上がったときやバッジを取ったときは、画面の下に知らせが出ます。知らせは次の計測を始めるまで出ていて、右上の × で先に閉じることもできます。まだ一覧で見ていない新しいバッジには「NEW」の印が付きます（記録のページの「バッジ」の横にも出ます）。</li>
         </ul>
 
         <h2>保存とログイン</h2>
@@ -153,21 +155,23 @@
         <h2>PLL / OLL</h2>
         <ul>
           <li>Click an image to open that case in the editor.</li>
+          <li>For PLL, the inverse case is shown to the right of the name, like "⇄ A1-" (not shown for cases that are their own inverse).</li>
           <li>Tap the circle in the top-right corner to cycle through To learn → Learning → Learned. The bar at the top shows your progress.</li>
           <li>Filter by status or group. For PLL, "By learning order" sorts the cases into stages in a recommended order. For OLL, you can view No Dot and Dot cases separately.</li>
           <li>"Practice" starts practicing the cases shown on the page.</li>
-          <li>"Download ZIP" saves images of every case at once (desktop only).</li>
+          <li>"Download ZIP" saves images of all the cases in the current view at once (desktop only). It first shows the number of images, the image size and the background; press "Download" to go ahead. The image size and colors come from the editor's settings.</li>
           <li>"Reset all progress" clears every status after you confirm. You can still undo it afterwards.</li>
         </ul>
 
         <h2>Practice</h2>
         <ul>
           <li>Choose PLL, OLL or Solve. For PLL and OLL, narrow down the cases by target (To learn, Learning, Learned or All) and by group. For OLL, you can also choose No Dot, Dot or All. On a phone, the settings are folded into one line; tap it to open them.</li>
-          <li>Apply the scramble, then press Space (or tap anywhere on the timer card on a phone) to start, and press again when you're done. Press Esc to cancel. To guard against accidental double presses, the timer won't stop during the first 0.5 seconds, and for 2 seconds after you stop, the time turns red and the timer won't start again.</li>
+          <li>Apply the scramble, then press Space (or tap anywhere on the timer card on a phone) to start, and press again when you're done. Press Esc to cancel. To guard against accidental double presses, the timer won't stop during the first 0.5 seconds, and for 2 seconds after you stop, the time turns red and the timer won't start again. At first, tips on how to use the timer appear on the timer card (close them with ×).</li>
           <li>Cases solved within the "Learned within" time are marked Learned; slower ones are marked Learning. Set the time with the slider or the − and + buttons, from 2 to 20 seconds in steps of 0.5. PLL and OLL each have their own time.</li>
           <li>With "Picks" set to "Favor weak", cases with slow recent times, failed solves, or no solves yet come up more often (still at random, not in order). With "Random", every case is equally likely.</li>
           <li>Stuck? Press "Hint" to see the first three moves, either before you start or while the timer is running (it keeps running). If you use a hint, the case stays Learning even if you're fast enough.</li>
-          <li>Before you start, "Skip" moves on to the next case. While solving, press "Couldn't solve" if you can't solve it, or "Cancel" (same as Esc) to stop without saving and retry the same scramble, for example if you applied it wrong. "Undo" in the result removes the solve.</li>
+          <li>Before you start, "Skip" moves on to the next case. While solving, press "Couldn't solve" if you can't solve it, or "Cancel" (same as Esc) to stop without saving and retry the same scramble, for example if you applied it wrong. "Undo" in the result removes the solve. If you stopped in time but the case wasn't actually solved, "Mark as Learning" keeps the time and marks the case as Learning.</li>
+          <li>For PLL, the same case or its inverse never comes up twice in a row.</li>
           <li>Keyboard shortcuts: S for Skip, H for Hint, D for Couldn't solve, and Esc for Cancel. Pressing H or D while solving doesn't stop the timer.</li>
           <li>Full solves use WCA-style scrambles. Hold Space (or the timer card on a phone) until the numbers turn green, then release to start. Inspection (15s) can be turned on or off. With inspection on, press Space (or tap) to start a 15-second countdown, then hold and release to start solving (over 15 seconds adds +2, over 17 seconds is a DNF). You can also add +2 or DNF in the result after you stop. ao5, ao12, ao100 and the mean (excluding DNFs) are shown too. ao100 drops the 5 fastest and 5 slowest solves.</li>
           <li>If you stop a full solve in under 15 seconds, it's treated as a mistaken press and isn't saved. Retry the same scramble, or press "Change scramble" to get a different one.</li>
@@ -176,7 +180,7 @@
         <h2>Stats</h2>
         <ul>
           <li>Choose PLL, OLL or Solve and a time period at the top. The PLL / OLL / Solve choice is shared with Practice, so switching between the two pages keeps it. OLL stats always include every case, both No Dot and Dot.</li>
-          <li>The chart shows each solve. Full solves also show ao5 and ao12 lines; PLL and OLL show a line for your "Learned within" time. With many solves, it shows the most recent few hundred; drag the chart sideways (swipe on phones) or use ‹ › below it to see earlier ones. Switch to "Distribution" at the top right of the chart to see a bar chart of how often each time range comes up. For PLL and OLL, solves within your "Learned within" time are shown in green.</li>
+          <li>The chart shows each solve. Full solves also show ao5 and ao12 lines; PLL and OLL show a line for your "Learned within" time. With many solves, it shows the most recent few hundred; drag the chart sideways (swipe on phones) or use ‹ › below it to see earlier ones. You can also grab the thin bar below the chart like a scrollbar to jump far back quickly. Switch to "Distribution" at the top right of the chart to see a bar chart of how often each time range comes up. For PLL and OLL, solves within your "Learned within" time are shown in green.</li>
           <li>For PLL and OLL, the "By case" table shows the count, best, average and recent average (last 10 solves) for each case. Sort by "Weakest first" (slowest recent times on top), "By group", or "By learning order" (PLL only). Click a case to practice it.</li>
           <li>In "Solves", you can delete solves one at a time or select several at once. "Delete all solves" removes every solve of that type (PLL, OLL or Solve), whatever the period. You can undo any deletion. Deleting solves doesn't change your progress.</li>
         </ul>
@@ -185,8 +189,8 @@
         <ul>
           <li>Your title is shown near the top of the Stats page (above the summary cards); on phones it is a compact bar that you tap to open the full card and your badges. It also appears in the menu under your icon at the top right while you are signed in. Your title goes up with the number of cases you have learned across PLL and OLL (out of 410). What the titles are is for you to find out as you learn. If you set cases back, your title goes down too.</li>
           <li>Hover over your title to see how many more cases you need for the next one. On the Stats page, your current practice streak (days in a row) and your best streak are shown under your title. A streak still counts if you practiced yesterday but not yet today.</li>
-          <li>You earn badges for things like how often you practice, practicing several days in a row, and full solves. There are 40 badges. On the Stats page, click "Badges" next to your title (on phones, tap your title) to open the list ("Hide badges" closes it), and click a badge you have earned to show it instead of your title (click it again to switch back). Some badges you haven't earned yet show how close you are. Earned badges stay even if you reset your progress or use "Delete all solves". However, badges that depend only on your solves, such as time badges, are removed if they no longer qualify after you delete solves one at a time or by selection, undo a result in practice, or change a full-solve penalty (so a badge earned with a mistaken stop doesn't stay).</li>
-          <li>When your title goes up or you earn a badge during practice, a message appears at the bottom of the screen. It stays until you start the next solve, or you can close it with the × in its corner. New badges you haven't looked at yet are marked "NEW" (also next to "Badges" in the menu at the top right).</li>
+          <li>You earn badges for things like how often you practice, practicing several days in a row, and full solves. There are 40 badges. On the Stats page, click "Badges" at the bottom right of your title card (on phones, tap your title) to open the list ("Hide badges" closes it), and click a badge you have earned to show it instead of your title (click it again to switch back). Some badges you haven't earned yet show how close you are. Earned badges stay even if you reset your progress or use "Delete all solves". However, badges that depend only on your solves, such as time badges, are removed if they no longer qualify after you delete solves one at a time or by selection, undo a result in practice, or change a full-solve penalty (so a badge earned with a mistaken stop doesn't stay).</li>
+          <li>When your title goes up or you earn a badge during practice, a message appears at the bottom of the screen. It stays until you start the next solve, or you can close it with the × in its corner. New badges you haven't looked at yet are marked "NEW" (also next to "Badges" on the Stats page).</li>
         </ul>
 
         <h2>Saving and signing in</h2>
