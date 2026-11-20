@@ -415,3 +415,27 @@ test('streakOf：今続けている日数（今日か昨日まで）といちば
   assert.deepEqual(T.streakOf({ practice: { log: log([9, 10]) }, stats }, now), { current: 40, best: 50 });
   assert.deepEqual(T.streakOf({ practice: { log: log([9, 10]) }, stats }, dayAt(12)), { current: 0, best: 50 }); // 2 日空いた
 });
+
+test('badgeProgress：数えられるバッジだけ、今の数と目標（目標で頭打ち）', () => {
+  const MINUTE = 60000;
+  const log = Array.from({ length: 320 }, (_, i) => caseEntry(Date.UTC(2026, 0, 5, 9) + i * MINUTE));
+  const p = T.badgeProgress({
+    progress: progressOf(10, 3),
+    practice: { log },
+    stats: { met: { pll: ['A1+', 'A2+'], oll: ['1'] } },
+  });
+  assert.deepEqual(p.pllHalf, { value: 10, goal: 76 });
+  assert.deepEqual(p.ollAll, { value: 3, goal: 259 });
+  assert.deepEqual(p.reps300, { value: 300, goal: 300 }); // 320 回でも目標で頭打ち
+  assert.deepEqual(p.reps1000, { value: 320, goal: 1000 });
+  assert.deepEqual(p.allMet, { value: 3, goal: 410 });
+  assert.deepEqual(p.focus, { value: 30, goal: 50 }); // 1 分おき：30 分未満に 30 回
+  assert.deepEqual(p.full100, { value: 0, goal: 100 });
+  // タイム・はじめての・週末のバッジには数を出さない
+  ['first', 'weekend', 'sub2', 'fullFirst', 'fullAo12', 'fullSub120', 'fullSub30', 'ao100Sub60'].forEach((id) =>
+    assert.equal(p[id], undefined, id)
+  );
+  // 判定と同じ目標：数が目標に届いたバッジだけを取る
+  const got = T.evaluate({ progress: progressOf(10, 3), practice: { log }, stats: { met: { pll: ['A1+', 'A2+'], oll: ['1'] } } }, {});
+  Object.keys(p).forEach((id) => assert.equal(got.includes(id), p[id].value >= p[id].goal, id));
+});

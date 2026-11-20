@@ -789,6 +789,31 @@
 .title-badge-date {
   color: #adb5bd;
 }
+/* まだ取っていないバッジの達成状況（細いバーと「39 / 410」） */
+.title-badge-progress {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-top: .25rem;
+}
+.title-badge-bar {
+  flex: none;
+  width: 6rem; /* 数の桁で長さが変わらないように決まった幅 */
+  height: 4px;
+  border-radius: 2px;
+  background: #e9ecef;
+  overflow: hidden;
+}
+.title-badge-bar-fill {
+  display: block;
+  height: 100%;
+  background: #adb5bd;
+}
+.title-badge-count {
+  font-size: .72rem;
+  font-variant-numeric: tabular-nums;
+  color: #adb5bd;
+}
 .title-badge.earned:hover {
   border-color: #ecd17f;
 }

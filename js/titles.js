@@ -223,15 +223,22 @@
   // PLL・OLL をヒントなしで sec 秒以内に解いたことがあるか
   const caseWithin = (d, sec) =>
     caseLog(d.practice).some((e) => e && !e.hint && typeof e.sec === 'number' && e.sec <= sec);
-  // PLL・OLL を、どの時点からでも span（ミリ秒）のうちに n 回記録したことがあるか（日付の区切りは使わない）
-  function casesWithin(practice, n, span) {
-    const times = caseLog(practice)
+  // どの時点からでも span（ミリ秒）未満のうちに記録した回数のいちばん多いもの（日付の区切りは使わない）
+  function maxWithin(log, span) {
+    const times = log
       .filter((e) => e && typeof e.at === 'number')
       .map((e) => e.at)
       .sort((x, y) => x - y);
-    for (let i = 0; i + n - 1 < times.length; i++) if (times[i + n - 1] - times[i] < span) return true;
-    return false;
+    let best = 0;
+    let from = 0;
+    times.forEach((at, i) => {
+      while (at - times[from] >= span) from++;
+      best = Math.max(best, i - from + 1);
+    });
+    return best;
   }
+  // PLL・OLL を 30 分のうちに記録したいちばん多い回数
+  const casesIn30min = (d) => maxWithin(caseLog(d.practice), 30 * 60000);
   // PLL・OLL で、ヒントなしで目安以内（習得済みの判定）に解いた回が続いたいちばん長い数
   function bestPerfectRun(practice) {
     let best = 0;
@@ -262,17 +269,10 @@
     });
     return best;
   }
-  // 通しを、どの時点からでも 24 時間のうちに n 回記録したことがあるか（日付の区切りは使わない）
-  function fullWithin24h(practice, n) {
-    const times = fullLog(practice)
-      .filter((r) => r && typeof r.at === 'number')
-      .map((r) => r.at)
-      .sort((a, b) => a - b);
-    for (let i = 0; i + n - 1 < times.length; i++) {
-      if (times[i + n - 1] - times[i] < 86400000) return true;
-    }
-    return false;
-  }
+  // 通しを 24 時間のうちに記録したいちばん多い回数
+  const fullIn24h = (d) => maxWithin(fullLog(d.practice), 86400000);
+  // 1 日の練習のいちばん多い回数（PLL・OLL と通しを合わせる）
+  const bestDay = (d) => Math.max(0, ...Object.values(perDay(d.practice)));
   // 同じ週末の土曜と日曜の両方に練習したことがあるか（端末の時刻の日付）
   // 週末キューバー：同じ週末の土曜と日曜に、どちらも WEEKEND_REPS 回以上（PLL・OLL と通しを合わせる）
   const WEEKEND_REPS = 20;
@@ -337,58 +337,78 @@
   }
 
   const GROUPS = ['learn', 'reps', 'streak', 'speed', 'full'];
+  // 数えられるバッジは count（今の数）と goal（目標）を持ち、count >= goal で取る。
+  // バッジの一覧では、まだ取っていないものに「count / goal」とバーを出す（badgeProgress）
+  const counted = (id, group, count, goal) => ({ id, group, count, goal, test: (d) => count(d) >= goal });
+  const learned = (set) => (d) => learnedCount(d.progress, set);
+  const fullCount = (d) => fullLog(d.practice).length;
+  const perfectRun = (d) => bestPerfectRun(d.practice);
   const BADGES = [
     // 習得
     { id: 'first', group: 'learn', test: (d) => learnedCount(d.progress, 'pll') + learnedCount(d.progress, 'oll') >= 1 },
-    { id: 'pllHalf', group: 'learn', test: (d) => learnedCount(d.progress, 'pll') >= Math.ceil(TOTALS.pll / 2) },
-    { id: 'pllAll', group: 'learn', test: (d) => learnedCount(d.progress, 'pll') >= TOTALS.pll },
-    { id: 'ollHalf', group: 'learn', test: (d) => learnedCount(d.progress, 'oll') >= Math.ceil(TOTALS.oll / 2) },
-    { id: 'ollAll', group: 'learn', test: (d) => learnedCount(d.progress, 'oll') >= TOTALS.oll },
+    counted('pllHalf', 'learn', learned('pll'), Math.ceil(TOTALS.pll / 2)),
+    counted('pllAll', 'learn', learned('pll'), TOTALS.pll),
+    counted('ollHalf', 'learn', learned('oll'), Math.ceil(TOTALS.oll / 2)),
+    counted('ollAll', 'learn', learned('oll'), TOTALS.oll),
     // 練習の量
-    { id: 'reps300', group: 'reps', test: (d) => reps(d) >= 300 },
-    { id: 'earlyBird', group: 'reps', test: (d) => bestHours(d, 5, 7) >= 10 },
+    counted('reps300', 'reps', reps, 300),
+    counted('earlyBird', 'reps', (d) => bestHours(d, 5, 7), 10),
     { id: 'weekend', group: 'reps', test: practicedWeekend },
-    { id: 'day100', group: 'reps', test: (d) => Object.values(perDay(d.practice)).some((n) => n >= 100) },
-    { id: 'reps1000', group: 'reps', test: (d) => reps(d) >= 1000 },
-    { id: 'pllRoundRobin', group: 'reps', test: (d) => pllPracticed(d) >= TOTALS.pll },
-    { id: 'reps5000', group: 'reps', test: (d) => reps(d) >= 5000 },
-    { id: 'week1000', group: 'reps', test: (d) => bestWeek(d.practice) >= 1000 },
-    { id: 'reps10000', group: 'reps', test: (d) => reps(d) >= 10000 },
-    { id: 'allMet', group: 'reps', test: (d) => metCount(d) >= TOTALS.all },
+    counted('day100', 'reps', bestDay, 100),
+    counted('reps1000', 'reps', reps, 1000),
+    counted('pllRoundRobin', 'reps', pllPracticed, TOTALS.pll),
+    counted('reps5000', 'reps', reps, 5000),
+    counted('week1000', 'reps', (d) => bestWeek(d.practice), 1000),
+    counted('reps10000', 'reps', reps, 10000),
+    counted('allMet', 'reps', metCount, TOTALS.all),
     // 続ける
-    { id: 'streak7', group: 'streak', test: (d) => bestRun(d) >= 7 },
-    { id: 'streak30', group: 'streak', test: (d) => bestRun(d) >= 30 },
-    { id: 'days100', group: 'streak', test: (d) => totalDays(d) >= 100 },
-    { id: 'streak100', group: 'streak', test: (d) => bestRun(d) >= 100 },
-    { id: 'streak365', group: 'streak', test: (d) => bestRun(d) >= 365 },
+    counted('streak7', 'streak', bestRun, 7),
+    counted('streak30', 'streak', bestRun, 30),
+    counted('days100', 'streak', totalDays, 100),
+    counted('streak100', 'streak', bestRun, 100),
+    counted('streak365', 'streak', bestRun, 365),
     // PLL・OLL の速さ・正確さ
     { id: 'sub2', group: 'speed', test: (d) => caseWithin(d, 2) },
-    { id: 'perfect10', group: 'speed', test: (d) => bestPerfectRun(d.practice) >= 10 },
-    { id: 'focus', group: 'speed', test: (d) => casesWithin(d.practice, 50, 30 * 60000) },
-    { id: 'perfect50', group: 'speed', test: (d) => bestPerfectRun(d.practice) >= 50 },
-    { id: 'perfect100', group: 'speed', test: (d) => bestPerfectRun(d.practice) >= 100 },
+    counted('perfect10', 'speed', perfectRun, 10, true),
+    counted('focus', 'speed', casesIn30min, 50),
+    counted('perfect50', 'speed', perfectRun, 50, true),
+    counted('perfect100', 'speed', perfectRun, 100, true),
     // 通し
     { id: 'fullFirst', group: 'full', test: (d) => fullLog(d.practice).length >= 1 },
     { id: 'fullAo12', group: 'full', test: (d) => bestFullAverage(d, 12) < Infinity },
-    { id: 'clean50', group: 'full', test: (d) => bestCleanRun(d) >= 50 },
-    { id: 'full100', group: 'full', test: (d) => fullLog(d.practice).length >= 100 },
+    counted('clean50', 'full', bestCleanRun, 50, true),
+    counted('full100', 'full', fullCount, 100),
     { id: 'fullSub120', group: 'full', test: (d) => bestFullSingle(d) < 120 },
-    { id: 'day50', group: 'full', test: (d) => fullWithin24h(d.practice, 50) },
-    { id: 'clean100', group: 'full', test: (d) => bestCleanRun(d) >= 100 },
-    { id: 'pb10', group: 'full', test: (d) => pbCount(d) >= 10 },
-    { id: 'full1000', group: 'full', test: (d) => fullLog(d.practice).length >= 1000 },
+    counted('day50', 'full', fullIn24h, 50),
+    counted('clean100', 'full', bestCleanRun, 100, true),
+    counted('pb10', 'full', pbCount, 10, true),
+    counted('full1000', 'full', fullCount, 1000),
     { id: 'fullSub60', group: 'full', test: (d) => bestFullSingle(d) < 60 },
     { id: 'ao12Sub60', group: 'full', test: (d) => bestFullAverage(d, 12) < 60 },
     { id: 'fullSub45', group: 'full', test: (d) => bestFullSingle(d) < 45 },
     { id: 'ao100Sub60', group: 'full', test: (d) => bestFullAverage(d, 100) < 60 },
-    { id: 'day300', group: 'full', test: (d) => fullWithin24h(d.practice, 300) },
+    counted('day300', 'full', fullIn24h, 300),
     { id: 'fullSub30', group: 'full', test: (d) => bestFullSingle(d) < 30 },
   ];
 
+  const dataOf = (data) => ({ progress: data && data.progress, practice: data && data.practice, stats: data && data.stats });
   function evaluate(data, earned) {
     const have = isObject(earned) ? earned : {};
-    const d = { progress: data && data.progress, practice: data && data.practice, stats: data && data.stats };
+    const d = dataOf(data);
     return BADGES.filter((b) => !have[b.id] && b.test(d)).map((b) => b.id);
+  }
+  // 数えられるバッジの達成状況 { id: { value, goal } }（value は goal で頭打ち。取ったかどうかには関係しない）。
+  // 同じ数を使うバッジ（reps300 / 1000 …）は 1 回だけ数える
+  function badgeProgress(data) {
+    const d = dataOf(data);
+    const cache = new Map();
+    const out = {};
+    BADGES.forEach((b) => {
+      if (!b.count) return;
+      if (!cache.has(b.count)) cache.set(b.count, b.count(d));
+      out[b.id] = { value: Math.min(cache.get(b.count), b.goal), goal: b.goal };
+    });
+    return out;
   }
 
   function read() {
@@ -455,6 +475,17 @@
     if (text != null) e.textContent = text;
     return e;
   }
+  // まだ取っていないバッジの達成状況：細いバーと「39 / 410」（バーは飾りで、読み上げは数の文字）
+  function progressBar(p, I) {
+    const row = make('span', 'title-badge-progress');
+    const bar = make('span', 'title-badge-bar');
+    bar.setAttribute('aria-hidden', 'true');
+    const fill = make('span', 'title-badge-bar-fill');
+    fill.style.width = (100 * p.value) / p.goal + '%';
+    bar.append(fill);
+    row.append(bar, make('span', 'title-badge-count', p.value.toLocaleString(I.lang) + ' / ' + p.goal.toLocaleString(I.lang)));
+    return row;
+  }
   function medal() {
     const span = make('span', 'title-medal');
     span.innerHTML = MEDAL;
@@ -515,6 +546,7 @@
   function renderBadges(I, onChange, options) {
     const t = read();
     const newSince = options && typeof options.newSince === 'number' ? options.newSince : Infinity;
+    const progress = badgeProgress({ progress: S.get('progress'), practice: S.get('practice'), stats: t.stats });
     const wrap = make('div', 'title-badge-groups');
     GROUPS.forEach((group) => {
       const badges = BADGES.filter((b) => b.group === group);
@@ -535,6 +567,7 @@
         if (isNew) nameEl.append(make('span', 'title-badge-new', 'NEW'));
         text.append(nameEl, make('span', 'title-badge-desc', I.t('titles.badge.' + b.id + '.desc')));
         if (at) text.append(make('span', 'title-badge-date', I.t('titles.badgeDate', { date: new Date(at).toLocaleDateString(I.lang) })));
+        else if (progress[b.id]) text.append(progressBar(progress[b.id], I));
         item.append(medal(), text);
         item.title = at ? I.t(chosen ? 'titles.badgeChosen' : 'titles.badgeChoose') : I.t('titles.badgeLocked');
         item.addEventListener('click', () => {
@@ -557,6 +590,7 @@
     GROUPS: GROUPS,
     BADGES: BADGES,
     evaluate: evaluate,
+    badgeProgress: badgeProgress,
     track: track,
     read: read,
     record: record,
