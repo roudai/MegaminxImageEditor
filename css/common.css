@@ -538,6 +538,12 @@
   white-space: normal;
 }
 
+/* エディタの本体の色・背景色：Chrome では色の入力欄が低く（27px）、横の「リセット」（38px）が下にはみ出すので、
+   ほかの入力欄と同じ高さにする。Bootstrap の .form-control-color は色の枠線を消して白が見えなくなるので使わない */
+.input-group > input[type="color"].form-control {
+  height: calc(1.5em + .75rem + calc(var(--bs-border-width) * 2));
+}
+
 /* 通しのスクランブル：1行ずつ、1行おきにうっすら色を付けて見やすくする（js/wca-scramble.js の render） */
 .scramble-line {
   padding: 0 .5rem;

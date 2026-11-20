@@ -8,6 +8,7 @@
 - 手順入力は `js/alg-input.js`。入力欄 `#alg` の値を `MegaminxState.applyAlg()` で計算し、
   `uface0..10` / `sface1..15` に書き込んで `imageChange()` で再描画する
 - 種類は `alg`（Algorithm to apply）/ `case`（Algorithm to solve case）/ `state`（Defines the puzzle state）
+  - 選び方：広い画面はラジオボタン（`input[name="algType"]`。値はこれが持つ）、スマホ（幅 576px 未満）はプルダウン `#algTypeSelect`（3 つ目だけ 2 行目に落ちて崩れるため）。プルダウンを変えると同じ値のラジオボタンを選んで `change` を投げ、ラジオボタンが変わるとプルダウンの表示をそろえる
 - 記法は `megaminx-state.js` の先頭コメントのとおり（`U F R L BR BL DR DL DBR DBL B D y`、`'`、`2`、括弧）
 
 ## 元データ：`data/pll/algs_info.json`

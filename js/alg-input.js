@@ -417,6 +417,7 @@
   }
 
   function onTypeChange() {
+    $('algTypeSelect').value = algType(); // スマホのプルダウンの表示をラジオボタンにそろえる
     const isState = algType() === 'state';
     $('algEditor').hidden = isState;
     $('stateEditor').hidden = !isState;
@@ -444,6 +445,13 @@
     if (e.key === 'Enter' && !$('myAlgSave').disabled) saveMyAlg();
   });
   typeRadios.forEach((r) => r.addEventListener('change', onTypeChange));
+  // スマホのプルダウン：同じ値のラジオボタンを選んで change を投げる（ラジオボタンの処理・state-editor.js の色の描き直しをそのまま使う）
+  $('algTypeSelect').addEventListener('change', (e) => {
+    const radio = [...typeRadios].find((r) => r.value === e.target.value);
+    if (!radio || radio.checked) return;
+    radio.checked = true;
+    radio.dispatchEvent(new Event('change', { bubbles: true }));
+  });
   $('algClear').addEventListener('click', () => {
     input.value = '';
     clearSelection();
