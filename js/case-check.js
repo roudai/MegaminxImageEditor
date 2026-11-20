@@ -13,6 +13,8 @@
  *                             OLL は s の前の AUF が上面の向きに影響しないので、最後の AUF だけを試す
  *   stripEnd(set, a)        a の最後の AUF・持ち替え y を外す（OLL では括弧の無い U も最後の AUF とみなす）
  *   findCase(set, a, data)  a で揃うケース（data の要素）を探す（無ければ null）
+ *   caseKey(set, alg, opts) alg を揃った状態に回した状態のキー（PLL は前後の AUF の違いを、OLL は上面の向き以外を無視）。
+ *                             opts は MegaminxState.applyAlg のオプション（inverse・cancelRotation）
  *
  * a・s は読み替え済み（convert 後）の手順。set は 'pll' / 'oll'。
  * 手順中の持ち替え（y）で完成後の向きが変わっても揃ったとみなす（cancelRotation）。
@@ -154,5 +156,6 @@
     fitSetup: fitSetup,
     stripEnd: stripEnd,
     findCase: findCase,
+    caseKey: caseKey,
   };
 });

@@ -8,6 +8,8 @@
 //   - 確認処理は js/case-check.js（エディタの「自分の手順」と共通）
 //   - 覚える順番 data/pll/learn_order.json（段階ごとのケース名の配列）から、各ケースに
 //       stage（段階 1〜27）と order（覚える順の通し番号 1〜151）を付ける。全ケースがちょうど1回ずつ無ければエラー
+//   - 各ケースに inverse（逆手順のケース名）を付ける：そのケースの手順 alg を揃った状態に回してできる状態（前後の AUF の違いは無視）が、
+//       setup の状態と一致するケース（自分自身のこともある）。ちょうど 1 つでなければエラー。練習で直前の逆手順を続けて出さないのに使う
 //   - 次を確認し、合わないケースがあれば直し方の候補を表示してエラーで止める
 //       a が s のケースを最後のAUFを除いて揃える（手順中の y による完成後の向きの違いは無視）
 //       a の最後にAUF・持ち替え（y）が無い
@@ -93,6 +95,15 @@ function buildAll() {
     }
     const at = learn[c.name] || {};
     return { name: c.name, group: c.group, stage: at.stage, order: at.order, alg: alg, setup: setup };
+  });
+  if (errors.length) throw new Error('data/pll/algs_info.json に問題があります:\n  ' + errors.join('\n  '));
+  // 逆手順のケース
+  const keys = cases.map((c) => C.caseKey('pll', c.setup));
+  cases.forEach((c) => {
+    const k = C.caseKey('pll', c.alg, { cancelRotation: true });
+    const found = cases.filter((x, i) => keys[i] === k);
+    if (found.length === 1) c.inverse = found[0].name;
+    else errors.push(`${c.name}: 逆手順のケースが ${found.length} 個あります（${found.map((x) => x.name).join(', ')}）`);
   });
   if (errors.length) throw new Error('data/pll/algs_info.json に問題があります:\n  ' + errors.join('\n  '));
 

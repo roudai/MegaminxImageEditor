@@ -58,3 +58,14 @@ test('覚える順番（data/pll/learn_order.json）は全151ケースをちょ�
     assert.ok(stages[c.stage - 1].includes(c.name), c.name);
   });
 });
+
+test('inverse（逆手順のケース）は実在のケース名で、対になっている（逆の逆が自分）', () => {
+  const byName = new Map(PLL.map((c) => [c.name, c]));
+  PLL.forEach((c) => {
+    assert.ok(byName.has(c.inverse), `${c.name}: inverse ${c.inverse}`);
+    assert.equal(byName.get(c.inverse).inverse, c.name, c.name);
+  });
+  assert.equal(byName.get('A1+').inverse, 'A1-');
+  assert.equal(byName.get('F2+').inverse, 'F3+');
+  assert.equal(byName.get('E1').inverse, 'E1');
+});
