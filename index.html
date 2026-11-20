@@ -102,12 +102,11 @@
       </div>
     </nav>
     <div class="d-flex justify-content-end text-muted small">presented by&nbsp;<a href="https://roudai.net" style="text-decoration: none">roudai.net</a></div>
-    <br>
-    <div class="text-center">
+    <!-- 画像：下にスクロールしても画面の上に残す（設定を変えながら見られるように。css/common.css の .editor-preview） -->
+    <div id="editorPreview" class="editor-preview sticky-top text-center mt-3">
       <canvas id="canvas" width="200" height="200" ucolor="uuuuuuuuuuu" scolor="pppcccaaaooolll"></canvas>
     </div>
-    <br>
-    <div class="text-center">
+    <div class="text-center mt-3">
       <button type="button" class="btn btn-outline-secondary" onclick="downloadImage();" data-i18n="editor.download">Download</button>
     </div>
 
@@ -115,7 +114,10 @@
     <input id="fname" class="form-control" type="text" value="megaminx.png">
 
     <label class="form-label" for="imageSize" data-i18n="editor.imageSize">Image Size (px)</label>
-    <input onchange="imageChange();" id="imageSize" class="form-control" name="size" type="number" value="200" min="100" max="1000" step="1"><!-- max は js/megaminx.js が画面の幅で決め直す -->
+    <div class="input-group">
+      <input onchange="imageChange();" id="imageSize" class="form-control" name="size" type="number" value="200" min="100" max="1000" step="1"><!-- max は js/megaminx.js が画面の幅で決め直す -->
+      <button id="imageSizeReset" class="btn btn-outline-secondary" type="button" data-i18n="common.reset">Reset</button>
+    </div>
 
     <hr>
     <label class="form-label" for="alg" data-i18n="editor.algorithm">Algorithm</label>

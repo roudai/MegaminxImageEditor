@@ -71,6 +71,20 @@
     if (String(size) !== input.value) input.value = size;
   }
 
+  // 画像サイズの「リセット」：既定の大きさ（200。上限が 200 より小さい画面では上限）に戻す
+  $('imageSizeReset').addEventListener('click', () => {
+    $('imageSize').value = SIZE_DEFAULT;
+    imageChange();
+  });
+
+  // 上に残した画像の高さを CSS に渡す（入力欄までスクロールしたときに画像の下に隠れないように。css/common.css の scroll-padding-top）
+  const preview = $('editorPreview');
+  if (preview && typeof ResizeObserver === 'function') {
+    new ResizeObserver(() => {
+      document.documentElement.style.setProperty('--editor-preview-height', Math.ceil(preview.getBoundingClientRect().height) + 'px');
+    }).observe(preview);
+  }
+
   window.imageChange = imageChange;
   window.downloadImage = downloadImage;
   window.color_convert = D.colorConvert;
