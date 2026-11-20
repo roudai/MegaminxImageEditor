@@ -122,13 +122,13 @@ test('バッジ：習得', () => {
 
 test('バッジ：練習の回数（記録の数と累計の大きい方）・1 日の回数', () => {
   const ids = (practice, stats) => T.evaluate({ practice, stats }, {});
-  assert.deepEqual(ids({ log: caseEntries(299, (i) => dayAt(i % 4) + i * MIN) }), []);
-  assert.deepEqual(ids({ log: caseEntries(300, (i) => dayAt(i % 4) + i * MIN) }), ['reps300']);
-  assert.deepEqual(ids({ log: caseEntries(100, (i) => dayAt(0, 9) + i * MIN) }), ['day100']);
-  assert.deepEqual(ids({ log: caseEntries(300, (i) => dayAt(0, 9) + i * MIN) }), ['reps300', 'day100']); // PLL・OLL は 300 回でも「気づけば朝」にならない
+  assert.deepEqual(ids({ log: caseEntries(99, (i) => dayAt(i % 4) + i * MIN) }), []);
+  assert.deepEqual(ids({ log: caseEntries(100, (i) => dayAt(i % 4) + i * MIN) }), ['reps300']); // 百本ノック（id は reps300 のまま）
+  assert.deepEqual(ids({ log: caseEntries(299, (i) => dayAt(0, 9) + i * MIN / 2) }), ['reps300']); // 1 日に 299 回では「指が温まってきた」は無し
+  assert.deepEqual(ids({ log: caseEntries(300, (i) => dayAt(0, 9) + i * MIN) }), ['reps300', 'day100']); // 1 日に 300 回 // PLL・OLL は 300 回でも「気づけば朝」にならない
   // 通しの記録も 1 日の回数に数える
-  const full = { log: Array.from({ length: 50 }, () => ({ at: dayAt(0, 9), sec: 200, penalty: '' })) };
-  assert.ok(ids({ log: caseEntries(50, (i) => dayAt(0, 10) + i * MIN), full }).includes('day100'));
+  const full = { log: Array.from({ length: 150 }, () => ({ at: dayAt(0, 9), sec: 200, penalty: '' })) };
+  assert.ok(ids({ log: caseEntries(150, (i) => dayAt(0, 10) + i * MIN), full }).includes('day100'));
   // 記録（最新 2000 件まで）を超える回数は累計で
   assert.deepEqual(ids({}, { reps: 4999 }), ['reps300', 'reps1000']);
   assert.deepEqual(ids({}, { reps: 10000 }), ['reps300', 'reps1000', 'reps5000', 'reps10000']);
@@ -220,7 +220,7 @@ test('バッジ：続けて練習した日数（記録から・累計から）�
   assert.deepEqual(byStats({ bestRun: 365 }), ['streak7', 'streak30', 'streak100', 'streak365']);
   assert.deepEqual(byStats({ days: 99 }), []);
   assert.deepEqual(byStats({ days: 100 }), ['days100']);
-  assert.deepEqual(ids(Array.from({ length: 100 }, (_, i) => i * 2)), ['days100']);
+  assert.deepEqual(ids(Array.from({ length: 100 }, (_, i) => i * 2)), ['reps300', 'days100']); // 記録が 100 回あるので百本ノックも
 });
 
 test('track：回数・日数・続けた日数を数える（同じ日は 1 日、1 日空くと 1 から、時計が戻ったら日数は数えない）', () => {
@@ -247,10 +247,11 @@ test('バッジ：PLL・OLL の速さ（ヒントを見た回は数えない）�
   // 集中タイム：どの時点からでも 30 分のうちに 100 回（タイム・判定は問わない。日付の区切りは使わない）
   const every = (n, gap, from) => Array.from({ length: n }, (_, i) => caseEntry((from == null ? dayAt(0) : from) + i * gap));
   assert.deepEqual(ids(newestFirst(every(99, 1000))), []);
-  assert.deepEqual(ids(newestFirst(every(100, 18000))), ['day100', 'focus']); // 99 × 18 秒 ＝ 29 分 42 秒（同じ日に 100 回なので day100 も）
-  assert.deepEqual(ids(newestFirst(every(100, 18300))), ['day100']); // 99 × 18.3 秒 ＝ 30 分 12 秒（集中タイムは無し）
-  assert.deepEqual(ids(newestFirst(every(100, 18000, dayAt(1, 0) - 15 * MIN))), ['focus']); // 夜中の 0 時をまたいでもよい（1 日 100 回にはならない）
-  assert.deepEqual(ids(newestFirst(every(50, 1000).concat(every(50, 1000, dayAt(0) + 31 * MIN)))), ['day100']); // 30 分のうちには 50 回まで（1 日では 100 回）
+  // 100 回の記録では百本ノック（reps300）も取れる
+  assert.deepEqual(ids(newestFirst(every(100, 18000))), ['reps300', 'focus']); // 99 × 18 秒 ＝ 29 分 42 秒
+  assert.deepEqual(ids(newestFirst(every(100, 18300))), ['reps300']); // 99 × 18.3 秒 ＝ 30 分 12 秒
+  assert.deepEqual(ids(newestFirst(every(100, 18000, dayAt(1, 0) - 15 * MIN))), ['reps300', 'focus']); // 夜中の 0 時をまたいでもよい（1 日 100 回にはならない）
+  assert.deepEqual(ids(newestFirst(every(50, 1000).concat(every(50, 1000, dayAt(0) + 31 * MIN)))), ['reps300']); // 30 分のうちには 50 回まで
   const run = (n) => Array.from({ length: n }, (_, i) => caseEntry(dayAt(0, 9) + i * MIN, { sec: 5, status: 'learned' }));
   assert.deepEqual(ids(newestFirst(run(9))), []);
   assert.deepEqual(ids(newestFirst(run(10))), ['perfect10']);
@@ -263,7 +264,7 @@ test('バッジ：PLL・OLL の速さ（ヒントを見た回は数えない）�
   assert.deepEqual(ids(newestFirst(hinted)), []);
   assert.deepEqual(ids(newestFirst(run(50))), ['perfect10', 'perfect50']);
   assert.deepEqual(ids(newestFirst(run(99))), ['perfect10', 'perfect50']);
-  assert.deepEqual(ids(newestFirst(run(100))), ['day100', 'perfect10', 'perfect50', 'perfect100']); // 1 日に 100 回なので「指が温まってきた」も
+  assert.deepEqual(ids(newestFirst(run(100))), ['reps300', 'perfect10', 'perfect50', 'perfect100']);
 });
 
 test('バッジ：通しのタイム（未満。+2 を含める）と ao（DNF が除く回数より多ければ出たことにしない）', () => {
@@ -426,7 +427,7 @@ test('badgeProgress：数えられるバッジだけ、今の数と目標（目�
   });
   assert.deepEqual(p.pllHalf, { value: 10, goal: 76 });
   assert.deepEqual(p.ollAll, { value: 3, goal: 259 });
-  assert.deepEqual(p.reps300, { value: 300, goal: 300 }); // 320 回でも目標で頭打ち
+  assert.deepEqual(p.reps300, { value: 100, goal: 100 }); // 320 回でも目標で頭打ち
   assert.deepEqual(p.reps1000, { value: 320, goal: 1000 });
   assert.deepEqual(p.allMet, { value: 3, goal: 410 });
   assert.deepEqual(p.focus, { value: 30, goal: 100 }); // 1 分おき：30 分未満に 30 回

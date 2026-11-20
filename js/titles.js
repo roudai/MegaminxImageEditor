@@ -359,10 +359,13 @@
     counted('ollHalf', 'learn', learned('oll'), Math.ceil(TOTALS.oll / 2)),
     counted('ollAll', 'learn', learned('oll'), TOTALS.oll),
     // 練習の量
-    counted('reps300', 'reps', reps, 300),
+    // 百本ノック：PLL・OLL を 100 回（id は以前の三百本ノック（300 回）のときの名前のまま。取ったバッジの保存に使っているので変えない）
+    counted('reps300', 'reps', reps, 100),
+    // 指が温まってきた：1 日に 300 回（id は以前の 100 回のときの名前のまま。取ったバッジの保存に使っているので変えない）。
+    // いつでも取れるので、決まった時間・日に取る朝練・週末キューバーより前に並べる
+    counted('day100', 'reps', bestDay, 300),
     counted('earlyBird', 'reps', (d) => bestHours(d, 5, 7), 10),
     { id: 'weekend', group: 'reps', test: practicedWeekend },
-    counted('day100', 'reps', bestDay, 100),
     counted('reps1000', 'reps', reps, 1000),
     counted('pllRoundRobin', 'reps', pllPracticed, TOTALS.pll),
     counted('reps5000', 'reps', reps, 5000),
