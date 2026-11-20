@@ -29,7 +29,6 @@
     pll: CA ? CA.merged('pll', window.PLL_DATA || []) : window.PLL_DATA || [],
     oll: CA ? CA.merged('oll', window.OLL_DATA || []) : window.OLL_DATA || [],
   };
-  const SCOPES = { nd: (c) => c.algset === 'ND', d: (c) => c.algset === 'D', all: () => true };
   const PERIODS = { 7: 7, 30: 30, all: null };
   const DAY = 24 * 60 * 60 * 1000;
 
@@ -38,13 +37,13 @@
     return p && typeof p === 'object' ? p : {};
   };
   const saved = practice().stats || {};
-  // 種類（PLL / OLL / 通し）と OLL の範囲は練習ページと共通（practice.set・practice.scope）。
-  // 練習と記録を行き来しても、選んでいた種類のまま開く（無ければ以前の記録のページだけの値）
+  // 種類（PLL / OLL / 通し）は練習ページと共通（practice.set）。練習と記録を行き来しても、選んでいた種類のまま開く
+  // （無ければ以前の記録のページだけの値）。OLL の範囲（No Dot / Dot）は練習で出題を分けるためのもので、
+  // 記録のページではいつも OLL 全体を出す（練習ページの範囲 practice.scope は変えない）
   const SETS = ['pll', 'oll', 'full'];
   const shared = practice();
   const view = {
     set: SETS.includes(shared.set) ? shared.set : SETS.includes(saved.set) ? saved.set : 'pll',
-    scope: SCOPES[shared.scope] ? shared.scope : SCOPES[saved.scope] ? saved.scope : 'nd',
     period: Object.prototype.hasOwnProperty.call(PERIODS, saved.period) ? saved.period : '30',
     // 並びの既定は苦手順。苦手順を足す前（sortV が無い）に保存した並び（平均の遅い順）は使わず、苦手順にする
     sort: saved.sortV === 2 && saved.sort ? saved.sort : 'weak',
@@ -54,25 +53,24 @@
     chart: saved.chart === 'dist' ? 'dist' : 'trend', // グラフ：推移（折れ線） / 分布（棒グラフ）
     badges: saved.badges === true, // バッジの一覧を開いているか（既定は閉じる）
   };
-  // 練習ページの「すべての記録を見る」から開いたとき（?set=oll&scope=d など）は、その種類を出す（表示の設定として保存する）
+  // 練習ページの「すべての記録を見る」から開いたとき（?set=oll など）は、その種類を出す（表示の設定として保存する）
   const params = new URLSearchParams(location.search);
   if (SETS.includes(params.get('set'))) view.set = params.get('set');
-  if (SCOPES[params.get('scope')]) view.scope = params.get('scope');
   if (params.has('set')) saveView();
   function saveView() {
-    S.set('practice', Object.assign({}, practice(), { set: view.set, scope: view.scope, stats: Object.assign({}, view) }));
+    S.set('practice', Object.assign({}, practice(), { set: view.set, stats: Object.assign({}, view) }));
   }
 
   const fmt = (sec) => (typeof sec === 'number' ? P.formatTime(sec) : '–'); // 60 秒以上は分表記（1:05.23）
   const from = () => (PERIODS[view.period] ? Date.now() - PERIODS[view.period] * DAY : 0);
-  const casesInScope = () => DATA[view.set].filter(view.set === 'oll' ? SCOPES[view.scope] : SCOPES.all);
-  // 範囲に入るケースの記録だけを使う
+  const casesInScope = () => DATA[view.set];
+  // 今の種類のケースの記録だけを使う（データに無くなったケースの古い記録は数えない）
   function logInScope() {
     const names = new Set(casesInScope().map((c) => c.name));
     return (practice().log || []).filter((e) => e && e.set === view.set && names.has(e.name));
   }
 
-  // ---- 種類・範囲・期間 ----
+  // ---- 種類・期間 ----
   function segment(items, current, onPick) {
     const box = el('div', 'stats-segment');
     box.setAttribute('role', 'group');
@@ -110,8 +108,8 @@
     ];
     const periodSeg = segment(periods, view.period, (v) => change({ period: v }));
     periodSeg.classList.add('stats-period-segment');
-    // スマホ（幅 576px 未満）では期間をプルダウンにして、種類と同じ 1 行の右端に置く（OLL の範囲は次の 1 行）。
-    // 広い画面ではプルダウンを隠し、種類・範囲・期間のボタンの順に並べる（css/stats.css で出し分け）
+    // スマホ（幅 576px 未満）では期間をプルダウンにして、種類と同じ 1 行の右端に置く。
+    // 広い画面ではプルダウンを隠し、種類・期間のボタンの順に並べる（css/stats.css で出し分け）
     const select = el('select', 'form-select form-select-sm stats-period-select');
     I.set(select, 'stats.period', null, 'aria-label');
     periods.forEach((item) => {
@@ -124,20 +122,6 @@
     });
     select.addEventListener('change', () => change({ period: select.value }));
     box.append(select);
-    if (view.set === 'oll') {
-      box.append(el('div', 'stats-controls-break'));
-      box.append(
-        segment(
-          [
-            { value: 'nd', key: 'list.scopeNd' },
-            { value: 'd', key: 'list.scopeD' },
-            { value: 'all', key: 'list.scopeAll' },
-          ],
-          view.scope,
-          (v) => change({ scope: v })
-        )
-      );
-    }
     box.append(periodSeg);
   }
 
@@ -149,8 +133,8 @@
       confirmingAll = false;
       deleteMessage = null;
     }
-    // 種類・範囲・期間・表を変えたら 1 ページ目に戻す
-    if (['set', 'scope', 'period', 'tab'].some((k) => k in next && next[k] !== view[k])) page = 1;
+    // 種類・期間・表を変えたら 1 ページ目に戻す
+    if (['set', 'period', 'tab'].some((k) => k in next && next[k] !== view[k])) page = 1;
     Object.assign(view, next);
     saveView();
     render();
