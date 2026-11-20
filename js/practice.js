@@ -693,7 +693,20 @@
     resetTimer();
     const result = $('practiceResult');
     result.hidden = false;
-    result.replaceChildren(note('practice.tooFast', { time: format(sec), sec: MIN_FULL_SEC }));
+    // 「スクランブルを変える」：押し間違いでなく崩し直したいときなど、スクランブルを作り直す（スキップと同じ）
+    const again = el('button', 'btn btn-link btn-sm p-0 align-baseline ms-2');
+    again.type = 'button';
+    I.set(again, 'practice.newScramble');
+    again.addEventListener('click', () => {
+      if (performance.now() < ignoreClicksUntil) return;
+      next();
+      clearTooFast();
+    });
+    const line = el('div', 'text-muted small');
+    const text = el('span');
+    I.set(text, 'practice.tooFast', { time: format(sec), sec: MIN_FULL_SEC });
+    line.append(text, again);
+    result.replaceChildren(line);
     tooFastShown = true;
   }
   function clearTooFast() {
