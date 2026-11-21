@@ -5,11 +5,13 @@
 //     PLL・OLL の練習の記録（各最大 10000 件）は 1 文書に入らないので、短い形にして種類ごとの文書
 //     users/{uid}/apps/megaminx-image-editor-log-pll・-log-oll に分ける（Store.toCloud・fromCloud）。中身が変わった文書だけ書く
 //     同じ Firebase プロジェクトのほかのアプリ（VisualCube Editor など）は users/{uid}/apps/<アプリ名> に保存し、ログインは共通
-//   - ログインしたとき（ページを開いたときも）：クラウドを読み → Store.merge で手元と合わせ → 両方に書く。
-//     この端末で初めてそのアカウントと合わせるときは、習得状況・自分の手順をケースごとに合わせる（union）。
-//     手元の内容が変わったら、画面に反映するためにページを1回読み直す
-//   - 手元のデータがどのアカウントのものかを SYNCED_KEY に覚え、別のアカウントでログインしたときは手元の内容を持ち込まず、
-//     そのアカウントの内容に入れ替える（Store.resolveLogin）
+//   - 新しくログインしたとき：アカウントにデータがあれば、その内容で手元を上書きする（ログイン前にこのブラウザで使った分は捨てる。
+//     合算はしない）。アカウントが空なら、手元の内容をアカウントに入れる（Store.resolveLogin）。
+//     捨てた内容があれば、読み直したあとにメニューを開いて知らせる（NOTICE_KEY）
+//   - ログインしたままページを開いたとき：クラウドを読み → Store.merge で手元と合わせ（名前ごとに新しい方）→ 両方に書く
+//     （まだクラウドに書けていなかった手元の変更を失わないため）
+//   - 「ログインしたまま」かは SESSION_KEY（ログイン中 'in'、ログアウトの状態が分かったら 'out'）と、
+//     手元のデータがどのアカウントのものかを覚えた SYNCED_KEY で決める。手元の内容が変わったら、画面に反映するためにページを1回読み直す
 //   - ログイン中は store-change を受けて、少しまとめてからクラウドに書く。ページを離れるときはすぐ書く
 //   - ログアウトしても手元のデータは消さない
 //   - ログイン中はアイコンの右上に、ログインに使ったサービス（Google / GitHub）のロゴを小さく出す
@@ -29,6 +31,8 @@ const box = document.getElementById('accountBox');
 const SDK = 'https://www.gstatic.com/firebasejs/10.12.2';
 const APP_ID = 'megaminx-image-editor'; // users/{uid}/apps/<APP_ID> に保存する
 const SYNCED_KEY = 'megaminx-image-editor:synced-uid'; // この端末でクラウドと合わせたことのあるアカウント
+const SESSION_KEY = 'megaminx-image-editor:session'; // 'in'：ログインしたまま / 'out'：ログアウトの状態だった（次のログインは新しいログイン）
+const NOTICE_KEY = 'megaminx-image-editor:login-notice'; // ログイン前のデータを捨てたことを、読み直したあとに知らせる（sessionStorage）
 const PUSH_DELAY = 1500;
 
 const readLocal = (key) => {
@@ -184,15 +188,26 @@ async function main() {
     try {
       const remote = await read();
       const local = Store.snapshot();
-      // 手元のデータが別のアカウントのものなら持ち込まない（store.js の resolveLogin）
-      const merged = Store.resolveLogin(local, remote, { owner: readLocal(SYNCED_KEY), uid: user.uid });
+      // 新しいログインなら、アカウントの内容で上書きする（アカウントが空なら手元を入れる）。store.js の resolveLogin
+      const who = { owner: readLocal(SYNCED_KEY), uid: user.uid, fresh: readLocal(SESSION_KEY) === 'out' };
+      const merged = Store.resolveLogin(local, remote, who);
+      const discarded = Store.discardsLocal(local, remote, who);
       const localChanged = JSON.stringify(merged.data) !== JSON.stringify(local.data);
       if (localChanged) Store.replace(merged);
       const partial = JSON.stringify(merged) !== JSON.stringify(remote) ? await write(merged) : null;
       writeLocal(SYNCED_KEY, user.uid);
+      writeLocal(SESSION_KEY, 'in');
       ready = true;
       if (partial) fail(partial);
       else setStatus('synced');
+      if (discarded) {
+        try {
+          sessionStorage.setItem(NOTICE_KEY, '1');
+        } catch (e) {
+          // 知らせを出せなくても続ける
+        }
+      }
+      if (!localChanged) showNotice();
       if (localChanged) {
         if (signInDone) await signInDone; // ログインの処理（Facebook の写真の保存）が終わってから
         location.reload(); // クラウドの内容を画面に反映する
@@ -200,6 +215,21 @@ async function main() {
     } catch (e) {
       fail(e);
     }
+  }
+
+  // ログイン前のデータを捨てたことを、メニューを開いて知らせる（読み直したあとのページで 1 回だけ）
+  function showNotice() {
+    let pending = false;
+    try {
+      pending = sessionStorage.getItem(NOTICE_KEY) === '1';
+      sessionStorage.removeItem(NOTICE_KEY);
+    } catch (e) {
+      pending = false;
+    }
+    if (!pending) return;
+    message = { key: 'account.localReplaced', ok: true };
+    menuOpen = true;
+    render();
   }
 
   function fail(e) {
@@ -570,6 +600,11 @@ async function main() {
       // 消せなくても続ける
     }
     saveHint(null);
+    // このブラウザのデータも消す（言語の選択だけは残す。表示が急に変わらないように）
+    if (clearLocal) {
+      const lang = Store.get('lang');
+      Store.replace(lang === null ? { data: {}, updated: {} } : { data: { lang: lang }, updated: { lang: Date.now() } });
+    }
   }
   window.CloudSync = {
     state: () => ({
@@ -599,12 +634,9 @@ async function main() {
     user = next;
     ready = false;
     saveHint(next);
+    // ログアウトの状態なら、次のログインは新しいログイン（アカウントの内容で上書きする）
+    if (!next) writeLocal(SESSION_KEY, 'out');
     render();
-    // このブラウザのデータも消す（言語の選択だけは残す。表示が急に変わらないように）
-    if (clearLocal) {
-      const lang = Store.get('lang');
-      Store.replace(lang === null ? { data: {}, updated: {} } : { data: { lang: lang }, updated: { lang: Date.now() } });
-    }
     if (user) syncOnLogin();
   });
 }
