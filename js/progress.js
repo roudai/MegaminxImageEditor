@@ -17,6 +17,7 @@
  *                                     OLL：保存した U の色だけを残した OLL 配色
  *   caseColors(c, scheme)           solve case（alg の逆手順を適用、持ち替え y は打ち消す）の状態の画像の色
  *   addLog(log, entry, max)         練習の記録（日時付き）の配列に足した新しい配列（新しい順、種類（PLL・OLL）ごとに最大 max 件。既定 10000）
+ *   FULL_LOG_MAX                    ソルブの記録の上限（2000。practice.js が addLog の max に渡す）
  *                                     entry = { at: 日時(ms), set, name, sec(null=解けなかった), status, hint }
  *   summarize(log, { set, from })   期間（from 以降。無ければすべて）の集計 { count, solved, dnf, avg, best }
  *   daily(log, { set, days, now })  直近 days 日の日ごとの { day: 'YYYY-MM-DD', count, avg }（古い順。練習していない日も 0 で入る）
@@ -132,6 +133,7 @@
   // ---- 練習の記録（日時付き） ----
   // 最大件数は種類（PLL・OLL）ごと（片方をたくさん練習しても、もう片方の記録が押し出されないように）
   const LOG_MAX = 10000;
+  const FULL_LOG_MAX = 2000; // ソルブの記録（practice.full.log）の上限（利用規約と同じ。クラウドの本体の文書に入れるので小さめ）
   function addLog(log, entry, max) {
     const prev = Array.isArray(log) ? log : [];
     const limit = max || LOG_MAX;
@@ -360,6 +362,7 @@
     bestSingle: bestSingle,
     meanTime: meanTime,
     addLog: addLog,
+    FULL_LOG_MAX: FULL_LOG_MAX,
     summarize: summarize,
     daily: daily,
     perCase: perCase,
