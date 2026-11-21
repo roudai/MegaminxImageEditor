@@ -17,11 +17,11 @@
  *   judgeRule(rule, data)           隠しバッジの条件の表で数えた数（tools/secret-badges.js・テスト用にも公開）
  *   encodeSecret(value) / decodeSecret(text)  隠しバッジのデータの符号化と戻し
  *   evaluate(data, earned)          まだ取っていない（earned に無い）バッジのうち、条件を満たしたものの id の配列
- *   track(stats, kind, at, meet)    練習を 1 回記録したあとの stats（新しいオブジェクト）。kind: 'case'（PLL・OLL）| 'full'（通し）| 'll'（LL。日数だけ数える）
- *                                     stats = { reps: PLL・OLL の累計の回数, days: 練習した日の累計, lastDay: 最後に練習した日,
+ *   track(stats, kind, at, meet)    練習を 1 回記録したあとの stats（新しいオブジェクト）。kind: 'case'（PLL・OLL）| 'll'（LL）| 'full'（通し）
+ *                                     stats = { reps: PLL・OLL・LL の累計の回数（LL も 1 回）, days: 練習した日の累計, lastDay: 最後に練習した日,
  *                                               run: lastDay まで続けて練習した日数, bestRun: 続けて練習した日数のいちばん長いもの,
  *                                               met: 練習の対象「すべて」で出会ったケース { pll: [名前], oll: [名前] } }
- *                                     meet = { set, name }（練習の対象が「すべて」のときだけ渡す。ほかは null）
+ *                                     meet = { set, name } かその配列（練習の対象が「すべて」のときだけ渡す。LL は OLL・PLL の 2 つ。ほかは null）
  *                                     （記録 practice.log は PLL・OLL それぞれ最新 10000 件までなので、それを超える回数・日数はここで数える）
  *   read()                          store.js の 'titles'（{ earned: { id: 日時(ms) }, shown: id | null, stats, seenAt }）を形を整えて読む
  *                                     seenAt は一覧で見たことにしたバッジのいちばん新しい取得日時（ms。それより後に取ったバッジが NEW）
@@ -145,10 +145,12 @@
   }
   function track(stats, kind, at, meet) {
     const s = normalizeStats(stats);
-    if (kind === 'case') s.reps += 1;
-    if (isObject(meet) && (meet.set === 'pll' || meet.set === 'oll') && typeof meet.name === 'string' && !s.met[meet.set].includes(meet.name)) {
-      s.met[meet.set].push(meet.name);
-    }
+    if (kind === 'case' || kind === 'll') s.reps += 1;
+    [].concat(meet || []).forEach((m) => {
+      if (isObject(m) && (m.set === 'pll' || m.set === 'oll') && typeof m.name === 'string' && !s.met[m.set].includes(m.name)) {
+        s.met[m.set].push(m.name);
+      }
+    });
     const today = dayOf(at);
     if (s.lastDay !== today) {
       const gap = s.lastDay ? dayNumber(today) - dayNumber(s.lastDay) : null;
@@ -175,7 +177,7 @@
   const allEntries = (practice) =>
     caseLog(practice).concat(fullLog(practice), llLog(practice)).filter((e) => e && typeof e.at === 'number');
 
-  // 練習した日ごとの回数（PLL・OLL と通しを合わせる）
+  // 練習した日ごとの回数（PLL・OLL・LL と通しを合わせる）
   function perDay(practice) {
     const days = {};
     allEntries(practice).forEach((e) => {
@@ -200,7 +202,8 @@
     return best;
   }
   // 累計（stats）と、記録から数えたものの大きい方（stats を数え始める前の記録も数えるため）
-  const reps = (d) => Math.max(num(d.stats && d.stats.reps), caseLog(d.practice).length);
+  // 練習の回数は PLL・OLL と LL（1 回として）を合わせる
+  const reps = (d) => Math.max(num(d.stats && d.stats.reps), caseLog(d.practice).length + llLog(d.practice).length);
   const totalDays = (d) => Math.max(num(d.stats && d.stats.days), Object.keys(perDay(d.practice)).length);
   const bestRun = (d) => Math.max(num(d.stats && d.stats.bestRun), longestStreak(d.practice));
 
@@ -221,7 +224,7 @@
     return { current, best: Math.max(bestRun(d), current) };
   }
 
-  // 同じ日の from〜to 時（to 時ちょうどは含まない）に練習した回数のいちばん多いもの（PLL・OLL と通しを合わせる）
+  // 同じ日の from〜to 時（to 時ちょうどは含まない）に練習した回数のいちばん多いもの（PLL・OLL・LL と通しを合わせる）
   function bestHours(d, from, to) {
     const days = {};
     allEntries(d.practice).forEach((e) => {
@@ -288,10 +291,10 @@
   }
   // 通しを 24 時間のうちに記録したいちばん多い回数
   const fullIn24h = (d) => maxWithin(fullLog(d.practice), 86400000);
-  // 1 日の練習のいちばん多い回数（PLL・OLL と通しを合わせる）
+  // 1 日の練習のいちばん多い回数（PLL・OLL・LL と通しを合わせる）
   const bestDay = (d) => Math.max(0, ...Object.values(perDay(d.practice)));
   // 同じ週末の土曜と日曜の両方に練習したことがあるか（端末の時刻の日付）
-  // 週末キューバー：同じ週末の土曜と日曜に、どちらも WEEKEND_REPS 回以上（PLL・OLL と通しを合わせる）
+  // 週末キューバー：同じ週末の土曜と日曜に、どちらも WEEKEND_REPS 回以上（PLL・OLL・LL と通しを合わせる）
   const WEEKEND_REPS = 20;
   function practicedWeekend(d) {
     const counts = {};
@@ -304,8 +307,14 @@
       .map(Number)
       .some((n) => new Date(Date.UTC(1970, 0, 1 + n)).getUTCDay() === 6 && enough(n) && enough(n + 1));
   }
-  // PLL のケースを何種類練習したか
-  const pllPracticed = (d) => new Set(caseLog(d.practice).filter((e) => e && e.set === 'pll').map((e) => e.name)).size;
+  // PLL のケースを何種類練習したか（LL で出た PLL も数える。LL の記録の p は「J1+」か「J1+/J2-」）
+  const pllPracticed = (d) => {
+    const names = new Set(caseLog(d.practice).filter((e) => e && e.set === 'pll').map((e) => e.name));
+    llLog(d.practice).forEach((r) => {
+      if (r && typeof r.p === 'string') r.p.split('/').forEach((n) => names.add(n));
+    });
+    return names.size;
+  };
 
   // 通し：ペナルティを含めたタイム（DNF は Infinity）
   const fullTime = (r) => (!r || r.penalty === 'DNF' || typeof r.sec !== 'number' ? Infinity : r.sec + (r.penalty === '+2' ? 2 : 0));
@@ -428,7 +437,7 @@
   //      'dc'（1 日・ケースごとのいちばん多い数）| 'same'（当てはまる 2 件が同じ値（0.01 秒まで）で続いた回数）|
   //      'seq'（ケースごとの値の並びに m が続けて現れたケースの数）
   const SECRET =
-    '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';
+    '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';
   // 符号化：JSON → UTF-8 → 決まった種の疑似乱数の列と XOR → base64（tools/secret-badges.js と共通）
   function keystream(n) {
     const out = new Uint8Array(n);

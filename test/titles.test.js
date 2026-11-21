@@ -559,3 +559,22 @@ test('judgeRule：作り物の条件の表で、数え方ごとに数える', ()
   assert.equal(J({ s: 'g', a: 'n' }), 3);
   assert.equal(T.judgeRule(null, d), 0);
 });
+
+test('LL：練習の回数（1 回）・PLL 総当たり（出た PLL）・一期一会（「すべて」で出た OLL・PLL）に数える', () => {
+  const ll = [];
+  for (let i = 0; i < 60; i++) ll.push({ at: 1000 + i, sec: 10, o: '1A', p: i % 2 ? 'A1+' : 'J1+/J2-' });
+  const log = [];
+  for (let i = 0; i < 40; i++) log.push({ at: 5000 + i, set: 'pll', name: 'H1+', sec: 3, status: 'learned', hint: false });
+  const d = { practice: { log: log, ll: { log: ll } }, stats: null };
+  assert.ok(evaluate(d, {}).includes('reps300')); // PLL 40 回 + LL 60 回 = 100 回
+  assert.ok(!evaluate({ practice: { log: log, ll: { log: ll.slice(1) } }, stats: null }, {}).includes('reps300'));
+  assert.equal(T.badgeProgress(d).pllRoundRobin.value, 4); // H1+・A1+・J1+・J2-
+  // track：LL も回数に数え、出会ったケースを配列で受ける
+  let s = T.track(null, 'll', Date.UTC(2026, 0, 1, 12), [
+    { set: 'oll', name: '1A' },
+    { set: 'pll', name: 'J1+' },
+  ]);
+  s = T.track(s, 'll', Date.UTC(2026, 0, 1, 13), { set: 'oll', name: '1A' });
+  assert.equal(s.reps, 2);
+  assert.deepEqual(s.met, { pll: ['J1+'], oll: ['1A'] });
+});

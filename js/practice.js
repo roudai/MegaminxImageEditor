@@ -1207,7 +1207,11 @@
     const rec = { at: Date.now(), sec: sec, o: oll.name };
     if (plls.length) rec.p = plls.map((c) => c.name).join('/');
     saveLl({ log: P.addLog(llLog(), rec, P.LL_LOG_MAX) }); // 最新 5000 件（利用規約と同じ）
-    if (T) T.record('ll', rec.at); // 続けて練習した日数に数える（PLL・OLL の回数には数えない）
+    // 練習の回数・日数に数える。対象が「すべて」の OLL・PLL は、出会ったケース（一期一会）にも足す
+    const meet = [];
+    if (llMode('oll') === 'all') meet.push({ set: 'oll', name: oll.name });
+    if (llMode('pll') === 'all') plls.forEach((c) => meet.push({ set: 'pll', name: c.name }));
+    if (T) T.record('ll', rec.at, meet.length ? meet : null);
     celebrate();
     showLlResult(rec, { oll, plls, scramble });
     renderHistory();
