@@ -8,9 +8,14 @@
  *   rankOf(progress)                { id, index, learned: { pll, oll, all }, total, next: { id, need } | null }
  *                                     progress は store.js の 'progress'（{ pll: { ケース名: 'learning' | 'learned' }, oll: … }）
  *   GROUPS                          バッジの分類の並び（表示名は i18n.js の titles.group.<group>）
- *   BADGES                          バッジの配列 [{ id, group, test(data) }]。data = { progress, practice, stats }
+ *   BADGES                          バッジの配列 [{ id, group, test(data) }]。data = { progress, practice, stats, customAlgs }
  *                                     （store.js の 'progress'・'practice' と、'titles' の stats）
  *                                     表示名は i18n.js の titles.badge.<id>、条件の説明は titles.badge.<id>.desc
+ *                                     隠しバッジ（group 'secret'、secret: true）は符号化した SECRET から作る（中身はコードに書かない。judgeRule）
+ *   badgeName(I, id) / badgeDesc(I, id)  バッジの名前・説明（隠しバッジは SECRET の中の文。ほかは i18n.js の titles.badge.<id>）
+ *   countOf(earned)                 { n, total }：「バッジ n / 40」の数（隠しバッジは数えない）
+ *   judgeRule(rule, data)           隠しバッジの条件の表で数えた数（tools/secret-badges.js・テスト用にも公開）
+ *   encodeSecret(value) / decodeSecret(text)  隠しバッジのデータの符号化と戻し
  *   evaluate(data, earned)          まだ取っていない（earned に無い）バッジのうち、条件を満たしたものの id の配列
  *   track(stats, kind, at, meet)    練習を 1 回記録したあとの stats（新しいオブジェクト）。kind: 'case'（PLL・OLL）| 'full'（通し）
  *                                     stats = { reps: PLL・OLL の累計の回数, days: 練習した日の累計, lastDay: 最後に練習した日,
@@ -345,7 +350,7 @@
     return best;
   }
 
-  const GROUPS = ['learn', 'reps', 'streak', 'speed', 'full'];
+  const GROUPS = ['learn', 'reps', 'streak', 'speed', 'full', 'secret'];
   // byLog：記録のタイム・判定・ペナルティだけで決まるバッジ（タイム・自己ベストの更新・続けて正解・DNF なしの連続）。
   // 記録を個別・選択して削除したり、取り消し・ペナルティを変えたりしたら判定し直し、満たさなくなっていれば外す（recheck）。
   // 回数・日数・出会ったケースは累計（stats）でも数えるので、記録を消しても外さない
@@ -408,7 +413,155 @@
     { id: 'fullSub30', byLog: true, group: 'full', test: (d) => bestFullSingle(d) < 30 },
   ];
 
-  const dataOf = (data) => ({ progress: data && data.progress, practice: data && data.practice, stats: data && data.stats });
+  // ---- 隠しバッジ（group: 'secret'）----
+  // 名前・説明・条件は、符号化した SECRET の中だけにある（コード・テスト・文書・i18n.js には平文で書かない）。
+  // 編集は node tools/secret-badges.js decode → tools/secret-badges.local.json（git に入れない）を直す → encode。
+  // 条件は次の表（rule）で表し、judgeRule が数えた数が rule.n 以上なら取る：
+  //   s：記録 'c'（PLL・OLL）| 'f'（ソルブ）| 'a'（両方。続き・同じ値は種類ごと）| 'g'（自分の手順のケース）
+  //   v：値 't'（タイム。ソルブは +2 込み、DNF・タイムなしは Infinity）| 'r'（計った秒。+2 を含まない。DNF・タイムなしは NaN）|
+  //      'h'（時刻の時）| 'i'（ヒント 1/0）| 'd'（DNF 1/0）| 'l'（習得済みの判定 1/0）
+  //   p：1 件ごとの判定 ['r', lo, hi]（lo 以上 hi 未満）| ['z']（0.01 秒まで書いた数字が 3 桁以上すべて同じ）| ['e', k]（等しい）| 無し（すべて）
+  //   a：数え方 'n'（当てはまる件数）| 'run'（続いたいちばん長い数）| 'day'（1 日ごとのいちばん多い数）|
+  //      'dc'（1 日・ケースごとのいちばん多い数）| 'same'（当てはまる 2 件が同じ値（0.01 秒まで）で続いた回数）|
+  //      'seq'（ケースごとの値の並びに m が続けて現れたケースの数）
+  const SECRET =
+    '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';
+  // 符号化：JSON → UTF-8 → 決まった種の疑似乱数の列と XOR → base64（tools/secret-badges.js と共通）
+  function keystream(n) {
+    const out = new Uint8Array(n);
+    let x = 0x9e3779b9;
+    for (let i = 0; i < n; i++) {
+      x ^= x << 13;
+      x ^= x >>> 17;
+      x ^= x << 5;
+      out[i] = x & 255;
+    }
+    return out;
+  }
+  function encodeSecret(value) {
+    const bytes = new TextEncoder().encode(JSON.stringify(value));
+    const key = keystream(bytes.length);
+    let bin = '';
+    bytes.forEach((b, i) => {
+      bin += String.fromCharCode(b ^ key[i]);
+    });
+    return btoa(bin);
+  }
+  function decodeSecret(text) {
+    if (!text) return [];
+    try {
+      const bin = atob(text);
+      const key = keystream(bin.length);
+      const bytes = Uint8Array.from(bin, (c, i) => c.charCodeAt(0) ^ key[i]);
+      const list = JSON.parse(new TextDecoder().decode(bytes));
+      return Array.isArray(list) ? list : [];
+    } catch (e) {
+      return [];
+    }
+  }
+  const round2 = (x) => Math.round(x * 100);
+  function ruleValue(v, e, kind) {
+    const dnf = kind === 'f' && e.penalty === 'DNF';
+    if (v === 't') return kind === 'f' ? fullTime(e) : typeof e.sec === 'number' ? e.sec : Infinity;
+    if (v === 'r') return typeof e.sec === 'number' && !dnf ? e.sec : NaN;
+    if (v === 'h') return new Date(e.at).getHours();
+    if (v === 'i') return e.hint ? 1 : 0;
+    if (v === 'd') return dnf ? 1 : 0;
+    if (v === 'l') return e.status === 'learned' ? 1 : 0;
+    return 0;
+  }
+  function ruleMatch(p, x) {
+    if (!Array.isArray(p)) return true;
+    if (p[0] === 'r') return x >= p[1] && x < p[2];
+    if (p[0] === 'z') return Number.isFinite(x) && x > 0 && /^(\d)\1{2,}$/.test(x.toFixed(2).replace('.', ''));
+    if (p[0] === 'e') return x === p[1];
+    return false;
+  }
+  // 記録を古い順に、種類ごとの列にする [{ kind, rows }]
+  function ruleSeries(s, d) {
+    const old = (list) => list.filter((e) => isObject(e) && typeof e.at === 'number').slice().sort((a, b) => a.at - b.at);
+    if (s === 'c') return [{ kind: 'c', rows: old(caseLog(d.practice)) }];
+    if (s === 'f') return [{ kind: 'f', rows: old(fullLog(d.practice)) }];
+    if (s === 'a') return [{ kind: 'c', rows: old(caseLog(d.practice)) }, { kind: 'f', rows: old(fullLog(d.practice)) }];
+    if (s === 'g') {
+      const algs = isObject(d.customAlgs) ? d.customAlgs : {};
+      const rows = [];
+      ['pll', 'oll'].forEach((set) => {
+        if (isObject(algs[set])) Object.keys(algs[set]).forEach((name) => rows.push({ set: set, name: name, at: 0 }));
+      });
+      return [{ kind: 'g', rows: rows }];
+    }
+    return [];
+  }
+  function judgeRule(r, d) {
+    if (!isObject(r)) return 0;
+    let total = 0;
+    let best = 0;
+    const groups = {};
+    ruleSeries(r.s, d).forEach(({ kind, rows }) => {
+      let run = 0;
+      let prev = null;
+      const perCase = {};
+      rows.forEach((e) => {
+        const x = ruleValue(r.v, e, kind);
+        const hit = ruleMatch(r.p, x);
+        if (r.a === 'n' && hit) total++;
+        if (r.a === 'run') {
+          run = hit ? run + 1 : 0;
+          best = Math.max(best, run);
+        }
+        if ((r.a === 'day' || r.a === 'dc') && hit) {
+          const k = dayOf(e.at) + (r.a === 'dc' ? '|' + e.set + '|' + e.name : '');
+          groups[k] = (groups[k] || 0) + 1;
+        }
+        if (r.a === 'same') {
+          const ok = hit && Number.isFinite(x);
+          if (ok && prev !== null && round2(prev) === round2(x)) total++;
+          prev = ok ? x : null;
+        }
+        if (r.a === 'seq') (perCase[e.set + '|' + e.name] || (perCase[e.set + '|' + e.name] = [])).push(x);
+      });
+      if (r.a === 'seq' && Array.isArray(r.m) && r.m.length) {
+        const m = r.m.join(',');
+        Object.values(perCase).forEach((xs) => {
+          if ((',' + xs.join(',') + ',').includes(',' + m + ',')) total++;
+        });
+      }
+    });
+    if (r.a === 'run') return best;
+    if (r.a === 'day' || r.a === 'dc') return Math.max(0, ...Object.values(groups));
+    return total;
+  }
+  const SECRETS = decodeSecret(SECRET).filter((x) => isObject(x) && typeof x.id === 'string' && isObject(x.r));
+  SECRETS.forEach((x) => {
+    BADGES.push({ id: x.id, group: 'secret', secret: true, byLog: !!x.b, test: (d) => judgeRule(x.r, d) >= (x.r.n || 1) });
+  });
+  const secretOf = (id) => SECRETS.find((x) => x.id === id);
+  // バッジの名前・説明（隠しバッジは SECRET の中の言語ごとの文。ふつうのバッジは i18n.js の titles.badge.<id>）
+  function badgeText(I, id, index) {
+    const x = secretOf(id);
+    if (!x) return I.t('titles.badge.' + id + (index ? '.desc' : ''));
+    const t = x[I.lang] || x.en || x.ja || [];
+    return t[index] || '';
+  }
+  const badgeName = (I, id) => badgeText(I, id, 0);
+  const badgeDesc = (I, id) => badgeText(I, id, 1);
+  // 「バッジ n / 40」の数（隠しバッジは数えない）
+  function countOf(earned) {
+    const have = isObject(earned) ? earned : {};
+    const list = BADGES.filter((b) => !b.secret);
+    return { n: list.filter((b) => have[b.id]).length, total: list.length };
+  }
+  // 自分の手順（custom-algs）から、ケースごとの時刻（_at）を除いたもの
+  const algsOf = (v) => (isObject(v) ? { pll: isObject(v.pll) ? v.pll : {}, oll: isObject(v.oll) ? v.oll : {} } : {});
+
+  const dataOf = (data) => ({
+    progress: data && data.progress,
+    practice: data && data.practice,
+    stats: data && data.stats,
+    customAlgs: algsOf(data && data.customAlgs),
+  });
+  const currentData = (t) => ({ progress: S.get('progress'), practice: S.get('practice'), stats: t.stats, customAlgs: S.get('custom-algs') });
   function evaluate(data, earned) {
     const have = isObject(earned) ? earned : {};
     const d = dataOf(data);
@@ -467,7 +620,7 @@
   function update(now) {
     if (!signedIn()) return [];
     const t = read();
-    const got = evaluate({ progress: S.get('progress'), practice: S.get('practice'), stats: t.stats }, t.earned);
+    const got = evaluate(currentData(t), t.earned);
     if (!got.length) return [];
     const at = typeof now === 'number' ? now : Date.now();
     got.forEach((id) => {
@@ -483,7 +636,7 @@
   function recheck(now) {
     if (!signedIn()) return [];
     const t = read();
-    const d = { progress: S.get('progress'), practice: S.get('practice'), stats: t.stats };
+    const d = dataOf(currentData(t));
     const lost = BADGES.filter((b) => b.byLog && t.earned[b.id] && !b.test(d)).map((b) => b.id);
     if (!lost.length) return [];
     const at = Math.max(typeof now === 'number' ? now : Date.now(), ...lost.map((id) => t.earned[id]));
@@ -498,7 +651,7 @@
 
   // 「条件を満たさなくなったバッジを外しました：…」（練習ページの知らせ・記録のページの削除のメッセージ）
   function revokedText(I, ids) {
-    return I.t('titles.badgeRevoked', { names: ids.map((id) => I.t('titles.badge.' + id)).join(I.t('titles.listSep')) });
+    return I.t('titles.badgeRevoked', { names: ids.map((id) => badgeName(I, id)).join(I.t('titles.listSep')) });
   }
 
   // バッジの一覧を見たことにする（これより後に取ったバッジに NEW の印を付ける）。
@@ -576,7 +729,7 @@
     }
     const card = make('div', 'title-card tier-' + (tierOf(rank.id) || 'bronze'));
     const name = make('div', 'title-card-name');
-    name.append(medal(), make('span', null, I.t(shown ? 'titles.badge.' + shown : 'titles.rank.' + rank.id)));
+    name.append(medal(), make('span', null, shown ? badgeName(I, shown) : I.t('titles.rank.' + rank.id)));
     const tip = rank.next
       ? I.t('titles.next', { n: rank.learned.all, total: rank.total, need: rank.next.need, next: I.t('titles.rank.' + rank.next.id) })
       : I.t('titles.max', { total: rank.total });
@@ -607,12 +760,13 @@
   function renderBadges(I, onChange, options) {
     const t = read();
     const newSince = options && typeof options.newSince === 'number' ? options.newSince : Infinity;
-    const progress = badgeProgress({ progress: S.get('progress'), practice: S.get('practice'), stats: t.stats });
+    const progress = badgeProgress(currentData(t));
     const wrap = make('div', 'title-badge-groups');
     GROUPS.forEach((group) => {
       const badges = BADGES.filter((b) => b.group === group);
       const got = badges.filter((b) => t.earned[b.id]).length;
       const section = make('div', 'title-badge-group');
+      if (!badges.length) return;
       section.append(make('h3', 'title-badge-group-name', I.t('titles.group.' + group) + ` ${got} / ${badges.length}`));
       const list = make('div', 'title-badges');
       badges.forEach((b) => {
@@ -624,11 +778,13 @@
         item.disabled = !at;
         item.setAttribute('aria-pressed', String(chosen));
         const text = make('span', 'title-badge-text');
-        const nameEl = make('span', 'title-badge-name', I.t('titles.badge.' + b.id));
+        // 隠しバッジは、取るまで名前も説明も「？？？」
+        const hidden = b.secret && !at;
+        const nameEl = make('span', 'title-badge-name', hidden ? I.t('titles.badgeSecret') : badgeName(I, b.id));
         if (isNew) nameEl.append(make('span', 'title-badge-new', 'NEW'));
-        text.append(nameEl, make('span', 'title-badge-desc', I.t('titles.badge.' + b.id + '.desc')));
+        text.append(nameEl, make('span', 'title-badge-desc', hidden ? I.t('titles.badgeSecret') : badgeDesc(I, b.id)));
         if (at) text.append(make('span', 'title-badge-date', I.t('titles.badgeDate', { date: new Date(at).toLocaleDateString(I.lang) })));
-        else if (progress[b.id]) text.append(progressBar(progress[b.id], I));
+        else if (progress[b.id] && !b.secret) text.append(progressBar(progress[b.id], I));
         item.append(medal(), text);
         item.title = at ? I.t(chosen ? 'titles.badgeChosen' : 'titles.badgeChoose') : I.t('titles.badgeLocked');
         item.addEventListener('click', () => {
@@ -656,6 +812,12 @@
     read: read,
     record: record,
     signedIn: signedIn,
+    badgeName: badgeName,
+    badgeDesc: badgeDesc,
+    countOf: countOf,
+    judgeRule: judgeRule,
+    encodeSecret: encodeSecret,
+    decodeSecret: decodeSecret,
     update: update,
     recheck: recheck,
     revokedText: revokedText,

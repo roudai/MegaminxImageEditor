@@ -820,7 +820,7 @@
   // 「称号が上がりました」「バッジを手に入れました」と名前に分ける（スマホは名前を次の行に。css/practice.css）
   // 名前は複数でもよい（同時に取ったバッジは「バッジを手に入れました」を 1 回にまとめる）
   const namedLine = (key, nameKeys) => ({ head: () => I.t(key), names: [].concat(nameKeys).map((k) => () => I.t(k)) });
-  const earnedLine = (ids) => namedLine('titles.badgeEarned', ids.map((id) => 'titles.badge.' + id));
+  const earnedLine = (ids) => ({ head: () => I.t('titles.badgeEarned'), names: ids.map((id) => () => T.badgeName(I, id)) });
   function celebrate(beforeRank) {
     if (!T || !T.signedIn()) return; // 称号とバッジはログイン中だけ
     const lines = [];

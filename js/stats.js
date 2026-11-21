@@ -1423,7 +1423,7 @@
       card.tabIndex = 0;
       card.setAttribute('aria-expanded', 'false');
       const unseenN = T.unseenCount();
-      const summary = el('span', 'stats-titles-badges', I.t('titles.badges', { n: Object.keys(T.read().earned).length, total: T.BADGES.length }));
+      const summary = el('span', 'stats-titles-badges', I.t('titles.badges', T.countOf(T.read().earned))); // 隠しバッジは数えない
       if (unseenN) summary.append(el('span', 'title-badge-new', I.t('titles.newCount', { n: unseenN })));
       summary.append(el('span', 'stats-titles-chevron', '›'));
       card.append(summary);
@@ -1446,9 +1446,8 @@
     toggle.type = 'button';
     toggle.setAttribute('aria-expanded', String(view.badges));
     toggle.setAttribute('aria-controls', 'statsBadges');
-    const n = Object.keys(T.read().earned).length;
     const unseen = T.unseenCount();
-    const count = el('span', 'stats-titles-count', I.t('titles.badges', { n: n, total: T.BADGES.length }));
+    const count = el('span', 'stats-titles-count', I.t('titles.badges', T.countOf(T.read().earned))); // 隠しバッジは数えない
     if (unseen && !view.badges) count.append(el('span', 'title-badge-new', I.t('titles.newCount', { n: unseen })));
     toggle.append(
       count,

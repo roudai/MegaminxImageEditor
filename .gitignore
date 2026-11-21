@@ -1,2 +1,5 @@
 .DS_Store
 firebase-debug.log
+
+# 隠しバッジの平文（tools/secret-badges.js。条件をリポジトリに入れない）
+tools/secret-badges.local.json
