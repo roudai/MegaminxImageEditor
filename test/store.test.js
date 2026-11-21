@@ -319,3 +319,30 @@ test('discardsLocal：練習の記録は日時ごとに比べる（キーの順�
   const other = { data: { practice: { log: [{ at: 6, set: 'pll', name: 'A1+', sec: 3, status: 'learned', hint: false }] } }, updated: { practice: 2 } };
   assert.equal(Store.discardsLocal(local, other, who), true);
 });
+
+test('LL の記録：クラウドでは -log-ll の文書に短い形で分け、読むときに戻す。合わせる・消した印も種類ごと', () => {
+  const ll = [
+    { at: 2, sec: 12.3, o: '3A', p: 'J1+' },
+    { at: 1, sec: null, o: '1A', p: 'F3+' },
+  ];
+  const snap = { data: { practice: { set: 'll', ll: { scope: 'nd', log: ll } } }, updated: { practice: 9 } };
+  const cloud = Store.toCloud(snap);
+  assert.equal(cloud.main.llSplit, true);
+  assert.deepEqual(cloud.main.data.practice.ll, { scope: 'nd' });
+  assert.deepEqual(cloud.logs.ll, [[2, 12.3, '3A', 'J1+'], [1, null, '1A', 'F3+']]);
+  const back = Store.fromCloud(cloud.main, cloud.logs);
+  assert.deepEqual(back.data.practice.ll, { scope: 'nd', log: ll });
+  // llSplit の無い本体（LL を分ける前のページが書いたもの）は、本体の記録のまま
+  const before = { data: { practice: { ll: { log: [{ at: 3, sec: 9, o: '2A', p: 'H' }] } } }, updated: {}, logsSplit: true, fullSplit: true };
+  assert.deepEqual(Store.fromCloud(before, { ll: [[9, 1, 'x', 'y']] }).data.practice.ll.log, [{ at: 3, sec: 9, o: '2A', p: 'H' }]);
+  // 消した印
+  const next = Store.withTombstones({ ll: { log: ll } }, { ll: { log: [ll[0]] } });
+  assert.deepEqual(next.removed, { ll: [1] });
+  // 2 つの端末の記録を合わせる
+  const m = Store.merge(
+    { data: { practice: { ll: { scope: 'all', log: [ll[0]] } } }, updated: { practice: 5 } },
+    { data: { practice: { ll: { scope: 'nd', log: [ll[1]] } } }, updated: { practice: 6 } }
+  ).data.practice;
+  assert.deepEqual(m.ll.log.map((x) => x.at), [2, 1]);
+  assert.equal(m.ll.scope, 'nd');
+});

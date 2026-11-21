@@ -3,7 +3,7 @@
 //   - js/firebase-config.js の window.FIREBASE_CONFIG が null なら何もしない（ログインのボタンも出さない）
 //   - Firestore の users/{uid}/apps/megaminx-image-editor の1文書に、store.js の snapshot を JSON 文字列で保存する（{ json, savedAt }）。
 //     PLL・OLL の練習の記録（各最大 10000 件）は 1 文書に入らないので、短い形にして種類ごとの文書
-//     users/{uid}/apps/megaminx-image-editor-log-pll・-log-oll に分ける（Store.toCloud・fromCloud）。中身が変わった文書だけ書く
+//     users/{uid}/apps/megaminx-image-editor-log-pll・-log-oll に分ける（ソルブ・LL の記録も -log-full・-log-ll に）（Store.toCloud・fromCloud）。中身が変わった文書だけ書く
 //     同じ Firebase プロジェクトのほかのアプリ（VisualCube Editor など）は users/{uid}/apps/<アプリ名> に保存し、ログインは共通
 //   - 新しくログインしたとき：アカウントにデータがあれば、その内容で手元を上書きする（ログイン前にこのブラウザで使った分は捨てる。
 //     合算はしない）。アカウントが空なら、手元の内容をアカウントに入れる（Store.resolveLogin）。
@@ -158,8 +158,8 @@ async function main() {
     }
     const logs = {};
     if (main && main.logsSplit) {
-      // ソルブの記録の文書は、本体が分けた形（fullSplit）のときだけ読む
-      for (const set of Store.LOG_SETS.filter((x) => x !== 'full' || main.fullSplit)) {
+      // ソルブ・LL の記録の文書は、本体が分けた形（fullSplit・llSplit）のときだけ読む
+      for (const set of Store.LOG_SETS.filter((x) => (x !== 'full' || main.fullSplit) && (x !== 'll' || main.llSplit))) {
         const doc = await dbSdk.getDoc(logRef(set));
         if (!doc.exists()) continue;
         try {

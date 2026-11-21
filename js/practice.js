@@ -23,6 +23,10 @@
 //     +2 / DNF（インスペクションの超過で自動、結果からも変えられる）、ao5・ao12・ベスト（progress.js の average など）。
 //     記録は practice.full = { inspection, log: [{ at, sec, penalty, s }] }（s はスクランブルの短い形）。習得状況は変えない。
 //     通しのタイマーは長押し（0.3 秒で準備完了）して離したときにスタートする
+//   - LL（set: 'll'）：OLL から完成まで（OLL と PLL）を通して解く。スクランブルは「PLL のスクランブル」＋「OLL のスクランブル」を
+//     つないで作る（前・間・後にランダムな AUF）。OLL・PLL それぞれ「習得済み」（既定）か「すべて」から出す（practice.ll.oll・pll）。
+//     出てくる PLL は、自分の OLL の手順を当てたあとの PLL（case-check.js の pllAfter）。「習得済み」ならそれが習得済みのものだけを出す
+//     記録は practice.ll = { oll, pll, log: [{ at, sec, o, p }] }（o・p は OLL・PLL の名前。スクランブルは記録しない）。習得状況は変えない
 //   - 称号とバッジ（titles.js）：記録したあと、段位が上がった・バッジを取ったら画面の下に数秒知らせる。ページを開いたときは知らせずに付ける
 (function () {
   'use strict';
@@ -57,7 +61,7 @@
   const saved = S.get('practice');
   const prefs = Object.assign({ set: 'pll', scope: 'nd', filter: 'new', times: {} }, saved && typeof saved === 'object' ? saved : {});
   const params = new URLSearchParams(location.search);
-  const SETS = ['pll', 'oll', 'full'];
+  const SETS = ['pll', 'oll', 'll', 'full'];
   if (SETS.includes(params.get('set'))) prefs.set = params.get('set');
   if (SCOPES[params.get('scope')]) prefs.scope = params.get('scope');
   if (FILTERS.includes(params.get('filter'))) prefs.filter = params.get('filter');
@@ -69,6 +73,16 @@
     return Object.assign({ inspection: true, log: [] }, f && typeof f === 'object' ? f : {});
   };
   const saveFull = (change) => savePrefs({ full: Object.assign(fullPrefs(), change) });
+  const isLl = () => prefs.set === 'll';
+  // LL の記録
+  const llPrefs = () => {
+    const f = (S.get('practice') || {}).ll;
+    return Object.assign({ log: [] }, f && typeof f === 'object' ? f : {});
+  };
+  const saveLl = (change) => savePrefs({ ll: Object.assign(llPrefs(), change) });
+  const llLog = () => (Array.isArray(llPrefs().log) ? llPrefs().log : []);
+  // 出題する OLL・PLL：'learned'（習得済み。既定）/ 'all'（すべて）
+  const llMode = (set) => (llPrefs()[set] === 'all' ? 'all' : 'learned');
   if (!SCOPES[prefs.scope]) prefs.scope = 'nd';
   if (!FILTERS.includes(prefs.filter)) prefs.filter = 'new';
   // 習得の目安は PLL・OLL で別々（prefs.thresholds = { pll, oll }。以前の共通の threshold は P.thresholdOf が引き継ぐ）
@@ -111,11 +125,12 @@
   // URL で指定した種類・範囲・絞り込みは保存する（以降の savePrefs が保存済みの前回の値で prefs を上書きしないように）
   if (['set', 'scope', 'filter'].some((k) => params.has(k))) savePrefs({ set: prefs.set, scope: prefs.scope, filter: prefs.filter });
   // 一覧ページから開いたとき（?order=…&groups=…）：並びと選んだグループを引き継いで保存する
-  if (params.has('order') && CS.hasStages(DATA[prefs.set]) && ['learn', 'group'].includes(params.get('order'))) {
+  const caseSet = DATA[prefs.set] !== undefined; // PLL・OLL（グループで選べる種類）
+  if (caseSet && params.has('order') && CS.hasStages(DATA[prefs.set]) && ['learn', 'group'].includes(params.get('order'))) {
     const f = S.get('list-filter');
     S.set('list-filter', Object.assign({}, f && typeof f === 'object' ? f : {}, { [prefs.set + 'Order']: params.get('order') }));
   }
-  if (params.has('groups')) {
+  if (caseSet && params.has('groups')) {
     const stage = byStage(prefs.set);
     const valid = new Set(CS.list(DATA[prefs.set], stage).map((s) => (stage ? String(s.stage) : s.key)));
     const list = params
@@ -149,10 +164,11 @@
     return box;
   }
 
-  function field(labelKey, control) {
+  function field(labelKey, control, text) {
     const f = el('div', 'practice-field');
     const label = el('span', 'practice-field-label');
-    I.set(label, labelKey);
+    if (labelKey) I.set(label, labelKey);
+    else label.textContent = text; // 訳さない見出し（「OLL」「PLL」）
     f.append(label, control);
     return f;
   }
@@ -183,6 +199,7 @@
         [
           { value: 'pll', text: 'PLL' },
           { value: 'oll', text: 'OLL' },
+          { value: 'll', text: 'LL', title: 'practice.llTitle' },
           { value: 'full', key: 'practice.full' },
         ],
         prefs.set,
@@ -205,6 +222,7 @@
     box.classList.toggle('open', prefs.settingsOpen === true);
     box.append(settingsSummary());
     document.body.classList.toggle('practice-full', isFull());
+    document.body.classList.toggle('practice-ll', isLl());
     renderTip();
     if (isFull()) {
       // 通し：インスペクションのオン・オフだけ
@@ -231,6 +249,29 @@
       const scopeField = field('practice.scope', scopeSegment());
       scopeField.classList.add('practice-scope-field');
       box.append(scopeField);
+    }
+    if (isLl()) {
+      // LL：出題する OLL・PLL（習得済み / すべて）だけ。No Dot / Dot の範囲は LL では分けない
+      ['oll', 'pll'].forEach((set) => {
+        const f = field(
+          null,
+          segment(
+            [
+              { value: 'learned', key: 'status.learned' },
+              { value: 'all', key: 'list.filterAll' },
+            ],
+            llMode(set),
+            (v) => {
+              saveLl({ [set]: v });
+              renderSettings();
+              next();
+            }
+          ),
+          set.toUpperCase()
+        );
+        box.append(f);
+      });
+      return;
     }
     box.append(field(byStage(prefs.set) ? 'practice.stages' : 'practice.groups', groupSummary()));
     const cases = inSelection(prefs.set);
@@ -276,6 +317,10 @@
     } else {
       // OLL の範囲（スマホでは見出しの横に出さないので、要約の先頭に出す）
       if (prefs.set === 'oll') parts.push(I.t({ nd: 'list.scopeNd', d: 'list.scopeD', all: 'list.scopeAll' }[prefs.scope] || 'list.scopeAll'));
+    }
+    if (isLl()) {
+      ['oll', 'pll'].forEach((set) => parts.push(set.toUpperCase() + ' ' + I.t(llMode(set) === 'all' ? 'list.filterAll' : 'status.learned')));
+    } else if (!isFull()) {
       const chosen = chosenGroups(prefs.set);
       if (chosen) parts.push(I.t('practice.groupsCount', { n: chosen.size }));
       parts.push(I.t('practice.target') + ' ' + I.t(prefs.filter === 'all' ? 'list.filterAll' : 'status.' + prefs.filter));
@@ -491,6 +536,12 @@
       return;
     }
     $('scramble').classList.remove('full');
+    $('scramble').classList.toggle('ll', isLl());
+    I.set($('practiceEmpty'), 'practice.empty');
+    if (isLl()) {
+      nextLl();
+      return;
+    }
     const forced = forcedName ? DATA[prefs.set].find((x) => x.name === forcedName) : null;
     forcedName = null;
     const list = forced ? [forced] : pool();
@@ -521,6 +572,61 @@
     lastName = c.name;
     $('scramble').textContent = scramble;
   }
+
+  // ---- LL の出題 ----
+  // PLL のスクランブル（前に AUF）＋ AUF ＋ OLL のスクランブル（後に AUF）をつなぐ。PLL のスクランブルは上面の向きを変えないので、
+  // つないだ状態はその OLL のケースになり、並び（OLL のあとの PLL）はランダムになる。
+  // つなぎ目のとなり合う同じ面の回転（"U U2"・"R2' R" など）は 1 つにまとめる（P.joinMoves）
+  const rand = (list) => list[Math.floor(Math.random() * list.length)];
+  const rand5 = () => Math.floor(Math.random() * 5);
+  function llScramble(pllScramble, ollScramble) {
+    return P.joinMoves(P.wrapAuf(pllScramble, rand5(), rand5()), P.wrapAuf(ollScramble, 0, rand5()));
+  }
+  // OLL（習得済み / すべて）を選び、自分の OLL の手順を当てたあとの PLL（向きが対称なケースで AUF が複数当てはまるときはそのすべて）が
+  // PLL の対象（習得済み / すべて）に入るスクランブルを探す（PLL スキップは出さない）。出せなければ { reason }（知らせの文のキー）
+  const LL_TIME_MS = 1500;
+  let lastLl = null;
+  function pickLl() {
+    const pllScrambles = Object.values(SCRAMBLES.pll).filter((list) => list.length);
+    const olls = DATA.oll.filter((c) => llMode('oll') === 'all' || P.statusOf('oll', c.name) === 'learned');
+    if (!olls.length) return { reason: 'practice.llNoOll' };
+    const learnedPll = new Set(DATA.pll.filter((c) => llMode('pll') === 'all' || P.statusOf('pll', c.name) === 'learned').map((c) => c.name));
+    if (!learnedPll.size) return { reason: 'practice.llNoPll' };
+    const choices = olls.length > 1 ? olls.filter((c) => c.name !== lastLl) : olls;
+    const until = performance.now() + LL_TIME_MS;
+    while (performance.now() < until) {
+      const oll = rand(choices);
+      const ollScrambles = SCRAMBLES.oll[oll.name] || [];
+      if (!ollScrambles.length || !pllScrambles.length) continue;
+      const scramble = llScramble(rand(rand(pllScrambles)), rand(ollScrambles));
+      const after = window.CaseCheck.pllAfter(scramble, oll.alg, DATA.pll);
+      if (!after.length || !after.every((x) => x && x !== 'skip' && learnedPll.has(x.name))) continue;
+      const plls = after.filter((x, i) => after.indexOf(x) === i);
+      return { set: 'll', oll: oll, plls: plls, scramble: scramble };
+    }
+    return { reason: 'practice.llNotFound' };
+  }
+  function nextLl() {
+    hintUsed = false;
+    showHint(false);
+    const picked = pickLl();
+    const ok = !picked.reason;
+    $('practiceEmpty').hidden = ok;
+    ['timer', 'dnfButton'].forEach((id) => {
+      $(id).disabled = !ok;
+    });
+    $('skipButton').disabled = !ok && picked.reason !== 'practice.llNotFound'; // 見つからなかったときはスキップでもう一度探せる
+    if (!ok) {
+      current = null;
+      I.set($('practiceEmpty'), picked.reason);
+      $('scramble').textContent = '';
+      return;
+    }
+    current = picked;
+    lastLl = picked.oll.name;
+    $('scramble').textContent = picked.scramble;
+  }
+  const llNames = (oll, plls) => (plls ? `${oll} → ${plls}` : oll); // PLL の無い記録は OLL だけ
 
   // ---- タイマー ----
   // idle → running（スペースを押した瞬間・タイマーをタップした瞬間にスタート）→ idle
@@ -717,6 +823,7 @@
     setState('idle');
     if (isFull() && sec < MIN_FULL_SEC) return tooFast(sec);
     if (isFull()) recordFull(sec, penalty);
+    else if (isLl()) recordLl(sec);
     else record(sec);
   }
   // 結果の欄の短い知らせ（言語を切り替えたら訳し直す）
@@ -1094,14 +1201,93 @@
     result.append(body);
   }
 
-  // 通しの ao5・ao12・ao100・平均（DNF を除く）・ベスト（最近の記録の上）
+  // ---- LL の記録 ----
+  function recordLl(sec) {
+    const { oll, plls, scramble } = current;
+    const rec = { at: Date.now(), sec: sec, o: oll.name };
+    if (plls.length) rec.p = plls.map((c) => c.name).join('/');
+    saveLl({ log: P.addLog(llLog(), rec, P.LL_LOG_MAX) }); // 最新 5000 件（利用規約と同じ）
+    if (T) T.record('ll', rec.at); // 続けて練習した日数に数える（PLL・OLL の回数には数えない）
+    celebrate();
+    showLlResult(rec, { oll, plls, scramble });
+    renderHistory();
+    next(true);
+    showLlTime(rec);
+  }
+
+  // 解き終わったタイム（DNF）と、その上にケース（例「LL 3A → J1+」）を、次の計測が始まるまで出しておく
+  function showLlTime(rec) {
+    timerEl.textContent = showTime(rec);
+    $('timerCase').textContent = `LL ${llNames(rec.o, rec.p)}`;
+    shownRecAt = rec.at;
+  }
+
+  // ケースの画像（PLL・OLL の結果と同じ描き方）
+  function caseCanvas(set, c, size) {
+    const display = P.displaySettings(set);
+    const canvas = el('canvas');
+    const ratio = window.devicePixelRatio || 1;
+    canvas.width = canvas.height = Math.round(size * ratio);
+    canvas.style.width = canvas.style.height = size + 'px';
+    const colors = P.caseColors(c, display.scheme);
+    D.draw(canvas, colors.ucolor, colors.scolor, { border: display.border });
+    return canvas;
+  }
+
+  // 結果：タイム・削除、OLL → PLL（画像・名前・手順）、スクランブル
+  function showLlResult(rec, shown) {
+    const { oll, plls, scramble } = shown;
+    const result = $('practiceResult');
+    result.hidden = false;
+    result.replaceChildren();
+    tooFastShown = false;
+    const body = el('div', 'practice-result-body w-100');
+    const head = el('div', 'd-flex flex-wrap align-items-baseline gap-2');
+    head.append(el('span', 'practice-result-time', showTime(rec)));
+    const del = el('button', 'btn btn-link practice-undo');
+    del.type = 'button';
+    I.set(del, 'practice.delete');
+    del.addEventListener('click', () => {
+      saveLl({ log: llLog().filter((r) => r.at !== rec.at) });
+      recheckBadges();
+      if (state === 'idle' && shownRecAt === rec.at) resetTimer();
+      result.replaceChildren(note('practice.deleted'));
+      renderHistory();
+    });
+    head.append(del);
+    // OLL → PLL を横に並べる（入らなければ折り返す）
+    const caseBlock = (set, c) => {
+      const b = el('div', 'practice-ll-case');
+      const text = el('div', 'practice-ll-case-text');
+      text.append(el('div', 'practice-case-name', `${set.toUpperCase()} ${c.name}`), el('div', 'practice-case-alg', c.alg));
+      b.append(caseCanvas(set, c, 72), text);
+      return b;
+    };
+    const cases = el('div', 'practice-ll-cases mt-2');
+    cases.append(caseBlock('oll', oll));
+    plls.forEach((c, i) => {
+      cases.append(el('span', 'practice-ll-arrow', i ? '/' : '→'));
+      cases.append(caseBlock('pll', c));
+    });
+    body.append(head, cases);
+    if (scramble) {
+      const line = el('div', 'practice-case-scramble mt-1');
+      const label = el('span', 'practice-case-scramble-label');
+      I.set(label, 'practice.resultScramble');
+      line.append(label, el('span', 'practice-case-alg', scramble));
+      body.append(line);
+    }
+    result.append(body);
+  }
+
+  // 通し・LL の ao5・ao12・ao100・平均（DNF を除く）・ベスト（最近の記録の上）
   function renderFullStats() {
     const box = $('practiceFullStats');
-    if (!isFull()) {
+    if (!isFull() && !isLl()) {
       box.hidden = true;
       return;
     }
-    const log = fullLog();
+    const log = isLl() ? llLog() : fullLog();
     box.hidden = false;
     // 値は 1 回だけ計算して、チップ（広い画面）と表（スマホ）の両方で使う
     const SIZES = [5, 12, 100];
@@ -1181,6 +1367,15 @@
     renderFullStats();
     $('practiceHistory').classList.toggle('full', isFull()); // ソルブはタイムだけなので、丸を同じ幅でそろえる（css/practice.css）
     // 最近の記録：保存してある、今の種類の最新 HISTORY 件（ページを開き直しても出る。記録のページで消せばここからも消える）
+    if (isLl()) {
+      // LL：ケース（OLL → PLL）とタイム。DNF は練習中の色
+      $('practiceHistory').replaceChildren(
+        ...llLog()
+          .slice(0, HISTORY)
+          .map((r) => el('li', P.effectiveTime(r) === null ? 'learning' : '', `${llNames(r.o, r.p)} ${showTime(r)}`))
+      );
+      return;
+    }
     if (isFull()) {
       $('practiceHistory').replaceChildren(...fullLog().slice(0, HISTORY).map((r) => el('li', P.effectiveTime(r) === null ? 'learning' : '', showTime(r))));
       return;
@@ -1305,6 +1500,7 @@
     if (!current) return;
     resetTimer();
     if (isFull()) recordFull(0, 'DNF');
+    else if (isLl()) recordLl(null);
     else record(null);
   }
   // キーボード（Tab と Enter）で押したとき。マウス・タップは上の pointerdown で処理する
@@ -1322,7 +1518,7 @@
       .join(' ');
   }
   $('hintButton').addEventListener('click', () => {
-    if (!current || state === 'inspecting' || performance.now() < ignoreClicksUntil) return;
+    if (!current || isLl() || state === 'inspecting' || performance.now() < ignoreClicksUntil) return;
     const box = $('practiceHintText');
     // もう一度押すと消す（一度見たので、この問題は練習中の扱いのまま）
     if (box.childElementCount) {

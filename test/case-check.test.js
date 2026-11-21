@@ -93,3 +93,25 @@ test('自分の手順：小文字で入力しても正しい表記にして保�
   assert.equal(r.alg, "R2 U R2' U' R2 U2' R2' U2 R2 U' R2' U2 R2 U2 R2'");
   assert.equal(CA.validate('pll', c, c.alg.toLowerCase(), PLL).isDefault, true);
 });
+
+test('pllAfter：PLL のスクランブルに OLL のスクランブルをつなぎ、OLL の手順を当てたあとの PLL が分かる', () => {
+  const P_SCR = require('../js/pll-scrambles.js');
+  const O_SCR = require('../js/oll-scrambles.js');
+  const o = oll('1A');
+  // OLL のスクランブルだけ：上面が揃う AUF は 1 つで、出てくる PLL は 1 つ
+  const alone = C.pllAfter(O_SCR['1A'][0], o.alg, PLL);
+  assert.equal(alone.length, 1);
+  assert.ok(alone[0] && alone[0].name);
+  // その PLL の逆（setup の逆＝解く手順）を前に付けると、OLL のあとは PLL スキップ
+  const p = alone[0];
+  const undo = C.pllAfter(`${p.alg} ${O_SCR['1A'][0]}`, o.alg, PLL);
+  assert.ok(undo.includes('skip'));
+  // PLL のスクランブルをつないでも、上面が揃う AUF があり PLL が決まる
+  Object.keys(P_SCR).slice(0, 10).forEach((name) => {
+    const r = C.pllAfter(`${P_SCR[name][0]} U ${O_SCR['1A'][0]}`, o.alg, PLL);
+    assert.ok(r.length >= 1, name);
+    r.forEach((x) => assert.ok(x === 'skip' || (x && x.name), name));
+  });
+  // OLL の手順が違えば上面が揃わない
+  assert.deepEqual(C.pllAfter(O_SCR['1A'][0], 'R', PLL), []);
+});

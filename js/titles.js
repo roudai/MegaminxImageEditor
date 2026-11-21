@@ -17,7 +17,7 @@
  *   judgeRule(rule, data)           隠しバッジの条件の表で数えた数（tools/secret-badges.js・テスト用にも公開）
  *   encodeSecret(value) / decodeSecret(text)  隠しバッジのデータの符号化と戻し
  *   evaluate(data, earned)          まだ取っていない（earned に無い）バッジのうち、条件を満たしたものの id の配列
- *   track(stats, kind, at, meet)    練習を 1 回記録したあとの stats（新しいオブジェクト）。kind: 'case'（PLL・OLL）| 'full'（通し）
+ *   track(stats, kind, at, meet)    練習を 1 回記録したあとの stats（新しいオブジェクト）。kind: 'case'（PLL・OLL）| 'full'（通し）| 'll'（LL。日数だけ数える）
  *                                     stats = { reps: PLL・OLL の累計の回数, days: 練習した日の累計, lastDay: 最後に練習した日,
  *                                               run: lastDay まで続けて練習した日数, bestRun: 続けて練習した日数のいちばん長いもの,
  *                                               met: 練習の対象「すべて」で出会ったケース { pll: [名前], oll: [名前] } }
@@ -170,7 +170,10 @@
     isObject(practice) && isObject(practice.full) && Array.isArray(practice.full.log)
       ? practice.full.log.filter((r) => !(r && r.penalty !== 'DNF' && typeof r.sec === 'number' && r.sec < MIN_FULL_SEC))
       : [];
-  const allEntries = (practice) => caseLog(practice).concat(fullLog(practice)).filter((e) => e && typeof e.at === 'number');
+  const llLog = (practice) => (isObject(practice) && isObject(practice.ll) && Array.isArray(practice.ll.log) ? practice.ll.log : []);
+  // 練習の日数・1 日の回数などに数える記録（PLL・OLL と通しと LL を合わせる）
+  const allEntries = (practice) =>
+    caseLog(practice).concat(fullLog(practice), llLog(practice)).filter((e) => e && typeof e.at === 'number');
 
   // 練習した日ごとの回数（PLL・OLL と通しを合わせる）
   function perDay(practice) {
