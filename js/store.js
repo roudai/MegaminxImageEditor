@@ -3,7 +3,14 @@
  * 仕様: reference/CLOUD_SYNC_SPEC.md
  *
  *   Store.get(name)              値を読む（JSON として読めなければ文字列のまま。無ければ null）
- *   Store.set(name, value)       値を書く（前と同じなら何もしない）。更新時刻を記録し、window に 'store-change' を通知する
+ *   Store.set(name, value)       値を書く（前と同じなら何もしない）。更新時刻を記録し、window に 'store-change' を通知する。
+ *                                  practice では、消した記録の印（practice.removed・practice.cleared）を前の値との違いから付ける（withTombstones）
+ *   Store.withTombstones(prev, next)
+ *                                練習の記録（practice.log・practice.full.log）から消えた記録に印を付けた next を返す（DOM 非依存）。
+ *                                  - removed：{ pll|oll|full: [日時, …] }（新しい順、種類ごとに最大 REMOVED_MAX 件）
+ *                                  - cleared：{ pll|oll|full: 日時 }（「すべての記録を削除」で種類の記録が空になったとき。その日時以前の記録は消したもの）
+ *                                  - 上限（LOG_MAX。PLL・OLL 各 10000 件、ソルブ 2000 件）で押し出された古い記録には付けない。消した記録を戻したら（元に戻す）印を外す
+ *                                同じアカウントの別の端末の記録と合わせるとき（merge）に、消した記録が戻ってこないようにする
  *   Store.snapshot()             { data: { name: value }, updated: { name: 時刻(ms) } }（保存されているものだけ）
  *   Store.replace(snapshot)      snapshot の内容で書き換える（cloud-sync.js がクラウドの内容を反映するときに使う。通知しない）
  *   Store.merge(local, remote, { union })
@@ -90,6 +97,7 @@
   const get = (name) => decode(readRaw(PREFIX + name));
 
   function set(name, value) {
+    if (name === 'practice' && isObject(value)) value = withTombstones(get('practice'), value);
     const raw = value === null || value === undefined ? null : encode(value);
     if (readRaw(PREFIX + name) === raw) return; // 変わっていなければ時刻も通知も変えない
     writeRaw(PREFIX + name, raw);
@@ -124,6 +132,127 @@
   }
 
   const isObject = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+
+  // ---- 練習の記録（practice.log：PLL・OLL、practice.full.log：ソルブ）を端末どうしで合わせるための印 ----
+  const LOG_MAX = { pll: 10000, oll: 10000, full: 2000 }; // 種類ごとの記録の上限（js/progress.js の LOG_MAX・FULL_LOG_MAX と同じ）
+  const REMOVED_MAX = 1000; // 消した記録の印を種類ごとに残す数
+  const LOG_KINDS = ['pll', 'oll', 'full'];
+  // 種類ごとの記録の配列 { pll: [...], oll: [...], full: [...] }
+  function logsByKind(p) {
+    const out = { pll: [], oll: [], full: [] };
+    if (!isObject(p)) return out;
+    (Array.isArray(p.log) ? p.log : []).forEach((e) => {
+      if (isObject(e) && typeof e.at === 'number' && out[e.set]) out[e.set].push(e);
+    });
+    const full = isObject(p.full) && Array.isArray(p.full.log) ? p.full.log : [];
+    full.forEach((e) => {
+      if (isObject(e) && typeof e.at === 'number') out.full.push(e);
+    });
+    return out;
+  }
+  function withTombstones(prev, next) {
+    if (!isObject(next)) return next;
+    const before = logsByKind(prev);
+    const after = logsByKind(next);
+    const removed = {};
+    const cleared = {};
+    const src = isObject(next.removed) ? next.removed : isObject(prev) && isObject(prev.removed) ? prev.removed : {};
+    const srcCleared = isObject(next.cleared) ? next.cleared : isObject(prev) && isObject(prev.cleared) ? prev.cleared : {};
+    LOG_KINDS.forEach((kind) => {
+      const now = new Set(after[kind].map((e) => e.at));
+      const list = new Set(Array.isArray(src[kind]) ? src[kind].filter((t) => typeof t === 'number') : []);
+      let clear = typeof srcCleared[kind] === 'number' ? srcCleared[kind] : null;
+      const gone = before[kind].filter((e) => !now.has(e.at)).map((e) => e.at);
+      if (gone.length && !after[kind].length) {
+        // 種類の記録がすべて消えた（すべての記録を削除）：日時 1 つで印を付ける
+        clear = Math.max(clear || 0, ...gone);
+      } else if (gone.length) {
+        // 上限で押し出された古い記録（残った記録より古く、上限まである）には付けない
+        const oldest = Math.min(...after[kind].map((e) => e.at));
+        const trimmed = after[kind].length >= LOG_MAX[kind];
+        gone.forEach((at) => {
+          if (!(trimmed && at < oldest)) list.add(at);
+        });
+      }
+      // 戻した記録（元に戻す）は印を外す
+      after[kind].forEach((e) => list.delete(e.at));
+      if (clear !== null && after[kind].some((e) => e.at <= clear)) clear = null;
+      const arr = [...list].sort((a, b) => b - a).slice(0, REMOVED_MAX);
+      if (arr.length) removed[kind] = arr;
+      if (clear !== null) cleared[kind] = clear;
+    });
+    const out = Object.assign({}, next);
+    if (Object.keys(removed).length) out.removed = removed;
+    else delete out.removed;
+    if (Object.keys(cleared).length) out.cleared = cleared;
+    else delete out.cleared;
+    return out;
+  }
+
+  // 同じアカウントの 2 つの端末の練習のデータを合わせる：記録は両方（同じ日時は newer の方。消した印のあるものは除く）、
+  // ケースごとの最近のタイムは合わせた記録から作り直す。ほかの設定（対象・目安・表示など）は newer のもの
+  const TIMES_MAX = 10; // js/practice.js の MAX_TIMES と同じ
+  function mergePractice(older, newer) {
+    const o = isObject(older) ? older : {};
+    const n = isObject(newer) ? newer : {};
+    const out = Object.assign({}, n);
+    const removed = {};
+    const cleared = {};
+    LOG_KINDS.forEach((kind) => {
+      const list = (p) => (isObject(p.removed) && Array.isArray(p.removed[kind]) ? p.removed[kind] : []);
+      const r = [...new Set(list(o).concat(list(n)))].filter((t) => typeof t === 'number').sort((a, b) => b - a).slice(0, REMOVED_MAX);
+      if (r.length) removed[kind] = r;
+      const c = [o, n].map((p) => (isObject(p.cleared) && typeof p.cleared[kind] === 'number' ? p.cleared[kind] : null)).filter((t) => t !== null);
+      if (c.length) cleared[kind] = Math.max(...c);
+    });
+    const lo = logsByKind(o);
+    const ln = logsByKind(n);
+    const merged = {};
+    LOG_KINDS.forEach((kind) => {
+      const gone = new Set(removed[kind] || []);
+      const clear = cleared[kind];
+      const byAt = new Map();
+      lo[kind].concat(ln[kind]).forEach((e) => byAt.set(e.at, e)); // 同じ日時は newer（あとから入れた方）
+      merged[kind] = [...byAt.values()]
+        .filter((e) => !gone.has(e.at) && !(clear !== undefined && e.at <= clear))
+        .sort((a, b) => b.at - a.at)
+        .slice(0, LOG_MAX[kind]);
+    });
+    // 記録の配列の形を保つ（PLL・OLL は 1 つの配列に新しい順で混ぜる）。どちらにも無ければ足さない
+    if (Array.isArray(o.log) || Array.isArray(n.log)) out.log = merged.pll.concat(merged.oll).sort((a, b) => b.at - a.at);
+    if (isObject(o.full) || isObject(n.full)) {
+      out.full = Object.assign({}, isObject(o.full) ? o.full : {}, isObject(n.full) ? n.full : {});
+      if (merged.full.length || Array.isArray(out.full.log)) out.full.log = merged.full;
+    }
+    if (Object.keys(removed).length) out.removed = removed;
+    else delete out.removed;
+    if (Object.keys(cleared).length) out.cleared = cleared;
+    else delete out.cleared;
+    // 最近のタイム：合わせた記録から（ヒントなし・解けた回の新しい順に最大 TIMES_MAX 回）。
+    // 記録の方が少ないケース（記録を残す前の古いタイム・記録を消した）は newer のものを残す
+    if (isObject(o.times) || isObject(n.times)) {
+      const times = {};
+      ['pll', 'oll'].forEach((set) => {
+        const keep = Object.assign({}, isObject(o.times) && o.times[set], isObject(n.times) && n.times[set]);
+        const derived = {};
+        merged[set].forEach((e) => {
+          if (typeof e.sec !== 'number' || e.hint || typeof e.name !== 'string') return;
+          const list = derived[e.name] || (derived[e.name] = []);
+          if (list.length < TIMES_MAX) list.push(e.sec);
+        });
+        const names = new Set(Object.keys(keep).concat(Object.keys(derived)));
+        const t = {};
+        names.forEach((name) => {
+          const d = derived[name] || [];
+          const k = Array.isArray(keep[name]) ? keep[name] : [];
+          t[name] = d.length >= Math.min(TIMES_MAX, k.length) ? d : k;
+        });
+        if (Object.keys(t).length) times[set] = t;
+      });
+      out.times = Object.assign({}, n.times, times);
+    }
+    return out;
+  }
 
   // ケースごとに合わせる：older の上に newer を重ねる（{ pll: {…}, oll: {…} } のそれぞれで）
   function mergePerCase(older, newer) {
@@ -196,6 +325,12 @@
       if (inL && inR && union && PER_CASE.includes(name)) {
         const localNewer = tl >= tr;
         out.data[name] = localNewer ? mergePerCase(r.data[name], l.data[name]) : mergePerCase(l.data[name], r.data[name]);
+        out.updated[name] = Math.max(tl, tr);
+        return;
+      }
+      if (inL && inR && name === 'practice') {
+        const localNewer = tl >= tr;
+        out.data[name] = localNewer ? mergePractice(r.data[name], l.data[name]) : mergePractice(l.data[name], r.data[name]);
         out.updated[name] = Math.max(tl, tr);
         return;
       }
@@ -328,6 +463,7 @@
     merge: merge,
     resolveLogin: resolveLogin,
     discardsLocal: discardsLocal,
+    withTombstones: withTombstones,
     toCloud: toCloud,
     fromCloud: fromCloud,
     LOG_SETS: LOG_SETS,
