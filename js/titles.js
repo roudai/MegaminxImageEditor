@@ -25,6 +25,7 @@
  *   setShown(id)                    （ブラウザ用）表示する称号にするバッジ（null なら段位を出す）
  *   markSeen()                      （ブラウザ用）バッジの一覧を見たことにする（取ったバッジのいちばん新しい日時を seenAt に保存。新しいものが無ければ書かない）
  *   unseenCount()                   （ブラウザ用）seenAt より後に取ったバッジの数（NEW の数）
+ *   medal()                         （ブラウザ用）メダルのマーク（span.title-medal。練習ページの知らせにも使う）
  *   streakOf(data, now)             { current: 今続けて練習している日数（今日か昨日に練習していれば続いている）, best: いちばん長い日数 }
  *                                     data = { practice, stats }。記録から数えたものと stats の大きい方
  *   renderCard(I, options)          （ブラウザ用）称号の札の要素（I は I18N）。アカウントメニューと記録のページで使う
@@ -649,5 +650,6 @@
     streakOf: streakOf,
     renderCard: renderCard,
     renderBadges: renderBadges,
+    medal: medal,
   };
 });

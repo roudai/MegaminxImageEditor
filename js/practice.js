@@ -758,10 +758,13 @@
   // ---- 称号とバッジ（titles.js）：段位が上がったとき・バッジを取ったときに、画面の下に数秒知らせる ----
   const T = window.Titles;
   const rankIndex = () => (T ? T.rankOf(S.get('progress')).index : 0);
+  // 広い画面（幅 576px 以上）では、知らせを画面の下ではなく結果の行のすぐ下に出す（止めた直後に見るところ。画面の下だと見落としやすい）
+  const WIDE = window.matchMedia('(min-width: 576px)');
   function hideToast() {
     const box = $('practiceToast');
     if (!box) return;
-    box.classList.remove('show');
+    box.classList.remove('show', 'pop');
+    if (box.classList.contains('inline')) box.hidden = true; // 結果の下の場所を空ける
     // × を押したあと、スペースキーが隠れた × を押してしまわないようにフォーカスを外す
     if (box.contains(document.activeElement)) document.activeElement.blur();
   }
@@ -773,15 +776,20 @@
       box = el('div', 'practice-toast');
       box.id = 'practiceToast';
       box.setAttribute('role', 'status');
-      document.body.append(box);
     }
+    // 広い画面は結果の行のすぐ下、スマホは画面の下（固定）
+    const inline = WIDE.matches;
+    box.classList.toggle('inline', inline);
+    if (inline) $('practiceResult').after(box);
+    else if (box.parentNode !== document.body) document.body.append(box);
+    box.hidden = false;
     // 次の計測を始めるまで出したまま（setState）。× で先に閉じることもできる
     const close = el('button', 'practice-toast-close', '×');
     close.type = 'button';
     I.set(close, 'practice.toastClose', null, 'aria-label');
     close.addEventListener('click', hideToast);
-    box.replaceChildren(
-      close,
+    const body = el('div', 'practice-toast-lines');
+    body.append(
       ...lines.map((make) => {
         const line = el('div', 'practice-toast-line');
         if (typeof make === 'function') {
@@ -803,7 +811,11 @@
         return line;
       })
     );
-    box.classList.add('show');
+    box.replaceChildren(close, ...(T ? [T.medal()] : []), body);
+    // 出るときに少し大きくなって戻る（動きを減らす設定では動かさない。css/practice.css）
+    box.classList.remove('pop');
+    void box.offsetWidth;
+    box.classList.add('show', 'pop');
   }
   // 「称号が上がりました」「バッジを手に入れました」と名前に分ける（スマホは名前を次の行に。css/practice.css）
   // 名前は複数でもよい（同時に取ったバッジは「バッジを手に入れました」を 1 回にまとめる）

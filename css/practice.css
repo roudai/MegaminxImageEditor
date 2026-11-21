@@ -801,6 +801,44 @@ body:not(.practice-full) .practice-stage.running #dnfButton,
   pointer-events: auto;
   transform: translate(-50%, 0);
 }
+/* 出るときに少し大きくなって戻る（css/common.css の toast-pop-fixed・toast-pop） */
+.practice-toast.show.pop {
+  animation: toast-pop-fixed .5s ease;
+}
+/* 広い画面：結果の行のすぐ下に（画面の下だと見落としやすい。js/practice.js の toast） */
+.practice-toast.inline {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  margin: .75rem auto 0;
+  transform: none;
+  font-size: 1rem;
+}
+.practice-toast.inline.show {
+  transform: none;
+}
+.practice-toast.inline.show.pop {
+  animation: toast-pop .5s ease;
+}
+.practice-toast[hidden] {
+  display: none;
+}
+/* メダルのマークと文を横に並べる */
+.practice-toast {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+.practice-toast .title-medal {
+  color: #d9a400;
+}
+.practice-toast .title-medal svg {
+  width: 26px;
+  height: 26px;
+}
+.practice-toast-lines {
+  min-width: 0;
+}
 /* 先に閉じる × （次の計測を始めても消える） */
 .practice-toast-close {
   position: absolute;
@@ -840,5 +878,9 @@ body:not(.practice-full) .practice-stage.running #dnfButton,
 @media (prefers-reduced-motion: reduce) {
   .practice-toast {
     transition: none;
+  }
+  .practice-toast.show.pop,
+  .practice-toast.inline.show.pop {
+    animation: none;
   }
 }
