@@ -9,7 +9,7 @@
  *   Store.withTombstones(prev, next)
  *                                練習の記録（practice.log・practice.full.log）から消えた記録に印を付けた next を返す（DOM 非依存）。
  *                                  - removed：{ pll|oll|full: [日時, …] }（新しい順、種類ごとに最大 REMOVED_MAX 件）
- *                                  - cleared：{ pll|oll|full: 日時 }（「すべての記録を削除」で種類の記録が空になったとき。その日時以前の記録は消したもの）
+ *                                  - cleared：{ pll|oll|full: 日時 }（種類の記録が空になり、消した記録が removed に入りきらないとき。その日時以前の記録は消したもの）
  *                                  - 上限（LOG_MAX。PLL・OLL 各 10000 件、ソルブ 2000 件）で押し出された古い記録には付けない。消した記録を戻したら（元に戻す）印を外す
  *                                同じアカウントの別の端末の記録と合わせるとき（merge）に、消した記録が戻ってこないようにする
  *   Store.snapshot()             { data: { name: value }, updated: { name: 時刻(ms) } }（保存されているものだけ）
@@ -220,9 +220,12 @@
       const list = new Set(Array.isArray(src[kind]) ? src[kind].filter((t) => typeof t === 'number') : []);
       let clear = typeof srcCleared[kind] === 'number' ? srcCleared[kind] : null;
       const gone = before[kind].filter((e) => !now.has(e.at)).map((e) => e.at);
-      if (gone.length && !after[kind].length) {
-        // 種類の記録がすべて消えた（すべての記録を削除）：日時 1 つで印を付ける
+      if (gone.length && !after[kind].length && list.size + gone.length > REMOVED_MAX) {
+        // 種類の記録がすべて消え、1 件ずつの印に入りきらない（多くの記録をすべて削除）：日時 1 つで印を付ける。
+        // 入りきるときは 1 件ずつにする（この端末に無い別の端末の記録まで消さないように。1 件だけの記録を取り消したときなど）
         clear = Math.max(clear || 0, ...gone);
+      } else if (gone.length && !after[kind].length) {
+        gone.forEach((at) => list.add(at));
       } else if (gone.length) {
         // 上限で押し出された古い記録（残った記録より古く、上限まである）には付けない
         const oldest = Math.min(...after[kind].map((e) => e.at));

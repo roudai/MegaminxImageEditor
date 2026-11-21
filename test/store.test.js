@@ -179,7 +179,7 @@ test('toCloud：記録が多いときも 1 文書の上限に収める。本体�
   assert.deepEqual(Store.toCloud({ data: { practice: { log: [odd] } }, updated: {} }).logs.pll, [odd]);
 });
 
-test('withTombstones：消した記録に印を付ける（上限で押し出したものには付けない。戻したら外す。すべて削除は日時 1 つ）', () => {
+test('withTombstones：消した記録に印を付ける（上限で押し出したものには付けない。戻したら外す。1000 件より多くをすべて削除したときだけ日時 1 つ）', () => {
   const e = (set, at) => ({ at: at, set: set, name: 'A1+', sec: 5, status: 'learned' });
   const prev = { log: [e('pll', 5), e('pll', 4), e('oll', 3)], full: { log: [{ at: 9, sec: 60, penalty: '' }, { at: 8, sec: 61, penalty: '' }] } };
   // 1 件消す
@@ -188,11 +188,18 @@ test('withTombstones：消した記録に印を付ける（上限で押し出し
   // 戻す（元に戻す）と印を外す
   next = Store.withTombstones(next, Object.assign({}, next, { log: prev.log }));
   assert.equal(next.removed, undefined);
-  // ソルブをすべて削除：日時 1 つ（cleared）。戻せば外す
+  // ソルブをすべて削除（1000 件以下）：1 件ずつの印。戻せば外す
   next = Store.withTombstones(prev, Object.assign({}, prev, { full: { log: [] } }));
-  assert.deepEqual(next.cleared, { full: 9 });
-  assert.equal(next.removed, undefined);
+  assert.deepEqual(next.removed, { full: [9, 8] });
+  assert.equal(next.cleared, undefined);
   next = Store.withTombstones(next, Object.assign({}, next, { full: prev.full }));
+  assert.equal(next.removed, undefined);
+  // 1000 件より多くをすべて削除：日時 1 つ（cleared）。戻せば外す
+  const big = { log: Array.from({ length: 1500 }, (_, i) => e('oll', 5000 - i)) };
+  next = Store.withTombstones(big, { log: [] });
+  assert.deepEqual(next.cleared, { oll: 5000 });
+  assert.equal(next.removed, undefined);
+  next = Store.withTombstones(next, Object.assign({}, next, { log: big.log }));
   assert.equal(next.cleared, undefined);
   // 上限（10000 件）で押し出された古い記録には付けない
   const many = Array.from({ length: 10000 }, (_, i) => e('pll', 20000 - i));
@@ -270,4 +277,17 @@ test('習得状況・自分の手順：変えたケースに時刻を付け、�
   const b = Store.withCaseStamps({}, { oll: { '1A': { alg: 'x', setup: 'y' } } }, 20);
   const algs = Store.merge({ data: { 'custom-algs': a }, updated: { 'custom-algs': 1 } }, { data: { 'custom-algs': b }, updated: { 'custom-algs': 2 } }).data['custom-algs'];
   assert.deepEqual([algs.pll, algs.oll], [{ 'J3+': { alg: 'a', setup: 's' } }, { '1A': { alg: 'x', setup: 'y' } }]);
+});
+
+test('merge：手元に 1 件だけの種類の記録を取り消しても、別の端末のその種類の記録は消えない（PLL・OLL・ソルブ）', () => {
+  ['pll', 'oll', 'full'].forEach((kind) => {
+    const row = (at) => (kind === 'full' ? { at: at, sec: 60, penalty: '' } : { at: at, set: kind, name: String(at), sec: 3, status: 'learned', hint: false });
+    const wrap = (rows) => (kind === 'full' ? { full: { log: rows } } : { log: rows });
+    const remote = { data: { practice: wrap([3, 2, 1].map((i) => row(1000 + i))) }, updated: { practice: 50 } };
+    const next = Store.withTombstones(wrap([row(2000)]), wrap([]));
+    assert.equal(next.cleared, undefined, kind);
+    const m = Store.merge({ data: { practice: next }, updated: { practice: 60 } }, remote).data.practice;
+    const rows = kind === 'full' ? m.full.log : m.log;
+    assert.deepEqual(rows.map((x) => x.at), [1003, 1002, 1001], kind);
+  });
 });
