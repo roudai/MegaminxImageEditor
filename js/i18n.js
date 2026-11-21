@@ -458,6 +458,8 @@
       'account.signInFailed': 'Could not sign in. Please try again.',
       'account.localReplaced': 'Your account data has been loaded. What you did in this browser before signing in was replaced by it.',
       'account.signedOutCleared': 'Signed out. The data in this browser has been cleared (it is still in your account).',
+      'account.signedOutKept':
+        "Signed out. Your latest changes couldn't be saved to your account, so the data in this browser has been kept. Sign in again with the same account to combine it with your account.",
       'account.signOutFailed': "Couldn't save your latest changes to your account, so you are still signed in. Check your connection and try again.",
       'account.linkPrompt': '{email} is already registered with another sign-in method. Sign in with that method to link {provider} to it.',
       'account.linked': 'Linked {provider}. You can now sign in with it too.',
@@ -876,6 +878,8 @@
       'account.signInFailed': 'ログインできませんでした。もう一度お試しください。',
       'account.localReplaced': 'アカウントのデータを読み込みました。ログインする前にこのブラウザで使った内容は、アカウントのデータに置き換えました。',
       'account.signedOutCleared': 'ログアウトしました。このブラウザのデータは消しました（アカウントには残っています）。',
+      'account.signedOutKept':
+        'ログアウトしました。最新の変更をアカウントに保存できなかったので、このブラウザのデータは消さずに残しています。もう一度同じアカウントでログインすると、アカウントと合わせます。',
       'account.signOutFailed': '最新の変更をアカウントに保存できなかったので、ログアウトしていません。通信の状態を確かめて、もう一度お試しください。',
       'account.linkPrompt': '{email} は別のログイン方法で登録されています。前に使った方法でログインすると、{provider} でもログインできるようにつなげます。',
       'account.linked': '{provider} をつなげました。これからは {provider} でもログインできます。',
