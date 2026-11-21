@@ -759,7 +759,6 @@
   }
 
   // ---- 記録と判定 ----
-  const sessionHistory = [];
 
   // ---- 称号とバッジ（titles.js）：段位が上がったとき・バッジを取ったときに、画面の下に数秒知らせる ----
   const T = window.Titles;
@@ -903,8 +902,6 @@
     if (T) T.record('case', logEntry.at, prefs.filter === 'all' ? { set, name: c.name } : null);
     celebrate(rankBefore); // 取り消したら、記録だけで決まるバッジは判定し直す（recheckBadges）
     const entry = { set, c, sec, status, threshold: threshold(set), hinted };
-    sessionHistory.unshift(entry);
-    sessionHistory.length = Math.min(sessionHistory.length, HISTORY);
     // 最近のタイムを記録する前に戻した times
     const timesBefore = () => {
       const allTimes = Object.assign({}, S.get('practice') && S.get('practice').times);
@@ -918,7 +915,6 @@
       P.setStatus(set, c.name, beforeStatus);
       const log = ((S.get('practice') || {}).log || []).filter((e) => !isThis(e));
       savePrefs({ times: timesBefore(), log: log });
-      sessionHistory.splice(sessionHistory.indexOf(entry), 1);
       recheckBadges();
       if (state === 'idle' && shownEntry === entry) resetTimer(); // タイマーに出したままのタイムも 0.00 に戻す
       renderHistory();
@@ -1175,17 +1171,15 @@
   function renderHistory() {
     renderFullStats();
     $('practiceHistory').classList.toggle('full', isFull()); // ソルブはタイムだけなので、丸を同じ幅でそろえる（css/practice.css）
+    // 直近の記録：保存してある、今の種類の最新 HISTORY 件（ページを開き直しても出る。記録のページで消せばここからも消える）
     if (isFull()) {
-      // 通し：保存してある直近の記録（ページを開き直しても出る）
       $('practiceHistory').replaceChildren(...fullLog().slice(0, HISTORY).map((r) => el('li', P.effectiveTime(r) === null ? 'learning' : '', showTime(r))));
       return;
     }
-    const list = $('practiceHistory');
-    list.replaceChildren(
-      ...sessionHistory.map((h) => {
-        const li = el('li', h.status, `${h.c.name} ${h.sec === null ? 'DNF' : format(h.sec)}`);
-        return li;
-      })
+    const log = (S.get('practice') || {}).log || [];
+    const rows = log.filter((e) => e && e.set === prefs.set).slice(0, HISTORY);
+    $('practiceHistory').replaceChildren(
+      ...rows.map((e) => el('li', e.status === 'learned' ? 'learned' : 'learning', `${e.name} ${typeof e.sec === 'number' ? format(e.sec) : 'DNF'}`))
     );
   }
 
