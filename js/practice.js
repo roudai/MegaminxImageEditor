@@ -802,16 +802,30 @@
           I.live(span, fn);
           return span;
         };
+        if (make.secret) line.classList.add('secret');
         const names = el('span', 'practice-toast-names');
         make.names.forEach((fn, i) => {
           if (i) names.append(live('practice-toast-sep', () => I.t('practice.toastNameSep')));
           names.append(live('practice-toast-name', fn));
         });
         line.append(live('practice-toast-head', make.head), live('practice-toast-sep', () => I.t('practice.toastSep')), names);
+        // 隠しバッジは、取ったときに条件も明かす（1 つずつ 1 行）
+        (make.notes || []).forEach((fn) => line.append(live('practice-toast-note', fn)));
         return line;
       })
     );
-    box.replaceChildren(close, ...(T ? [T.medal()] : []), body);
+    // 隠しバッジを取ったときは派手に（虹色の枠・きらきら・大きめに弾む。css/practice.css の .secret）
+    const secret = lines.some((l) => l && l.secret);
+    box.classList.toggle('secret', secret);
+    const sparkles = [];
+    if (secret) {
+      for (let i = 0; i < 6; i++) {
+        const s = el('span', 'practice-toast-sparkle', '✦');
+        s.setAttribute('aria-hidden', 'true');
+        sparkles.push(s);
+      }
+    }
+    box.replaceChildren(close, ...(T ? [T.medal()] : []), body, ...sparkles);
     // 出るときに少し大きくなって戻る（動きを減らす設定では動かさない。css/practice.css）
     box.classList.remove('pop');
     void box.offsetWidth;
@@ -820,14 +834,30 @@
   // 「称号が上がりました」「バッジを手に入れました」と名前に分ける（スマホは名前を次の行に。css/practice.css）
   // 名前は複数でもよい（同時に取ったバッジは「バッジを手に入れました」を 1 回にまとめる）
   const namedLine = (key, nameKeys) => ({ head: () => I.t(key), names: [].concat(nameKeys).map((k) => () => I.t(k)) });
-  const earnedLine = (ids) => ({ head: () => I.t('titles.badgeEarned'), names: ids.map((id) => () => T.badgeName(I, id)) });
+  // 取ったバッジの知らせ。隠しバッジは「隠しバッジを見つけました！」の行を分け、条件（説明）も出す
+  const earnedLines = (ids) => {
+    const isSecret = (id) => T.BADGES.some((b) => b.id === id && b.secret);
+    const normal = ids.filter((id) => !isSecret(id));
+    const secret = ids.filter(isSecret);
+    const lines = [];
+    if (normal.length) lines.push({ head: () => I.t('titles.badgeEarned'), names: normal.map((id) => () => T.badgeName(I, id)) });
+    if (secret.length) {
+      lines.push({
+        secret: true,
+        head: () => I.t('titles.secretEarned'),
+        names: secret.map((id) => () => T.badgeName(I, id)),
+        notes: secret.map((id) => () => T.badgeDesc(I, id)),
+      });
+    }
+    return lines;
+  };
   function celebrate(beforeRank) {
     if (!T || !T.signedIn()) return; // 称号とバッジはログイン中だけ
     const lines = [];
     const after = T.rankOf(S.get('progress'));
     if (beforeRank !== undefined && after.index > beforeRank) lines.push(namedLine('titles.rankUp', 'titles.rank.' + after.id));
     const earned = T.update();
-    if (earned.length) lines.push(earnedLine(earned));
+    if (earned.length) lines.push(...earnedLines(earned));
     toast(lines);
   }
   // 記録を取り消した・削除した・ペナルティを変えたあと：記録だけで決まるバッジ（タイムなど）を判定し直し、
@@ -837,7 +867,7 @@
     const lost = T.recheck();
     const lines = lost.length ? [() => T.revokedText(I, lost)] : [];
     const earned = T.update();
-    if (earned.length) lines.push(earnedLine(earned));
+    if (earned.length) lines.push(...earnedLines(earned));
     if (lines.length) toast(lines);
   }
 
