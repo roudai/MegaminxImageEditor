@@ -291,3 +291,12 @@ test('merge：手元に 1 件だけの種類の記録を取り消しても、別
     assert.deepEqual(rows.map((x) => x.at), [1003, 1002, 1001], kind);
   });
 });
+
+test('discardsLocal：練習の記録は日時ごとに比べる（キーの順の違い・hint の無い古い記録では捨てたことにしない）', () => {
+  const who = { owner: 'A', uid: 'A', fresh: true };
+  const local = { data: { practice: { log: [{ set: 'pll', at: 5, name: 'A1+', sec: 3, status: 'learned' }] } }, updated: { practice: 1 } };
+  const remote = { data: { practice: { log: [{ at: 5, set: 'pll', name: 'A1+', sec: 3, status: 'learned', hint: false }] } }, updated: { practice: 2 } };
+  assert.equal(Store.discardsLocal(local, remote, who), false);
+  const other = { data: { practice: { log: [{ at: 6, set: 'pll', name: 'A1+', sec: 3, status: 'learned', hint: false }] } }, updated: { practice: 2 } };
+  assert.equal(Store.discardsLocal(local, other, who), true);
+});

@@ -512,7 +512,18 @@
     const r = (remote && remote.data) || {};
     const l = local.data;
     const filled = (v) => isObject(v) && Object.keys(v).some((k) => (isObject(v[k]) ? Object.keys(v[k]).length > 0 : v[k] != null));
-    const logs = (p) => (isObject(p) ? JSON.stringify([p.log || [], (isObject(p.full) && p.full.log) || []]) : '[[],[]]');
+    // 練習の記録は日時ごとに比べる（キーの順や、hint の無い古い記録（fromCloud で hint: false が付く）で違うと判定しないように）
+    const logs = (p) => {
+      const byKind = logsByKind(p);
+      return JSON.stringify(
+        LOG_KINDS.map((kind) =>
+          byKind[kind]
+            .map((e) => [e.at, e.sec === undefined ? null : e.sec, e.status || null, !!e.hint, e.penalty || ''])
+            .sort((a, b) => b[0] - a[0])
+        )
+      );
+    };
+    const noLogs = logs(null);
     const earned = (t) => (isObject(t) && isObject(t.earned) ? t.earned : {});
     // ケースごとの時刻（_at）は比べない（中身が同じなら捨てたことにならない）
     const cases = (v) => {
@@ -523,7 +534,7 @@
     };
     if (filled(cases(l.progress)) && JSON.stringify(cases(l.progress)) !== JSON.stringify(cases(r.progress))) return true;
     if (filled(cases(l['custom-algs'])) && JSON.stringify(cases(l['custom-algs'])) !== JSON.stringify(cases(r['custom-algs']))) return true;
-    if (logs(l.practice) !== '[[],[]]' && logs(l.practice) !== logs(r.practice)) return true;
+    if (logs(l.practice) !== noLogs && logs(l.practice) !== logs(r.practice)) return true;
     return Object.keys(earned(l.titles)).length > 0 && JSON.stringify(earned(l.titles)) !== JSON.stringify(earned(r.titles));
   }
 
