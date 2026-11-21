@@ -13,7 +13,10 @@
 //   - 「ログインしたまま」かは SESSION_KEY（ログイン中 'in'、ログアウトの状態が分かったら 'out'）と、
 //     手元のデータがどのアカウントのものかを覚えた SYNCED_KEY で決める。手元の内容が変わったら、画面に反映するためにページを1回読み直す
 //   - ログイン中は store-change を受けて、少しまとめてからクラウドに書く。ページを離れるときはすぐ書く
-//   - ログアウトしても手元のデータは消さない
+//   - ログアウトのボタンでは、まだクラウドに書いていない変更を書いてからログアウトし、このブラウザのデータを消す（言語だけ残す）。
+//     書けなかったとき（オフライン・ログインの同期が済んでいない）はログアウトせずにメニューで知らせる（消すと失うため）。
+//     同じブラウザのほかのタブには LOGOUT_KEY の storage イベントで伝え、読み直して空にする（古いデータを書き戻さないように）。
+//     ログインの期限切れ・ほかのタブでのログアウトなど、ボタンを通らないログアウトでは消さない
 //   - ログイン中はアイコンの右上に、ログインに使ったサービス（Google / GitHub）のロゴを小さく出す
 //   - メニューのアイコンの行と保存の状態の行のあいだに、称号の札（titles.js の段位、または選んだバッジ）と
 //     習得したケースの数を出す（バッジの一覧は記録のページ）。メニューを開いたときに Titles.update() でバッジを付ける
@@ -32,7 +35,8 @@ const SDK = 'https://www.gstatic.com/firebasejs/10.12.2';
 const APP_ID = 'megaminx-image-editor'; // users/{uid}/apps/<APP_ID> に保存する
 const SYNCED_KEY = 'megaminx-image-editor:synced-uid'; // この端末でクラウドと合わせたことのあるアカウント
 const SESSION_KEY = 'megaminx-image-editor:session'; // 'in'：ログインしたまま / 'out'：ログアウトの状態だった（次のログインは新しいログイン）
-const NOTICE_KEY = 'megaminx-image-editor:login-notice'; // ログイン前のデータを捨てたことを、読み直したあとに知らせる（sessionStorage）
+const NOTICE_KEY = 'megaminx-image-editor:login-notice'; // 読み直したあとに知らせる文のキー（sessionStorage。ログイン前のデータを捨てた・ログアウトして消した）
+const LOGOUT_KEY = 'megaminx-image-editor:signed-out-at'; // ログアウトでこのブラウザのデータを消したこと（ほかのタブが storage イベントで読み直す）
 const PUSH_DELAY = 1500;
 
 const readLocal = (key) => {
@@ -200,13 +204,7 @@ async function main() {
       ready = true;
       if (partial) fail(partial);
       else setStatus('synced');
-      if (discarded) {
-        try {
-          sessionStorage.setItem(NOTICE_KEY, '1');
-        } catch (e) {
-          // 知らせを出せなくても続ける
-        }
-      }
+      if (discarded) setNotice('account.localReplaced');
       if (!localChanged) showNotice();
       if (localChanged) {
         if (signInDone) await signInDone; // ログインの処理（Facebook の写真の保存）が終わってから
@@ -217,17 +215,24 @@ async function main() {
     }
   }
 
-  // ログイン前のデータを捨てたことを、メニューを開いて知らせる（読み直したあとのページで 1 回だけ）
-  function showNotice() {
-    let pending = false;
+  // 読み直したあとのページで、メニューを開いて 1 回だけ知らせる（ログイン前のデータを捨てた・ログアウトしてデータを消した）
+  function setNotice(key) {
     try {
-      pending = sessionStorage.getItem(NOTICE_KEY) === '1';
+      sessionStorage.setItem(NOTICE_KEY, key);
+    } catch (e) {
+      // 知らせを出せなくても続ける
+    }
+  }
+  function showNotice() {
+    let key = null;
+    try {
+      key = sessionStorage.getItem(NOTICE_KEY);
       sessionStorage.removeItem(NOTICE_KEY);
     } catch (e) {
-      pending = false;
+      key = null;
     }
-    if (!pending) return;
-    message = { key: 'account.localReplaced', ok: true };
+    if (key !== 'account.localReplaced' && key !== 'account.signedOutCleared') return;
+    message = { key: key, ok: true };
     menuOpen = true;
     render();
   }
@@ -238,15 +243,47 @@ async function main() {
     setStatus('error');
   }
 
-  // ログアウトの前に、まだクラウドに書いていない変更を書いておく
+  // ログアウト：まだクラウドに書いていない変更を書いてからログアウトし、このブラウザのデータを消す（言語だけ残す）。
+  // 書けなかったら（オフライン・ログインの同期が済んでいない）ログアウトせずに知らせる（消すと失うため）
+  let signingOut = false;
   async function signOutNow() {
+    if (signingOut) return;
     message = null;
-    if (timer) {
-      clearTimeout(timer);
-      await push();
+    clearTimeout(timer);
+    timer = null;
+    if (!ready) {
+      message = { key: 'account.signOutFailed' };
+      render();
+      return;
     }
+    signingOut = true;
+    setStatus('syncing');
+    try {
+      // 記録を分けて書けないとき（ルールが古い）は本体だけに書けていれば続ける。
+      // オフラインだと Firestore の書き込みは返ってこないので、15 秒で書けなかったことにする
+      await Promise.race([
+        write(Store.snapshot()),
+        new Promise((resolve, reject) => setTimeout(() => reject(new Error('timeout')), 15000)),
+      ]);
+    } catch (e) {
+      signingOut = false;
+      fail(e);
+      message = { key: 'account.signOutFailed' };
+      render();
+      return;
+    }
+    ready = false; // ここから先はクラウドに書かない
     await authSdk.signOut(auth);
+    const lang = Store.get('lang');
+    Store.replace(lang === null ? { data: {}, updated: {} } : { data: { lang: lang }, updated: { lang: Date.now() } });
+    writeLocal(LOGOUT_KEY, String(Date.now())); // ほかのタブに伝える
+    setNotice('account.signedOutCleared');
+    location.reload(); // 画面に残っているデータも消す
   }
+  // ほかのタブでログアウトしてデータを消したら、このタブも読み直す（画面のデータを書き戻さないように）
+  window.addEventListener('storage', (e) => {
+    if (e.key === LOGOUT_KEY && e.newValue) location.reload();
+  });
 
   // ログインの処理（Facebook の写真の取得まで）が終わるまでの Promise。
   // ログインの直後にクラウドの内容でページを読み直すときは、これを待つ（途中で読み直すと写真が保存されないため）
@@ -637,6 +674,7 @@ async function main() {
     // ログアウトの状態なら、次のログインは新しいログイン（アカウントの内容で上書きする）
     if (!next) writeLocal(SESSION_KEY, 'out');
     render();
+    if (!next) showNotice(); // ログアウトしてデータを消したあとの知らせ
     if (user) syncOnLogin();
   });
 }
