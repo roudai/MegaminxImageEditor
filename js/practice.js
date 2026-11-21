@@ -848,11 +848,15 @@
     // ヒントを見たときは、目安以内でも習得済みにはしない（練習中）。タイムも最近の記録に入れない
     const status = hinted ? 'learning' : P.judge(sec, threshold(set));
     const beforeStatus = P.statusOf(set, c.name);
-    const times = (prefs.times && prefs.times[set]) || {};
+    // 最近のタイムは保存したものから読み直す（ログイン中は別の端末の記録と合わせて手元が書き換わることがあり、
+    // ページを開いたときの prefs.times のままだと、合わせた分を古い値で上書きするため）
+    const saved = S.get('practice');
+    const savedTimes = (saved && typeof saved === 'object' && saved.times) || prefs.times || {};
+    const times = savedTimes[set] || {};
     const beforeTimes = times[c.name];
     P.setStatus(set, c.name, status);
     if (sec !== null && !hinted) {
-      const allTimes = Object.assign({}, prefs.times);
+      const allTimes = Object.assign({}, savedTimes);
       allTimes[set] = Object.assign({}, allTimes[set], { [c.name]: P.addTime(beforeTimes, sec, MAX_TIMES) });
       savePrefs({ times: allTimes });
     }
