@@ -822,7 +822,7 @@
   const namedLine = (key, nameKeys) => ({ head: () => I.t(key), names: [].concat(nameKeys).map((k) => () => I.t(k)) });
   const earnedLine = (ids) => namedLine('titles.badgeEarned', ids.map((id) => 'titles.badge.' + id));
   function celebrate(beforeRank) {
-    if (!T) return;
+    if (!T || !T.signedIn()) return; // 称号とバッジはログイン中だけ
     const lines = [];
     const after = T.rankOf(S.get('progress'));
     if (beforeRank !== undefined && after.index > beforeRank) lines.push(namedLine('titles.rankUp', 'titles.rank.' + after.id));

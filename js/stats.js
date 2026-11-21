@@ -1402,6 +1402,14 @@
   function renderTitles() {
     if (!T) return;
     const box = $('statsTitles');
+    // 称号とバッジはログイン中だけ。ログインしていなければ案内だけを出す（取ったバッジのデータは消さずに残す）
+    if (!T.signedIn()) {
+      $('titles').classList.remove('compact');
+      const card = el('div', 'title-card stats-titles-card stats-titles-signin');
+      I.set(card, 'titles.signInPrompt');
+      box.replaceChildren(card);
+      return;
+    }
     // スマホで閉じているとき：札を 2 段の小さな形にし、右下に「バッジ 11 / 40 NEW ›」。札のどこを押しても開く
     // （広い画面は今までどおりの大きな札と開け閉めのボタン）
     const compact = !view.badges && PHONE.matches;
@@ -1480,6 +1488,11 @@
   window.addEventListener('storage', (e) => {
     if (!e.key || e.key.indexOf('megaminx-image-editor:') !== 0) return;
     render();
+    if (T) T.update();
+    renderTitles();
+  });
+  // ログインした・ログアウトした（cloud-sync.js）：バッジを付け直して出し直す
+  window.addEventListener('account-change', () => {
     if (T) T.update();
     renderTitles();
   });

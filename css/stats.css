@@ -956,6 +956,12 @@
 .stats-titles .title-card-name {
   font-size: 1.05rem;
 }
+/* ログインしていないときの案内（称号とバッジはログイン中だけ）。称号の色ではなく控えめなグレー */
+.stats-titles .stats-titles-signin {
+  border-color: var(--bs-border-color);
+  background: var(--bs-tertiary-bg);
+  color: var(--bs-secondary-color);
+}
 .stats-titles .title-card-count,
 .stats-titles .title-card-breakdown {
   font-size: .78rem;

@@ -245,6 +245,9 @@ async function main() {
       writeLocal(SYNCED_KEY, user.uid);
       writeLocal(SESSION_KEY, 'in');
       ready = true;
+      // 称号とバッジはログイン中だけ（titles.js の signedIn）。ログインした時点の記録で条件を満たしていれば付け、ページに知らせる
+      if (window.Titles) window.Titles.update();
+      window.dispatchEvent(new Event('account-change'));
       if (partial) fail(partial);
       else setStatus('synced');
       if (discarded) setNotice('account.localReplaced');
@@ -766,6 +769,7 @@ async function main() {
     // ログアウトの状態なら、次のログインは新しいログイン（アカウントの内容で上書きする）。
     // ただし保存できずにデータを残してログアウトした（'kept'）ときは、次も合わせる（保存できなかった変更を失わないように）
     if (!next && readLocal(SESSION_KEY) !== 'kept') writeLocal(SESSION_KEY, 'out');
+    if (!next) window.dispatchEvent(new Event('account-change')); // 称号とバッジを隠す（記録のページ）
     render();
     if (!next) showNotice(); // ログアウトしてデータを消したあとの知らせ
     if (user) syncOnLogin();

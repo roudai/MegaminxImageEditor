@@ -21,7 +21,10 @@
  *   read()                          store.js の 'titles'（{ earned: { id: 日時(ms) }, shown: id | null, stats, seenAt }）を形を整えて読む
  *                                     seenAt は一覧で見たことにしたバッジのいちばん新しい取得日時（ms。それより後に取ったバッジが NEW）
  *   record(kind, at, meet)          （ブラウザ用）track した stats を 'titles' に保存する（練習ページで記録したとき）
- *   update(now)                     （ブラウザ用）新しく取ったバッジを 'titles' に足して保存し、その id の配列を返す
+ *   signedIn()                      ログインしているか（cloud-sync.js が同期できたときに書く megaminx-image-editor:session が 'in'）。
+ *                                     称号とバッジはログイン中だけ（ログインしていなければ update・recheck は何もしない。画面にも出さない）。
+ *                                     累計の回数・日数（record）はログインしていなくても数える（ログインしたときの判定に使う）
+ *   update(now)                     （ブラウザ用）新しく取ったバッジを 'titles' に足して保存し、その id の配列を返す（ログインしていなければ []）
  *   setShown(id)                    （ブラウザ用）表示する称号にするバッジ（null なら段位を出す）
  *   markSeen()                      （ブラウザ用）バッジの一覧を見たことにする（取ったバッジのいちばん新しい日時を seenAt に保存。新しいものが無ければ書かない）
  *   unseenCount()                   （ブラウザ用）seenAt より後に取ったバッジの数（NEW の数）
@@ -452,7 +455,17 @@
     S.set('titles', t);
   }
 
+  const SESSION_KEY = 'megaminx-image-editor:session';
+  function signedIn() {
+    try {
+      return typeof localStorage !== 'undefined' && localStorage.getItem(SESSION_KEY) === 'in';
+    } catch (e) {
+      return false;
+    }
+  }
+
   function update(now) {
+    if (!signedIn()) return [];
     const t = read();
     const got = evaluate({ progress: S.get('progress'), practice: S.get('practice'), stats: t.stats }, t.earned);
     if (!got.length) return [];
@@ -468,6 +481,7 @@
   // 今の記録で条件を満たさなくなったものを外す。外したバッジの id を返す。
   // 「すべての記録を削除」では呼ばない（記録の整理とみなし、取ったバッジは残す）
   function recheck(now) {
+    if (!signedIn()) return [];
     const t = read();
     const d = { progress: S.get('progress'), practice: S.get('practice'), stats: t.stats };
     const lost = BADGES.filter((b) => b.byLog && t.earned[b.id] && !b.test(d)).map((b) => b.id);
@@ -641,6 +655,7 @@
     track: track,
     read: read,
     record: record,
+    signedIn: signedIn,
     update: update,
     recheck: recheck,
     revokedText: revokedText,

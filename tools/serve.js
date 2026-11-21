@@ -64,12 +64,13 @@ function demoScript() {
       var data = ${JSON.stringify(data)};
       Object.keys(data).forEach(function (k) { localStorage.setItem(P + k, JSON.stringify(data[k])); });
       localStorage.setItem(MARK, String(Date.now()));
+      localStorage.setItem(P + 'session', 'in'); // ログインしている扱い（称号とバッジはログイン中だけ。--demo ではログインを使わない）
     }
   } catch (e) {}
   document.addEventListener('DOMContentLoaded', function () {
     var b = document.createElement('div');
     b.style.cssText = 'position:fixed;right:8px;bottom:8px;z-index:9999;padding:4px 10px;border-radius:999px;background:#fff3cd;color:#664d03;border:1px solid #ffe69c;font:12px/1.4 system-ui,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.1)';
-    b.innerHTML = 'テストデータ（ログインなし） · <a href="/__demo/reset" style="color:inherit">入れ直す</a>';
+    b.innerHTML = 'テストデータ（ログインしている扱い） · <a href="/__demo/reset" style="color:inherit">入れ直す</a>';
     document.body.appendChild(b);
   });
 })();

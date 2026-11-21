@@ -6,7 +6,8 @@ const T = require('../js/titles.js');
 const Store = require('../js/store.js');
 
 function withStorage(initial, fn) {
-  const map = new Map(Object.entries(initial || {}));
+  // 称号とバッジはログイン中だけなので、既定はログインしている扱い（session: 'in'）
+  const map = new Map(Object.entries(Object.assign({ 'megaminx-image-editor:session': 'in' }, initial)));
   global.localStorage = {
     getItem: (k) => (map.has(k) ? map.get(k) : null),
     setItem: (k, v) => map.set(k, String(v)),
@@ -476,4 +477,23 @@ test('15 秒未満のソルブ（DNF 以外）はバッジの判定に数えな�
   assert.ok(T.evaluate(full([{ at: 1, sec: 15, penalty: '' }]), {}).includes('fullSub30'));
   // DNF は短くても DNF として数える（はじめてのソルブ）
   assert.deepEqual(T.evaluate(full([{ at: 1, sec: 3, penalty: 'DNF' }]), {}), ['fullFirst']);
+});
+
+test('signedIn：ログインしていなければ（session が無い・out・kept）バッジを付けも外しもしない。累計は数える', () => {
+  [null, 'out', 'kept'].forEach((session) => {
+    withStorage({ 'megaminx-image-editor:session': session }, () => {
+      if (session === null) localStorage.removeItem('megaminx-image-editor:session');
+      assert.equal(T.signedIn(), false);
+      Store.set('progress', progressOf(1, 0));
+      assert.deepEqual(T.update(5), []);
+      assert.deepEqual(T.recheck(6), []);
+      assert.deepEqual(T.read().earned, {});
+      T.record('case', 10, null);
+      assert.equal(T.read().stats.reps, 1);
+      // ログインすると、その時点の記録で付く
+      localStorage.setItem('megaminx-image-editor:session', 'in');
+      assert.equal(T.signedIn(), true);
+      assert.deepEqual(T.update(20), ['first']);
+    });
+  });
 });
