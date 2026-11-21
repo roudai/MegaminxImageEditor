@@ -763,7 +763,12 @@
     const progress = badgeProgress(currentData(t));
     const wrap = make('div', 'title-badge-groups');
     GROUPS.forEach((group) => {
-      const badges = BADGES.filter((b) => b.group === group);
+      let badges = BADGES.filter((b) => b.group === group);
+      // 隠しバッジは、取ったものを取った順に前へ詰め、まだのもの（？？？）は後ろにまとめる（位置から手がかりが出ないように）
+      if (group === 'secret') {
+        const got = badges.filter((b) => t.earned[b.id]).sort((a, b) => t.earned[a.id] - t.earned[b.id]);
+        badges = got.concat(badges.filter((b) => !t.earned[b.id]));
+      }
       const got = badges.filter((b) => t.earned[b.id]).length;
       const section = make('div', 'title-badge-group');
       if (!badges.length) return;
