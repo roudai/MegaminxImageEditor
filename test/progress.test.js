@@ -58,7 +58,10 @@ test('statusOf / setStatus：覚えた度を読み書きし、未着手は保存
     P.setStatus('pll', 'A1+', 'learned');
     assert.equal(P.statusOf('pll', 'A1+'), 'learned');
     P.setStatus('pll', 'A1+', 'new');
-    assert.deepEqual(JSON.parse(map.get('megaminx-image-editor:progress')), { oll: { '1A': 'learned' }, pll: {} });
+    const saved = JSON.parse(map.get('megaminx-image-editor:progress'));
+    assert.equal(typeof saved._at.pll['A1+'], 'number'); // 変えたケースの時刻（端末どうしでケースごとに合わせるため。store.js）
+    delete saved._at;
+    assert.deepEqual(saved, { oll: { '1A': 'learned' }, pll: {} });
   });
 });
 
