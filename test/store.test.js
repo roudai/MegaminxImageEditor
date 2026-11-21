@@ -137,22 +137,30 @@ test('merge：外したバッジ（titles.revoked）は、それより前に取�
   assert.deepEqual(t.revoked, { fullSub60: 40, fullSub30: 30 });
 });
 
-test('toCloud / fromCloud：PLL・OLL の記録を種類ごとの短い形に分け、読んだら元に戻す', () => {
+test('toCloud / fromCloud：PLL・OLL・ソルブの記録を種類ごとの短い形に分け、読んだら元に戻す', () => {
   const log = [
     { at: 5, set: 'oll', name: '16B+', sec: 12.34, status: 'learned', hint: false },
     { at: 4, set: 'pll', name: 'A1+', sec: null, status: 'learning', hint: true },
     { at: 3, set: 'pll', name: 'H1-', sec: 7.28, status: 'learned', hint: false },
   ];
-  const snap = { data: { practice: { set: 'pll', log: log, full: { log: [{ at: 1, sec: 50, penalty: '', s: 'x' }] } }, lang: 'ja' }, updated: { practice: 9, lang: 1 } };
+  const full = [
+    { at: 2, sec: 61.5, penalty: 'DNF', s: 'y' },
+    { at: 1, sec: 50, penalty: '', s: 'x' },
+    { at: 0, sec: 70, penalty: '+2' },
+  ];
+  const snap = { data: { practice: { set: 'pll', log: log, full: { inspection: true, log: full } }, lang: 'ja' }, updated: { practice: 9, lang: 1 } };
   const cloud = Store.toCloud(snap);
-  // 本体には記録を入れない（ソルブの記録は本体のまま）
+  // 本体には記録を入れない（ソルブの記録も、設定だけ残す）
   assert.equal(cloud.main.logsSplit, true);
+  assert.equal(cloud.main.fullSplit, true);
   assert.equal('log' in cloud.main.data.practice, false);
-  assert.deepEqual(cloud.main.data.practice.full, snap.data.practice.full);
+  assert.deepEqual(cloud.main.data.practice.full, { inspection: true });
+  assert.deepEqual(cloud.logs.full, [[2, 61.5, 'y', 'DNF'], [1, 50, 'x'], [0, 70, null, '+2']]);
   assert.deepEqual(cloud.logs.pll, [[4, 'A1+', null, 1, 1], [3, 'H1-', 7.28, 2]]);
   assert.deepEqual(cloud.logs.oll, [[5, '16B+', 12.34, 2]]);
   // 手元の snapshot は変えない
   assert.equal(snap.data.practice.log.length, 3);
+  assert.equal(snap.data.practice.full.log.length, 3);
   // JSON を通して読み戻すと同じ
   const back = Store.fromCloud(JSON.parse(JSON.stringify(cloud.main)), JSON.parse(JSON.stringify(cloud.logs)));
   assert.deepEqual(back, snap);
@@ -164,6 +172,9 @@ test('fromCloud：以前の形（logsSplit の無い本体）はそのまま。�
   const split = { data: { practice: { set: 'oll' } }, updated: { practice: 2 }, logsSplit: true };
   assert.deepEqual(Store.fromCloud(split, {}).data.practice, { set: 'oll', log: [] });
   assert.equal(Store.fromCloud(null, {}), null);
+  // fullSplit の無い本体（ソルブを分ける前のページが書いたもの）は、ソルブの記録を本体のまま使う
+  const before = { data: { practice: { full: { log: [{ at: 3, sec: 40, penalty: '' }] } } }, updated: {}, logsSplit: true };
+  assert.deepEqual(Store.fromCloud(before, { full: [[9, 1, null]] }).data.practice.full.log, [{ at: 3, sec: 40, penalty: '' }]);
 });
 
 test('toCloud：記録が多いときも 1 文書の上限に収める。本体だけに書く以前の形（inline）は最新 2000 件', () => {
@@ -174,6 +185,14 @@ test('toCloud：記録が多いときも 1 文書の上限に収める。本体�
   assert.ok(JSON.stringify({ rows: cloud.logs.pll }).length < 500000);
   assert.equal(cloud.inline.data.practice.log.length, 2000);
   assert.equal(cloud.inline.data.practice.log[0].at, log[0].at);
+  // ソルブ 5000 件も 1 文書に収まり、inline では最新 2000 件
+  const fullLog = [];
+  for (let i = 0; i < 5000; i++) fullLog.push({ at: 1795158456787 - i * 1000, sec: 65.43, penalty: i % 9 ? '' : '+2', s: 'AbCdEfGhIjKlM' });
+  const c2 = Store.toCloud({ data: { practice: { full: { log: fullLog } } }, updated: {} });
+  assert.equal(c2.logs.full.length, 5000);
+  assert.ok(JSON.stringify({ rows: c2.logs.full }).length < 500000);
+  assert.equal(c2.inline.data.practice.full.log.length, 2000);
+  assert.equal('log' in c2.inline.data.practice, false);
   // 知らない項目のある記録はそのまま残す
   const odd = { at: 1, set: 'pll', name: 'A1+', sec: 1, status: 'learned', extra: 1 };
   assert.deepEqual(Store.toCloud({ data: { practice: { log: [odd] } }, updated: {} }).logs.pll, [odd]);

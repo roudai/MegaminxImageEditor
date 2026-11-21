@@ -122,7 +122,7 @@ async function main() {
   // 本体の文書に最後に書いた（読んだ）中身。書く前に読んで違っていたら、同じアカウントの別の端末が書いたので、合わせてから書く
   let lastMain = null;
   // 記録を種類ごとの文書に書いてから本体を書く（本体の logsSplit を見て、読むときに種類ごとの文書を使う）。
-  // 種類ごとの文書に書けなかったら（Firestore のルールが古いなど）、記録を本体に入れた以前の形（最新 2000 件）で本体だけ書き、
+  // 種類ごとの文書に書けなかったら（Firestore のルールが古いなど）、記録を本体に入れた以前の形（PLL・OLL は合わせて、ソルブはそれぞれ最新 2000 件）で本体だけ書き、
   // そのエラーを返す（本体の保存はできているので、ほかの変更は失わない）
   async function write(snap) {
     const cloud = Store.toCloud(snap);
@@ -158,7 +158,8 @@ async function main() {
     }
     const logs = {};
     if (main && main.logsSplit) {
-      for (const set of Store.LOG_SETS) {
+      // ソルブの記録の文書は、本体が分けた形（fullSplit）のときだけ読む
+      for (const set of Store.LOG_SETS.filter((x) => x !== 'full' || main.fullSplit)) {
         const doc = await dbSdk.getDoc(logRef(set));
         if (!doc.exists()) continue;
         try {
