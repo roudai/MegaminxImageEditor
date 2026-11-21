@@ -122,7 +122,7 @@
   {"name":"T3+","group":"T","stage":13,"order":49,"alg":"R2' U2 R2 U R2' U' R2 U R2' U2 R2","setup":"R2 U2' R2' U' R2 U R2' U' R2 U2' R2'","inverse":"T3-"},
   {"name":"T3-","group":"T","stage":13,"order":50,"alg":"R2 U2' R2' U' R2 U R2' U' R2 U2' R2'","setup":"R2' U2 R2 U R2' U' R2 U R2' U2 R2","inverse":"T3+"},
   {"name":"T4+","group":"T","stage":13,"order":51,"alg":"R U R' U R2 U2' R2' U' R2 U2' R2' U2' R U' R'","setup":"(U') R U2 R2' U' R2 U2' R2' U2 R U' R' U2 R2 U2 R' U R U' R' (U')","inverse":"T4+"},
-  {"name":"T4-","group":"T","stage":13,"order":52,"alg":"R' U' R U2' R2 U2' R2' U' R2 U2' R2' U R' U R","setup":"R U2' R2' U2' R U R2 U2' R2 U2' R2 U R' U R2 U2 R' U2' R' (U2')","inverse":"T4-"},
+  {"name":"T4-","group":"T","stage":13,"order":52,"alg":"R' U' R U2' R2' U2' R2 U' R2' U2' R2 U R' U R","setup":"R U2' R2' U2' R U R2 U2' R2 U2' R2 U R' U R2 U2 R' U2' R' (U2')","inverse":"T4-"},
   {"name":"U1+","group":"U","stage":5,"order":14,"alg":"R' U' R U' R U R2' U R U' R U' R'","setup":"(U') R U R U R' U R' U' R2 U' R' U R' U R U2 R' (U2')","inverse":"U1-"},
   {"name":"U1-","group":"U","stage":5,"order":15,"alg":"(U2') R U R' U R' U' R2 U' R' U R' U R","setup":"R U' R' U R U2' R U R' U R' U' R2 U' R' U2 R'","inverse":"U1+"},
   {"name":"U2+","group":"U","stage":5,"order":16,"alg":"R U R' U2 R' U' R U' R U R2' U R U' R U2' R'","setup":"(U') R' U' R2' U2 R2' U2' R' U' R U2' R2 U2 R' U' R2' U2' R2 U2' R' (U)","inverse":"U2-"},
