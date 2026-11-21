@@ -348,7 +348,10 @@
       'titles.rank.whisperer': 'Dodecahedron Whisperer',
       'titles.rank.reborn': 'Reincarnated Dodecahedron',
       'titles.empty': 'Learn a case to earn a title',
-      'titles.signInPrompt': 'Sign in to earn titles and badges.',
+      'titles.signInPrompt': 'Sign in to collect titles and badges',
+      'titles.signInNote':
+        'Earn titles as you learn cases, plus badges for practice, streaks and full solves. Your records are saved to your account, so you can pick up where you left off on any device.',
+      'titles.signInButton': 'Sign in',
       'titles.count': '{n} / {total}',
       'titles.breakdown': 'PLL {pll}/{pllTotal} · OLL {oll}/{ollTotal}',
       'titles.streak': '{n}-day streak · Best: {best}',
@@ -772,7 +775,10 @@
       'titles.rank.whisperer': '十二面体と話せる',
       'titles.rank.reborn': '十二面体の生まれ変わり',
       'titles.empty': 'ケースを習得すると称号がもらえます',
-      'titles.signInPrompt': 'ログインすると、称号とバッジがもらえます。',
+      'titles.signInPrompt': 'ログインして、称号とバッジを集めよう',
+      'titles.signInNote':
+        'ケースを習得するほど上がる称号と、練習の回数・続けた日数・ソルブの記録でもらえるバッジ。記録はアカウントに保存されるので、ほかの端末でも続きから使えます。',
+      'titles.signInButton': 'ログイン',
       'titles.count': '{n} / {total}',
       'titles.breakdown': 'PLL {pll}/{pllTotal} · OLL {oll}/{ollTotal}',
       'titles.streak': '連続 {n} 日 · 最長 {best} 日',

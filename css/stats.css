@@ -957,10 +957,49 @@
   font-size: 1.05rem;
 }
 /* ログインしていないときの案内（称号とバッジはログイン中だけ）。称号の色ではなく控えめなグレー */
-.stats-titles .stats-titles-signin {
-  border-color: var(--bs-border-color);
-  background: var(--bs-tertiary-bg);
-  color: var(--bs-secondary-color);
+/* ログインしていないときの、ログインを促す札（称号とバッジはログイン中だけ。js/stats.js の renderTitles） */
+.stats-titles-signin {
+  position: relative;
+  max-width: 34rem;
+  padding: .9rem 1.1rem 1rem;
+  border: 1px solid #ecd17f;
+  border-radius: .75rem;
+  background: linear-gradient(135deg, #fff8e1 0%, #fffdf6 50%, #fdeccf 100%);
+  color: #7a5600;
+  box-shadow: 0 .25rem .9rem rgba(217, 164, 0, .15);
+}
+.stats-signin-head {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+.stats-signin-head .title-medal {
+  color: #d9a400;
+}
+.stats-signin-head .title-medal svg {
+  width: 26px;
+  height: 26px;
+}
+.stats-signin-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.stats-signin-note {
+  margin: .35rem 0 .75rem;
+  font-size: .88rem;
+  color: #7a5a1c;
+}
+.stats-signin-button {
+  padding: .35rem 1.1rem;
+  border: 0;
+  background: #c98a00;
+  color: #fff;
+  font-weight: 600;
+}
+.stats-signin-button:hover,
+.stats-signin-button:focus-visible {
+  background: #a87300;
+  color: #fff;
 }
 .stats-titles .title-card-count,
 .stats-titles .title-card-breakdown {

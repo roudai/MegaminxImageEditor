@@ -1405,8 +1405,28 @@
     // 称号とバッジはログイン中だけ。ログインしていなければ案内だけを出す（取ったバッジのデータは消さずに残す）
     if (!T.signedIn()) {
       $('titles').classList.remove('compact');
-      const card = el('div', 'title-card stats-titles-card stats-titles-signin');
-      I.set(card, 'titles.signInPrompt');
+      // ログインを促す札：メダル・見出し・何がもらえるか・「ログイン」のボタン（ナビバーのログインのメニューを開く）
+      const card = el('div', 'stats-titles-signin');
+      const head = el('div', 'stats-signin-head');
+      const title = el('span', 'stats-signin-title');
+      I.set(title, 'titles.signInPrompt');
+      head.append(T.medal(), title);
+      const note = el('p', 'stats-signin-note');
+      I.set(note, 'titles.signInNote');
+      card.append(head, note);
+      if (window.FIREBASE_CONFIG !== null) {
+        const button = el('button', 'btn stats-signin-button');
+        button.type = 'button';
+        I.set(button, 'titles.signInButton');
+        button.addEventListener('click', (e) => {
+          e.stopPropagation(); // ページのクリックでメニューが閉じないように（cloud-sync.js）
+          const signin = document.querySelector('#accountBox .account-signin');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          if (signin && signin.getAttribute('aria-expanded') !== 'true') signin.click();
+          if (signin) signin.focus({ preventScroll: true });
+        });
+        card.append(button);
+      }
       box.replaceChildren(card);
       return;
     }
