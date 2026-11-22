@@ -8,6 +8,13 @@
 //   - ログインは使えなくする（js/firebase-config.js の代わりに FIREBASE_CONFIG = null を返す）。テストデータがアカウントに送られないように
 //   - ポートを普段（8765）と分けるので、ブラウザの保存（localStorage）も普段のものとは別になる
 //   - 画面の右下に「テストデータ」の印とリセットのリンクを出す
+//
+// 最大のデータで動かす：node tools/serve.js --demo --max [ポート]（既定 8767）→ http://localhost:8767/stats
+//   - 保存できる上限いっぱいの記録（PLL・OLL 各 10000 件、ソルブ・LL 各 5000 件。過去 400 日）・全ケース習得済み・
+//     全ケースの自分の手順・すべてのバッジ（隠しバッジも）を取った状態（tools/demo-data.js の buildMax）
+//   - ポートを --demo と分けるので、ブラウザの保存も別になる
+//   - データは大きい（約 2.5MB）ので、ページごとには埋め込まず、まだ入れていないときだけ /__demo/data.json を読んで入れる。
+//     ブラウザの保存に入りきらなかったときは、右下の印にそう出す
 'use strict';
 const http = require('http');
 const fs = require('fs');
@@ -16,7 +23,8 @@ const path = require('path');
 const ROOT = path.join(__dirname, '..');
 const args = process.argv.slice(2);
 const DEMO = args.includes('--demo');
-const PORT = Number(args.find((a) => /^\d+$/.test(a))) || (DEMO ? 8766 : 8765);
+const MAX = DEMO && args.includes('--max');
+const PORT = Number(args.find((a) => /^\d+$/.test(a))) || (MAX ? 8767 : DEMO ? 8766 : 8765);
 const PREFIX = 'megaminx-image-editor:';
 const DEMO_MARK = PREFIX + 'demo-seeded'; // テストデータを入れたか（store.js の名前ではないので保存の対象にならない）
 const TYPES = {
@@ -54,23 +62,39 @@ function resolve(urlPath) {
 }
 
 // ---- テストデータ（--demo） ----
-// 各ページの <head> の最初に入れるスクリプト：まだ入れていなければテストデータを入れ、右下に印を出す
+// 入れるデータ（JSON の文字列）。--max はサーバーを起動したときの日時で 1 回だけ作る（大きいので毎回は作らない）
+let maxJson = null;
+function demoJson() {
+  const D = require('./demo-data.js');
+  if (!MAX) return JSON.stringify(D.build({ now: Date.now() }));
+  if (!maxJson) maxJson = JSON.stringify(D.buildMax({ now: Date.now() }));
+  return maxJson;
+}
+const LABEL = MAX ? '最大のデータ（ログインしている扱い）' : 'テストデータ（ログインしている扱い）';
+
+// 各ページの <head> の最初に入れるスクリプト：まだ入れていなければテストデータを入れ（/__demo/data.json を同期で読む）、右下に印を出す。
+// 印には demo / max のどちらを入れたかも残し、同じポートでモードを変えて起動し直したときは、このサイトの保存を消して入れ直す
 function demoScript() {
-  const data = require('./demo-data.js').build({ now: Date.now() });
   return `(function () {
-  var P = ${JSON.stringify(PREFIX)}, MARK = ${JSON.stringify(DEMO_MARK)};
+  var P = ${JSON.stringify(PREFIX)}, MARK = ${JSON.stringify(DEMO_MARK)}, MODE = ${JSON.stringify(MAX ? 'max' : 'demo')}, error = '';
   try {
-    if (!localStorage.getItem(MARK)) {
-      var data = ${JSON.stringify(data)};
+    if (String(localStorage.getItem(MARK) || '').split(':')[0] !== MODE) {
+      Object.keys(localStorage).forEach(function (k) { if (k.indexOf(P) === 0) localStorage.removeItem(k); });
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '/__demo/data.json', false);
+      xhr.send();
+      var data = JSON.parse(xhr.responseText);
       Object.keys(data).forEach(function (k) { localStorage.setItem(P + k, JSON.stringify(data[k])); });
-      localStorage.setItem(MARK, String(Date.now()));
+      localStorage.setItem(MARK, MODE + ':' + Date.now());
       localStorage.setItem(P + 'session', 'in'); // ログインしている扱い（称号とバッジはログイン中だけ。--demo ではログインを使わない）
     }
-  } catch (e) {}
+  } catch (e) {
+    error = e && e.name === 'QuotaExceededError' ? '（ブラウザの保存に入りきりませんでした）' : '（入れられませんでした：' + (e && e.message) + '）';
+  }
   document.addEventListener('DOMContentLoaded', function () {
     var b = document.createElement('div');
     b.style.cssText = 'position:fixed;right:8px;bottom:8px;z-index:9999;padding:4px 10px;border-radius:999px;background:#fff3cd;color:#664d03;border:1px solid #ffe69c;font:12px/1.4 system-ui,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.1)';
-    b.innerHTML = 'テストデータ（ログインしている扱い） · <a href="/__demo/reset" style="color:inherit">入れ直す</a>';
+    b.innerHTML = ${JSON.stringify(LABEL)} + error + ' · <a href="/__demo/reset" style="color:inherit">入れ直す</a>';
     document.body.appendChild(b);
   });
 })();
@@ -89,6 +113,11 @@ function sendDemo(res, pathname, file) {
   if (pathname === '/__demo/seed.js') {
     res.writeHead(200, { 'Content-Type': TYPES['.js'], 'Cache-Control': 'no-store' });
     res.end(demoScript());
+    return true;
+  }
+  if (pathname === '/__demo/data.json') {
+    res.writeHead(200, { 'Content-Type': TYPES['.json'], 'Cache-Control': 'no-store' });
+    res.end(demoJson());
     return true;
   }
   if (pathname === '/__demo/reset') {
@@ -125,5 +154,6 @@ http
   })
   .listen(PORT, '127.0.0.1', () => {
     console.log(`http://localhost:${PORT}/`);
-    if (DEMO) console.log(`テストデータで動かしています（ログインなし）。記録のページ：http://localhost:${PORT}/stats　入れ直す：http://localhost:${PORT}/__demo/reset`);
+    if (MAX) console.log('最大のデータ（PLL・OLL 各 10000 件、ソルブ・LL 各 5000 件、すべてのバッジ）を入れます。');
+    if (DEMO) console.log(`テストデータで動かしています（ログインは使わない）。記録のページ：http://localhost:${PORT}/stats　入れ直す：http://localhost:${PORT}/__demo/reset`);
   });
