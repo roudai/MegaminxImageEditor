@@ -376,6 +376,7 @@
   // 件数・バー・グループの「覚えた数 / 全体」を今の状態に合わせる（絞り込みはやり直さない。
   // 絞り込み中に状態を変えたカードがすぐ消えると落ち着かないので、チップを押したときに反映する）
   function updateSummary() {
+    updatePracticeLink();
     const n = counts(scoped());
     ['learned', 'learning'].forEach((s) => {
       const seg = document.querySelector(`#progressBox [data-segment="${s}"]`);
@@ -399,6 +400,23 @@
     });
   }
 
+  // 今の範囲・絞り込みのまま練習ページを開くボタン（習得状況を変えたときも直す。updateSummary からも呼ぶ）。
+  // 対象は絞り込みのチップを引き継ぐ。ただしチップが「すべて」でグループも選んでいないときは、未習得にする
+  // （とりあえず押したときに、習得済みまで混ぜた全ケースより、まだ覚えていないケースを練習するように。
+  // 練習ページを直接開いたときの既定とも同じ）。範囲に未習得が 1 つも無ければ「すべて」のまま
+  function updatePracticeLink() {
+    const practice = $('practiceLink');
+    if (!practice) return;
+    const picked = sections.filter((s) => chosen.has(s.key));
+    const target = filter === 'all' && !picked.length && scoped().some((c) => statusOf(c) === 'new') ? 'new' : filter;
+    const q = new URLSearchParams({ set: SET, filter: target });
+    if (SET === 'oll') q.set('scope', scope.key);
+    // 選んだグループ（覚える順なら段階の番号）も渡す。空ならすべて
+    if (HAS_STAGES) q.set('order', byStage ? 'learn' : 'group');
+    q.set('groups', picked.map((s) => (byStage ? s.stage : s.key)).join(','));
+    practice.href = 'practice?' + q.toString();
+  }
+
   // 選んだ範囲・状態のカードだけを表示し、1枚も無いグループは見出しごと隠す
   function applyFilter() {
     document.querySelectorAll('#progressBox [data-scope]').forEach((b) => {
@@ -419,17 +437,7 @@
     $('groupClear').disabled = !chosen.size;
     // 見出しの横の数は全ケースの数で固定（範囲ごとの数は No Dot / Dot / All のボタンに出ているので繰り返さない）
     I.set($('caseCount'), 'list.count', { n: DATA.length });
-    // 今の範囲・絞り込みのまま練習ページを開くボタン
-    const practice = $('practiceLink');
-    if (practice) {
-      const q = new URLSearchParams({ set: SET, filter: filter });
-      if (SET === 'oll') q.set('scope', scope.key);
-      // 選んだグループ（覚える順なら段階の番号）も渡す。空ならすべて
-      if (HAS_STAGES) q.set('order', byStage ? 'learn' : 'group');
-      const picked = sections.filter((s) => chosen.has(s.key));
-      q.set('groups', picked.map((s) => (byStage ? s.stage : s.key)).join(','));
-      practice.href = 'practice?' + q.toString();
-    }
+    updatePracticeLink();
     const zip = $('downloadZip');
     if (!zip.disabled) {
       I.set(zip, 'list.download');
