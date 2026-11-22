@@ -145,8 +145,20 @@
   }
 
   // 未選択から選んだときは case にする。選んだまま別のケースに変えたときは種類をそのままにする
+  // [PLL | OLL] の切り替え：その種類のグループ・ケース・前後のボタンだけを出す（選んでいるケースはそのまま）
+  const setRadios = document.querySelectorAll('input[name="caseSet"]');
+  function showSet(key) {
+    setRadios.forEach((r) => {
+      r.checked = r.value === key;
+    });
+    document.querySelectorAll('#algEditor [data-set]').forEach((el) => {
+      el.hidden = el.dataset.set !== key;
+    });
+  }
+
   function selectCase(set, c) {
     const keepType = selected() !== null;
+    showSet(set.key);
     Object.values(SETS).forEach((other) => {
       if (other !== set) clearSet(other);
     });
@@ -462,6 +474,7 @@
   });
   $('myAlgSave').addEventListener('click', saveMyAlg);
   $('myAlgReset').addEventListener('click', resetMyAlg);
+  setRadios.forEach((r) => r.addEventListener('change', () => showSet(r.value)));
   Object.values(SETS).forEach((set) => {
     set.group.addEventListener('change', () => {
       const first = set.data.find((c) => c.group === set.group.value);

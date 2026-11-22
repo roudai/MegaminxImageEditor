@@ -28,10 +28,9 @@ PLL（`reference/PLL_SPEC.md`）と同じ仕組みで、OLL を選ぶと手順�
 
 ## 画面
 ```
-PLL  [Group ▼] [Case ▼] [‹ Prev][Next ›]
-OLL  [Group ▼] [Case ▼] [‹ Prev][Next ›]
+[PLL|OLL] [Group ▼] [Case ▼] [‹ Prev][Next ›]
 ```
-- PLL の行の下に OLL の行を置く。並びと狭い画面での縦並びは PLL と同じ
+- PLL と同じ行で、[PLL | OLL] の切り替えで OLL を選ぶと OLL の Group・Case・ボタンを出す（reference/PLL_SPEC.md の「画面」）
 - Group は `-- OLL --`（未選択）とデータに出てくる順のグループ。名前を括弧付きで添える（一覧は `js/case-groups.js` の `oll`）
   - 1〜37：形の名前（例：`6 (Anchor)`、`18 (Long Block)`）
   - `1C`・38〜53：Dot 系のカテゴリー名（`1C (Dot EO)`、38〜43 `Dot 2 Corner CO`、44〜49 `Dot 3 Corner CO`、50〜52 `Dot 4 Corner CO`、53 `Dot 5 Corner CO`）

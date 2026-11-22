@@ -130,17 +130,22 @@
     <div id="editorPreview" class="editor-preview sticky-top text-center mt-3">
       <canvas id="canvas" width="200" height="200" ucolor="uuuuuuuuuuu" scolor="pppcccaaaooolll"></canvas>
     </div>
-    <div class="text-center mt-3">
-      <button type="button" class="btn btn-outline-secondary" onclick="downloadImage();" data-i18n="editor.download">Download</button>
-    </div>
-
-    <label class="form-label" for="fname" data-i18n="editor.fileName">File name</label>
-    <input id="fname" class="form-control" type="text" value="megaminx.png">
-
-    <label class="form-label" for="imageSize" data-i18n="editor.imageSize">Image size (px)</label>
-    <div class="input-group">
-      <input onchange="imageChange();" id="imageSize" class="form-control" name="size" type="number" value="200" min="100" max="1000" step="1"><!-- max は js/megaminx.js が画面の幅で決め直す -->
-      <button id="imageSizeReset" class="btn btn-outline-secondary" type="button" data-i18n="common.reset">Reset</button>
+    <!-- ファイル名の横にダウンロード（設定を決めてから押す並び）。広い画面ではファイル名と画像サイズを横に並べる -->
+    <div class="row g-2 mt-2">
+      <div class="col-12 col-md-6">
+        <label class="form-label" for="fname" data-i18n="editor.fileName">File name</label>
+        <div class="input-group">
+          <input id="fname" class="form-control" type="text" value="megaminx.png">
+          <button type="button" class="btn btn-outline-secondary" onclick="downloadImage();" data-i18n="editor.download">Download</button>
+        </div>
+      </div>
+      <div class="col-12 col-md-6">
+        <label class="form-label" for="imageSize" data-i18n="editor.imageSize">Image size (px)</label>
+        <div class="input-group">
+          <input onchange="imageChange();" id="imageSize" class="form-control" name="size" type="number" value="200" min="100" max="1000" step="1"><!-- max は js/megaminx.js が画面の幅で決め直す -->
+          <button id="imageSizeReset" class="btn btn-outline-secondary" type="button" data-i18n="common.reset">Reset</button>
+        </div>
+      </div>
     </div>
 
     <hr>
@@ -168,32 +173,34 @@
       <option value="state" data-i18n="editor.typeState">Set colors</option>
     </select>
 
-    <!-- PLL・OLL の選択。見えるラベル（PLL / OLL）は置かない（プルダウンの初期表示「-- PLL --」「-- OLL --」がラベルを兼ねる。
-         読み上げの名前は各プルダウンの aria-label「PLL group」など） -->
+    <!-- PLL・OLL の選択。[PLL | OLL] の切り替えで種類を選び、その種類のグループとケースだけを出す（js/alg-input.js の showSet）。
+         広い画面は 1 行、スマホは「切り替え・グループ」「ケース・前へ・次へ」の 2 行。
+         グループのプルダウンの初期表示「-- PLL --」「-- OLL --」がラベルを兼ねる（読み上げの名前は aria-label「PLL group」など） -->
     <div id="algEditor">
       <div class="row g-2 mt-1 align-items-center">
-        <div class="col-12 col-md-4">
-          <select id="pllGroup" class="form-select" aria-label="PLL group" data-i18n-aria-label="editor.groupAria" data-i18n-params='{"set":"PLL"}'></select>
+        <div class="col-auto">
+          <div class="btn-group" role="group" aria-label="Case type" data-i18n-aria-label="editor.setAria">
+            <input type="radio" class="btn-check" name="caseSet" id="caseSetPll" value="pll" autocomplete="off" checked>
+            <label class="btn btn-outline-secondary" for="caseSetPll">PLL</label>
+            <input type="radio" class="btn-check" name="caseSet" id="caseSetOll" value="oll" autocomplete="off">
+            <label class="btn btn-outline-secondary" for="caseSetOll">OLL</label>
+          </div>
         </div>
-        <div class="col-12 col-md-3">
-          <select id="pllCase" class="form-select" aria-label="PLL case" data-i18n-aria-label="editor.caseAria" data-i18n-params='{"set":"PLL"}' disabled></select>
+        <div class="col col-md-4">
+          <select id="pllGroup" class="form-select" data-set="pll" aria-label="PLL group" data-i18n-aria-label="editor.groupAria" data-i18n-params='{"set":"PLL"}'></select>
+          <select id="ollGroup" class="form-select" data-set="oll" aria-label="OLL group" data-i18n-aria-label="editor.groupAria" data-i18n-params='{"set":"OLL"}' hidden></select>
         </div>
-        <div class="col-12 col-md-auto">
-          <div class="btn-group" role="group" aria-label="PLL navigation" data-i18n-aria-label="editor.navAria" data-i18n-params='{"set":"PLL"}'>
+        <div class="w-100 d-md-none"></div>
+        <div class="col col-md-3">
+          <select id="pllCase" class="form-select" data-set="pll" aria-label="PLL case" data-i18n-aria-label="editor.caseAria" data-i18n-params='{"set":"PLL"}' disabled></select>
+          <select id="ollCase" class="form-select" data-set="oll" aria-label="OLL case" data-i18n-aria-label="editor.caseAria" data-i18n-params='{"set":"OLL"}' disabled hidden></select>
+        </div>
+        <div class="col-auto">
+          <div class="btn-group" role="group" data-set="pll" aria-label="PLL navigation" data-i18n-aria-label="editor.navAria" data-i18n-params='{"set":"PLL"}'>
             <button id="pllPrev" class="btn btn-outline-secondary" type="button" data-i18n="common.prev">&lsaquo; Prev</button>
             <button id="pllNext" class="btn btn-outline-secondary" type="button" data-i18n="common.next">Next &rsaquo;</button>
           </div>
-        </div>
-      </div>
-      <div class="row g-2 mt-0 align-items-center">
-        <div class="col-12 col-md-4">
-          <select id="ollGroup" class="form-select" aria-label="OLL group" data-i18n-aria-label="editor.groupAria" data-i18n-params='{"set":"OLL"}'></select>
-        </div>
-        <div class="col-12 col-md-3">
-          <select id="ollCase" class="form-select" aria-label="OLL case" data-i18n-aria-label="editor.caseAria" data-i18n-params='{"set":"OLL"}' disabled></select>
-        </div>
-        <div class="col-12 col-md-auto">
-          <div class="btn-group" role="group" aria-label="OLL navigation" data-i18n-aria-label="editor.navAria" data-i18n-params='{"set":"OLL"}'>
+          <div class="btn-group" role="group" data-set="oll" aria-label="OLL navigation" data-i18n-aria-label="editor.navAria" data-i18n-params='{"set":"OLL"}' hidden>
             <button id="ollPrev" class="btn btn-outline-secondary" type="button" data-i18n="common.prev">&lsaquo; Prev</button>
             <button id="ollNext" class="btn btn-outline-secondary" type="button" data-i18n="common.next">Next &rsaquo;</button>
           </div>
