@@ -519,8 +519,9 @@ test('隠しバッジ：名前・説明が日本語・英語にそろい、空�
   assert.equal(T.badgeDesc(I('ja'), 'first'), 'titles.badge.first.desc');
   const all = {};
   T.BADGES.forEach((b) => (all[b.id] = 1));
-  assert.deepEqual(T.countOf(all), { n: 40, total: 40 });
-  assert.deepEqual(T.countOf({ [secrets[0].id]: 1, first: 1 }), { n: 1, total: 40 });
+  assert.deepEqual(T.countOf(all), { n: 40, total: 40, secret: 10 });
+  assert.deepEqual(T.countOf({ [secrets[0].id]: 1, first: 1 }), { n: 1, total: 40, secret: 1 });
+  assert.deepEqual(T.countOf({ first: 1 }), { n: 1, total: 40, secret: 0 });
 });
 
 test('隠しバッジの符号化：戻すと元の値になる。壊れた文字列は空', () => {

@@ -519,6 +519,12 @@ html.booting body {
   color: #f0702c;
 }
 /* NEW の印（記録のページのバッジの一覧・「バッジ n / 40」、アカウントメニューのリンク） */
+/* 「バッジ n / 40」の横の、取った隠しバッジの数「+k」（隠しバッジを取ったときの知らせと同じ紫） */
+.title-badge-secret-count {
+  margin-left: .3rem;
+  color: #7c3aed;
+  font-weight: 700;
+}
 .title-badge-new {
   display: inline-block;
   margin-left: .4rem;

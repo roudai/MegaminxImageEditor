@@ -1470,6 +1470,22 @@
   const newSince = T ? T.read().seenAt : 0;
   const PHONE = window.matchMedia('(max-width: 575.98px)');
   PHONE.addEventListener('change', () => renderTitles());
+  // 「バッジ n / 40」と、取った隠しバッジの「+k」（隠しバッジは分母に入れず、見つけたぶんをおまけとして添える。
+  // 1 つも無ければ出さない。読み上げは「隠しバッジ k」）
+  function badgeCount() {
+    const c = T.countOf(T.read().earned);
+    const nodes = [document.createTextNode(I.t('titles.badges', c))];
+    if (c.secret) {
+      const plus = el('span', 'title-badge-secret-count');
+      const label = I.t('titles.secretCount', { n: c.secret });
+      plus.title = label;
+      const mark = el('span', null, '+' + c.secret);
+      mark.setAttribute('aria-hidden', 'true');
+      plus.append(mark, el('span', 'visually-hidden', label));
+      nodes.push(plus);
+    }
+    return nodes;
+  }
   function renderTitles() {
     if (!T) return;
     const box = $('statsTitles');
@@ -1514,7 +1530,8 @@
       card.tabIndex = 0;
       card.setAttribute('aria-expanded', 'false');
       const unseenN = T.unseenCount();
-      const summary = el('span', 'stats-titles-badges', I.t('titles.badges', T.countOf(T.read().earned))); // 隠しバッジは数えない
+      const summary = el('span', 'stats-titles-badges');
+      summary.append(...badgeCount());
       if (unseenN) summary.append(el('span', 'title-badge-new', I.t('titles.newCount', { n: unseenN })));
       summary.append(el('span', 'stats-titles-chevron', '›'));
       card.append(summary);
@@ -1538,7 +1555,8 @@
     toggle.setAttribute('aria-expanded', String(view.badges));
     toggle.setAttribute('aria-controls', 'statsBadges');
     const unseen = T.unseenCount();
-    const count = el('span', 'stats-titles-count', I.t('titles.badges', T.countOf(T.read().earned))); // 隠しバッジは数えない
+    const count = el('span', 'stats-titles-count');
+    count.append(...badgeCount());
     if (unseen && !view.badges) count.append(el('span', 'title-badge-new', I.t('titles.newCount', { n: unseen })));
     toggle.append(
       count,

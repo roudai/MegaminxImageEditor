@@ -13,7 +13,7 @@
  *                                     表示名は i18n.js の titles.badge.<id>、条件の説明は titles.badge.<id>.desc
  *                                     隠しバッジ（group 'secret'、secret: true）は符号化した SECRET から作る（中身はコードに書かない。judgeRule）
  *   badgeName(I, id) / badgeDesc(I, id)  バッジの名前・説明（隠しバッジは SECRET の中の文。ほかは i18n.js の titles.badge.<id>）
- *   countOf(earned)                 { n, total }：「バッジ n / 40」の数（隠しバッジは数えない）
+ *   countOf(earned)                 { n, total, secret }：「バッジ n / 40」の数（隠しバッジは数えない）と、取った隠しバッジの数（secret。「+k」で添える）
  *   judgeRule(rule, data)           隠しバッジの条件の表で数えた数（tools/secret-badges.js・テスト用にも公開）
  *   encodeSecret(value) / decodeSecret(text)  隠しバッジのデータの符号化と戻し
  *   evaluate(data, earned)          まだ取っていない（earned に無い）バッジのうち、条件を満たしたものの id の配列
@@ -558,11 +558,15 @@
   }
   const badgeName = (I, id) => badgeText(I, id, 0);
   const badgeDesc = (I, id) => badgeText(I, id, 1);
-  // 「バッジ n / 40」の数（隠しバッジは数えない）
+  // 「バッジ n / 40」の数（隠しバッジは数えない。分母は全員同じ 40 のまま）と、取った隠しバッジの数（「+k」で添える）
   function countOf(earned) {
     const have = isObject(earned) ? earned : {};
     const list = BADGES.filter((b) => !b.secret);
-    return { n: list.filter((b) => have[b.id]).length, total: list.length };
+    return {
+      n: list.filter((b) => have[b.id]).length,
+      total: list.length,
+      secret: BADGES.filter((b) => b.secret && have[b.id]).length,
+    };
   }
   // 自分の手順（custom-algs）から、ケースごとの時刻（_at）を除いたもの
   const algsOf = (v) => (isObject(v) ? { pll: isObject(v.pll) ? v.pll : {}, oll: isObject(v.oll) ? v.oll : {} } : {});

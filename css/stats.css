@@ -1132,6 +1132,10 @@
   outline: none;
   box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .25);
 }
+/* スマホの小さな札の「バッジ n / 40」の行は flex の gap で間を取るので、「+k」の左の余白は付けない（バーの幅を残す） */
+.stats-titles-badges .title-badge-secret-count {
+  margin-left: 0;
+}
 .stats-titles-count {
   font-size: .85rem;
   font-weight: 600;
