@@ -77,7 +77,7 @@
         <ul>
           <li>「手順」に回転記号を入れると、画像に反映されます。下のボタンでも入れられます。</li>
           <li>手順の扱いは「この手順で揃う状態」（最初はこれ）「手順を回した状態」「色を直接指定」から選べます。</li>
-          <li>PLL・OLL の行でケースを選ぶと、その手順が入ります。「‹ 前へ」「次へ ›」で順に見られます。</li>
+          <li>「PLL | OLL」を切り替えて、グループとケースを選ぶと、その手順が入ります。「‹ 前へ」「次へ ›」で順に見られます。</li>
           <li>ケースを選んだまま手順を書き換えて「保存」すると、自分の手順になります（「この手順で揃う状態」のとき）。「既定に戻す」で元に戻ります。</li>
           <li>色や画像サイズを決めて、「ダウンロード」で PNG を保存します。</li>
         </ul>
@@ -100,7 +100,9 @@
           <li>「出題」を「苦手優先」にすると、遅いケースや解けなかったケースが出やすくなります。</li>
           <li>「ヒント」で手順の最初の 3 手を見られます。ヒントを見た回は練習中になります。</li>
           <li>解けなかったときは「解けなかった」、回し間違えたときは「中止」でやり直せます。スタート前なら「スキップ」で次のケースに進めます。</li>
-          <li>止めたあと、記録を残したくないときは「記録を取り消す」、目安以内でも揃っていなかったときは「練習中にする」を押します。</li>
+          <li>止めたあと、記録を残したくないときは「記録を取り消す」、目安以内でも揃っていなかったときは「練習中にする」を押します。「練習中にする」を押したあとは「習得済みに戻す」で戻せます。</li>
+          <li>タイマーの右上のボタンで、スクランブルとタイマーだけの画面（全画面）にできます。計測中はタイマーだけになります。× で元に戻ります。</li>
+          <li>「最近の記録」のケースを押すと、そのケースの画像・手順・最近のタイムを見られます（PLL・OLL）。</li>
           <li>LL は、OLL から完成まで（OLL と PLL）を通して解きます。OLL・PLL それぞれ、習得済みのものだけか、すべてから出すかを選べます（出てくる PLL は、登録した OLL の手順で解いたときのものです）。結果には OLL・PLL とスクランブルが出ます。習得状況は変わりません。</li>
           <li>ソルブは WCA と同じ形のスクランブルで計ります。スペースを長押しして、数字が緑になったら離すとスタートします。インスペクション（15 秒）も選べます。</li>
         </ul>
@@ -119,12 +121,14 @@
           <li>称号は、PLL と OLL を合わせて習得したケースの数で上がります。記録のページの上と、右上のアイコンのメニューに出ます。</li>
           <li>練習の回数や続けた日数、タイムなどでバッジがもらえます。記録のページで、称号の札の「バッジ」（スマホでは札）を押すと一覧が開きます。取ったバッジを押すと、称号の代わりに表示できます。</li>
           <li>タイムなど記録で決まるバッジは、記録を削除して条件を満たさなくなると外れます。</li>
+          <li>記録のページの「称号とバッジ」の「共有」で、称号の札を画像にして SNS に投稿できます（名前やアイコンなどアカウントの情報は入りません）。</li>
         </ul>
 
         <h2>保存とログイン</h2>
         <ul>
           <li>ログインしなくても、データはこのブラウザに保存されます。</li>
           <li>右上の「ログイン」から Google・Facebook・GitHub でログインすると、アカウントに保存され、ほかの端末でも使えます。</li>
+          <li>X などのアプリの中のブラウザではログインできないことがあります。そのときは Chrome や Safari で開いてください。</li>
           <li>アカウントにデータがあるときにログインすると、このブラウザの内容はアカウントのデータに置き換わります。</li>
           <li>ログアウトすると、このブラウザのデータを消します（アカウントには残ります）。</li>
           <li>保存できる記録には上限があり、超えると古いものから消えます（PLL・OLL それぞれ最新 10000 件、ケースごとの最近のタイムは各 10 回、ソルブ・LL はそれぞれ最新 5000 件）。詳しくは<a href="terms">利用規約</a>と<a href="privacy">プライバシーポリシー</a>をご覧ください。</li>
@@ -149,7 +153,7 @@
         <ul>
           <li>Type moves into the Algorithm box and the image updates. You can also use the buttons below it.</li>
           <li>Choose how the algorithm is used: "Solve with algorithm" (the default), "Apply algorithm", or "Set colors".</li>
-          <li>Pick a case in the PLL / OLL row to load its algorithm. Use "‹ Prev" and "Next ›" to step through cases.</li>
+          <li>Switch between "PLL | OLL", then pick a group and a case to load its algorithm. Use "‹ Prev" and "Next ›" to step through cases.</li>
           <li>Edit the algorithm of a selected case and click "Save" to make it your own ("Solve with algorithm" only). "Reset to default" switches back.</li>
           <li>Set the colors and image size, then click "Download" to save a PNG.</li>
         </ul>
@@ -172,7 +176,9 @@
           <li>With "Case order" set to "Weak cases first", slow and failed cases come up more often.</li>
           <li>"Hint" shows the first 3 moves. A solve where you used the hint counts as Learning.</li>
           <li>If you can't solve it, press "Couldn't solve"; if you made a mistake, press "Cancel" to try again. Before starting, "Skip" moves on to the next case.</li>
-          <li>After stopping, press "Discard" to discard the result, or "Mark as Learning" if you stopped within the target time but the case wasn't actually solved.</li>
+          <li>After stopping, press "Discard" to discard the result, or "Mark as Learning" if you stopped within the target time but the case wasn't actually solved. After "Mark as Learning", "Back to Learned" switches it back.</li>
+          <li>The button at the top right of the timer switches to a full-screen view with only the scramble and the timer. While timing, only the timer is shown. Press × to go back.</li>
+          <li>Click a case in "Recent results" to see its image, algorithm and recent times (PLL / OLL).</li>
           <li>LL goes from OLL all the way to solved (OLL, then PLL). For OLL and PLL, choose whether to get only learned cases or all cases (the PLL is the one you get after your OLL algorithm). The result shows the OLL, the PLL, and the scramble. Your progress doesn't change.</li>
           <li>Full solves use WCA-style scrambles. Hold Space until the time turns green, then release to start. Inspection (15 seconds) is optional.</li>
         </ul>
@@ -191,12 +197,14 @@
           <li>Your title goes up with the number of PLL and OLL cases you have learned. It is shown at the top of the Stats page and in the menu under your icon.</li>
           <li>You earn badges for practice, streaks, times and more. On the Stats page, click "Badges" on your title card (on phones, tap the card) to open the list. Click a badge you have earned to show it instead of your title.</li>
           <li>Badges based on your solves, such as time badges, are removed if they no longer qualify after you delete solves.</li>
+          <li>Press "Share" next to Titles and badges on the Stats page to post your title card as an image on social media (your name, icon and other account details are not included).</li>
         </ul>
 
         <h2>Saving and signing in</h2>
         <ul>
           <li>Without signing in, your data is saved in this browser.</li>
           <li>Sign in with Google, Facebook, or GitHub from "Sign in" at the top right to save to your account and use it on other devices.</li>
+          <li>Signing in may not work in the browser inside apps such as X. If so, open the site in Chrome or Safari.</li>
           <li>If your account already has data, signing in replaces what is in this browser with your account's data.</li>
           <li>Signing out clears the data in this browser (it stays in your account).</li>
           <li>There are limits on how much is kept; older records are removed first (the latest 10,000 each for PLL and OLL, 10 recent times per case, and the latest 5,000 each for full solves and LL). See the <a href="terms">Terms of Use</a> and <a href="privacy">Privacy Policy</a> for details.</li>

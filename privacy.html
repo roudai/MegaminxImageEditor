@@ -90,7 +90,7 @@
           <li>保存した自分の手順</li>
           <li>表示する言語</li>
           <li>練習の記録（解いたタイム・日時・ケース・判定、ソルブのスクランブルとペナルティ）と練習の設定</li>
-          <li>称号とバッジ（取ったバッジと日時、練習した回数・日数の累計）</li>
+          <li>称号とバッジ（取ったバッジと日時、称号の代わりに表示するバッジ、練習した回数・日数の累計）</li>
         </ul>
 
         <h2>3. 使い方</h2>
@@ -100,7 +100,7 @@
         <p>情報は Google が提供する Firebase（Authentication・Cloud Firestore）に保存します。法令に基づく場合を除き、第三者に提供・販売することはありません。保存した内容は本人だけが読み書きできるように設定しています。</p>
 
         <h2>5. ブラウザへの保存</h2>
-        <p>設定・習得状況・練習の記録などはお使いのブラウザ（localStorage）にも保存します。ブラウザのサイトデータを消すと削除されます。ログイン中にログアウトすると、このブラウザに保存した内容は言語の設定を除いて削除されます（アカウントには残ります）。</p>
+        <p>設定・習得状況・練習の記録などはお使いのブラウザ（localStorage など）にも保存します。ブラウザのサイトデータを消すと削除されます。ログイン中にログアウトすると、このブラウザに保存した内容は言語の設定を除いて削除されます（アカウントには残ります）。</p>
         <p>ログイン中は、ページを開いたときの表示をすばやく出すため、ログインしているアカウントの名前・メールアドレス・プロフィール写真の URL・ログイン方法もブラウザに保存します。これはログアウトすると削除されます。</p>
 
         <h2 id="delete-ja">6. データの削除</h2>
@@ -138,7 +138,7 @@
           <li>Algorithms you saved as your own</li>
           <li>Your display language</li>
           <li>Your practice records (solve times, dates, cases and results, plus full-solve scrambles and penalties) and practice settings</li>
-          <li>Titles and badges (the badges you earned and when, and your total practice count and days)</li>
+          <li>Titles and badges (the badges you earned and when, the badge you show instead of your title, and your total practice count and days)</li>
         </ul>
 
         <h2>3. How we use it</h2>
@@ -148,7 +148,7 @@
         <p>The information is stored in Firebase (Authentication and Cloud Firestore), provided by Google. We do not share or sell it to third parties except as required by law. Your saved data can be read and written only by you.</p>
 
         <h2>5. Storage in your browser</h2>
-        <p>Your settings, progress, practice records and so on are also stored in your browser (localStorage). They are removed when you clear this site's data in your browser. When you sign out, what is stored in your browser is removed, except for your language setting; it is still kept in your account.</p>
+        <p>Your settings, progress, practice records and so on are also stored in your browser (localStorage and similar storage). They are removed when you clear this site's data in your browser. When you sign out, what is stored in your browser is removed, except for your language setting; it is still kept in your account.</p>
         <p>While you are signed in, the name, email address, profile picture URL and sign-in method of your account are also stored in your browser so that pages can show your sign-in status quickly. They are removed when you sign out.</p>
 
         <h2 id="delete-en">6. Deleting your data</h2>
