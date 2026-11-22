@@ -7,8 +7,9 @@
 ## 前提（既存の仕組み）
 - 手順入力は `js/alg-input.js`。入力欄 `#alg` の値を `MegaminxState.applyAlg()` で計算し、
   `uface0..10` / `sface1..15` に書き込んで `imageChange()` で再描画する
-- 種類は `alg`（Algorithm to apply）/ `case`（Algorithm to solve case）/ `state`（Defines the puzzle state）
+- 種類は `case`（この手順で揃う状態）/ `alg`（手順を回した状態）/ `state`（色を直接指定）。画面の並びもこの順
   - 選び方：広い画面はラジオボタン（`input[name="algType"]`。値はこれが持つ）、スマホ（幅 576px 未満）はプルダウン `#algTypeSelect`（3 つ目だけ 2 行目に落ちて崩れるため）。プルダウンを変えると同じ値のラジオボタンを選んで `change` を投げ、ラジオボタンが変わるとプルダウンの表示をそろえる
+  - 初期値（ページを開いたとき）は先頭の `case`（この手順で揃う状態）。PLL・OLL のケースを選ぶと `case` になり、ケースの画像もこの形で作るので、それに合わせる（保存はしない。URL の `?alg=` で開いたときは `alg`、`?case=` は `case`）
 - 画像（`#editorPreview`）は下にスクロールしても画面の上に残す（`sticky-top`。VisualCubeEditor2 と同じ。設定を変えながら見られるように）。表示は画面の高さの 35% まで（描く大きさ・ダウンロードする PNG は画像サイズのまま）。入力欄までのスクロールで画像の下に隠れないよう、画像の高さを `scroll-padding-top` にする（`js/megaminx.js`）
 - 画像サイズ（`#imageSize`）：100〜上限。上限はページを開いたときの画面の幅の 80% を 100 単位に丸めたもの（最大 1000。パソコンは 1000、幅 390px のスマホは 300。開いたときに 1 回だけ決める）。入力欄の min・max もこれにする。確定したときに範囲に収め、空欄なら 200（上限が 200 より小さい画面では上限）。保存した設定を読み込むときも範囲に収める（`js/megaminx.js` の `clampImageSize`）。横の「リセット」で 200（上限が 200 より小さい画面では上限）に戻す
 - 記法は `megaminx-state.js` の先頭コメントのとおり（`U F R L BR BL DR DL DBR DBL B D y`、`'`、`2`、括弧）

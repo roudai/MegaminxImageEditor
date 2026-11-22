@@ -146,15 +146,16 @@
     <hr>
     <label class="form-label" for="alg" data-i18n="editor.algorithm">Algorithm</label>
     <!-- 手順の扱い：広い画面はラジオボタン、スマホ（幅 576px 未満）はプルダウン（3 つ目だけ 2 行目に落ちて崩れるため）。
-         値を持つのはラジオボタン。プルダウンはそれを切り替える（js/alg-input.js） -->
+         値を持つのはラジオボタン。プルダウンはそれを切り替える（js/alg-input.js）。
+         初期値は先頭の「この手順で揃う状態」（PLL・OLL のケースを選ぶとこれになり、ケースの画像はこの形で作るため） -->
     <div class="d-none d-sm-block">
       <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="algType" id="algTypeAlg" value="alg" checked>
-        <label class="form-check-label" for="algTypeAlg" data-i18n="editor.typeAlg">Apply algorithm</label>
+        <input class="form-check-input" type="radio" name="algType" id="algTypeCase" value="case" checked>
+        <label class="form-check-label" for="algTypeCase" data-i18n="editor.typeCase">Solve with algorithm</label>
       </div>
       <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="algType" id="algTypeCase" value="case">
-        <label class="form-check-label" for="algTypeCase" data-i18n="editor.typeCase">Solve with algorithm</label>
+        <input class="form-check-input" type="radio" name="algType" id="algTypeAlg" value="alg">
+        <label class="form-check-label" for="algTypeAlg" data-i18n="editor.typeAlg">Apply algorithm</label>
       </div>
       <div class="form-check form-check-inline">
         <input class="form-check-input" type="radio" name="algType" id="algTypeState" value="state">
@@ -162,8 +163,8 @@
       </div>
     </div>
     <select id="algTypeSelect" class="form-select d-sm-none" aria-label="How to use the algorithm" data-i18n-aria-label="editor.typeAria">
+      <option value="case" data-i18n="editor.typeCase" selected>Solve with algorithm</option>
       <option value="alg" data-i18n="editor.typeAlg">Apply algorithm</option>
-      <option value="case" data-i18n="editor.typeCase">Solve with algorithm</option>
       <option value="state" data-i18n="editor.typeState">Set colors</option>
     </select>
 
