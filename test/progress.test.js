@@ -83,6 +83,39 @@ test('displaySettings：PLL は OLL 配色のとき OLL を選ぶ前の配色、
   withStorage({}, () => assert.equal(P.displaySettings('pll').scheme.F, M.DEFAULT_SCHEME.F));
 });
 
+test('isInverseOf：手順をそのまま逆にしたスクランブルか（前後の U・括弧・書き方の違いを除く）', () => {
+  const alg = "R2 U2 R2' U R2 U2 R2'"; // F1+
+  assert.equal(P.isInverseOf("R2 U2' R2' U' R2 U2' R2'", alg), true);
+  assert.equal(P.isInverseOf("U R2 U2' R2' U' R2 U2' R2' U2", alg), true); // 前後の AUF は除く
+  assert.equal(P.isInverseOf("R2 U2' R2' U' R2 U2' R2'", '(U2) ' + alg), true); // 手順の括弧・頭の U
+  assert.equal(P.isInverseOf("R2 U'2 R'2 U' R2 U'2 R'2", alg), true); // U'2・R'2 は U2'・R2'
+  assert.equal(P.isInverseOf("R2' U2' R2 U' R2' U2' R2", alg), false); // 別の手順（F1+ の別のスクランブル）
+  assert.equal(P.isInverseOf("R U2 R2 U2' R2' U' R2 U2' R2' U2 R'", alg), false);
+  assert.equal(P.isInverseOf('U2', 'U2'), false); // U だけのものは比べない
+  assert.equal(P.isInverseOf('', alg), false);
+});
+
+test('practiceScrambles：逆の手順と短すぎるもの（PLL 10 手以下・OLL 7 手以下）を除き、どのケースにも残る', () => {
+  [['pll', require('../js/pll-data.js'), require('../js/pll-scrambles.js')], ['oll', require('../js/oll-data.js'), require('../js/oll-scrambles.js')]].forEach(([set, data, scrambles]) => {
+    data.forEach((c) => {
+      const list = scrambles[c.name] || [];
+      const used = P.practiceScrambles(set, list, c.alg);
+      assert.ok(used.length > 0, `${set} ${c.name}`);
+      used.forEach((s) => {
+        assert.equal(P.isInverseOf(s, c.alg), false, `${set} ${c.name}: ${s}`);
+        assert.ok(s.split(/\s+/).length >= P.SCRAMBLE_MIN_MOVES[set], `${set} ${c.name}: ${s}`);
+      });
+    });
+  });
+  // F1± の 7 手（既定の手順の逆と、R2 と R2' を入れ替えた形）は出さない
+  const pll = require('../js/pll-scrambles.js');
+  const f1 = require('../js/pll-data.js').find((c) => c.name === 'F1+');
+  assert.equal(P.practiceScrambles('pll', pll['F1+'], f1.alg).length, pll['F1+'].length - 2);
+  // 除くと残らないときは逆の手順だけを除き、それでも残らなければそのまま
+  assert.deepEqual(P.practiceScrambles('pll', ["R U R'", "R U' R'"], "R U R'"), ["R U R'"]);
+  assert.deepEqual(P.practiceScrambles('pll', ["R U' R'"], "R U R'"), ["R U' R'"]);
+});
+
 test('wrapAuf：前後に AUF を足し、もともと前後にある U とまとめる', () => {
   assert.equal(P.wrapAuf("R U R'", 0, 0), "R U R'");
   assert.equal(P.wrapAuf("R U R'", 1, 4), "U R U R' U'");

@@ -564,7 +564,7 @@
     const notInverse = last && last.inverse ? notSame.filter((c) => c.name !== last.inverse) : notSame;
     const candidates = notInverse.length ? notInverse : notSame;
     const c = forced ? forced : P.pickWeighted(candidates, weightFor(prefs.set));
-    const scrambles = SCRAMBLES[prefs.set][c.name] || [];
+    const scrambles = usableScrambles(prefs.set, SCRAMBLES[prefs.set][c.name], c.alg);
     // 前後にランダムな AUF（0〜4 回）を足して、同じスクランブルでも崩れ方（向き）が変わるようにする
     const base = scrambles[Math.floor(Math.random() * scrambles.length)] || '';
     const scramble = base ? P.wrapAuf(base, Math.floor(Math.random() * 5), Math.floor(Math.random() * 5)) : '';
@@ -572,6 +572,10 @@
     lastName = c.name;
     $('scramble').textContent = scramble;
   }
+
+  // スクランブルの候補から、今の手順（自分の手順があればそれ。DATA は CustomAlgs.merged 済み）をそのまま逆にしたものと、
+  // 短すぎるもの（PLL は 10 手以下、OLL は 7 手以下）を除く（解く手順がスクランブルから読めてしまうため。Progress.practiceScrambles）
+  const usableScrambles = (set, list, alg) => P.practiceScrambles(set, list, alg);
 
   // ---- LL の出題 ----
   // PLL のスクランブル（前に AUF）＋ AUF ＋ OLL のスクランブル（後に AUF）をつなぐ。PLL のスクランブルは上面の向きを変えないので、
@@ -587,7 +591,7 @@
   const LL_TIME_MS = 1500;
   let lastLl = null;
   function pickLl() {
-    const pllScrambles = Object.values(SCRAMBLES.pll).filter((list) => list.length);
+    const pllScrambles = DATA.pll.map((c) => usableScrambles('pll', SCRAMBLES.pll[c.name], c.alg)).filter((list) => list.length);
     const olls = DATA.oll.filter((c) => llMode('oll') === 'all' || P.statusOf('oll', c.name) === 'learned');
     if (!olls.length) return { reason: 'practice.llNoOll' };
     const learnedPll = new Set(DATA.pll.filter((c) => llMode('pll') === 'all' || P.statusOf('pll', c.name) === 'learned').map((c) => c.name));
@@ -596,7 +600,7 @@
     const until = performance.now() + LL_TIME_MS;
     while (performance.now() < until) {
       const oll = rand(choices);
-      const ollScrambles = SCRAMBLES.oll[oll.name] || [];
+      const ollScrambles = usableScrambles('oll', SCRAMBLES.oll[oll.name], oll.alg);
       if (!ollScrambles.length || !pllScrambles.length) continue;
       const scramble = llScramble(rand(rand(pllScrambles)), rand(ollScrambles));
       const after = window.CaseCheck.pllAfter(scramble, oll.alg, DATA.pll);
