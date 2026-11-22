@@ -16,6 +16,11 @@
   - JS が無効なら `booting` が付かないので、そのまま見える
 - 新しいページを作るときも、`<head>` に同じ script を入れる
 
+## スマホでの拡大
+- ダブルタップでの拡大は止める（`css/common.css` の `html { touch-action: manipulation; }`）。前へ・次へや手順のボタン、一覧のバッジなどを続けて押したときに拡大しないように。`touch-action` は祖先と重なって効くので、記録のページのグラフの `pan-y` / `none`・練習のタイマーの指定はそのまま効く
+- ピンチでの拡大は止めない（拡大して見たい人のため。iPhone の Safari は `user-scalable=no` を無視するので、viewport にも書かない）
+- iPhone では文字が 16px より小さい入力欄・プルダウンを押すと勝手に拡大するので、タッチの端末（`@media (pointer: coarse)`）では小さい欄も 16px にする：記録のページの並べ替え（スマホのとき）・ページ送りのプルダウン（`css/stats.css`）、ログインできなかったときの URL の欄（`.account-url-field`。`css/common.css`）。新しく小さい欄（`-sm` など）を作るときも同じようにする
+
 ## ローカルでの確認
 - `node tools/serve.js`（ポートを変えるなら `node tools/serve.js 8080`）→ `http://localhost:8765/`
   - GitHub Pages と同じく `.html` なしの URL で各ページを返す（`python3 -m http.server` は `/pll` を返せないので使わない）

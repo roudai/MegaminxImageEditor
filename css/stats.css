@@ -613,6 +613,18 @@
   border-color: #dee2e6;
   box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .35);
 }
+/* iPhone では 16px より小さいプルダウンを押すと勝手に拡大するので、タッチの端末では 16px にする（高さは行の高さを詰めて保つ） */
+@media (pointer: coarse) {
+  .stats-page-select {
+    font-size: 16px;
+  }
+}
+@media (max-width: 575.98px) and (pointer: coarse) {
+  .stats-sort-select {
+    font-size: 16px;
+    line-height: 1.2;
+  }
+}
 /* スマホ：前へ・次へは矢印だけ（プルダウンと 1 行に収める） */
 @media (max-width: 575.98px) {
   .stats-page-step {
