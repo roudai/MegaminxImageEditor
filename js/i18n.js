@@ -353,7 +353,7 @@
       'titles.empty': 'Learn a case to earn a title',
       'titles.signInPrompt': 'Sign in to collect titles and badges',
       'titles.signInNote':
-        'Earn titles as you learn cases, plus badges for practice, streaks and full solves. Your records are saved to your account, so you can pick up where you left off on any device.',
+        'Earn titles as you learn cases, and badges for practice, streaks, times and more. Your progress and practice records are saved to your account, so you can pick up where you left off on any device.',
       'titles.signInButton': 'Sign in',
       'titles.count': '{n} / {total}',
       'titles.breakdown': 'PLL {pll}/{pllTotal} · OLL {oll}/{ollTotal}',
@@ -783,7 +783,7 @@
       'titles.empty': 'ケースを習得すると称号がもらえます',
       'titles.signInPrompt': 'ログインして、称号とバッジを集めよう',
       'titles.signInNote':
-        'ケースを習得するほど上がる称号と、練習の回数・続けた日数・ソルブの記録でもらえるバッジ。記録はアカウントに保存されるので、ほかの端末でも続きから使えます。',
+        'ケースを習得するほど称号が上がり、練習の回数や続けた日数、タイムなどでバッジがもらえます。習得状況や練習の記録はアカウントに保存されるので、ほかの端末でも続きから使えます。',
       'titles.signInButton': 'ログイン',
       'titles.count': '{n} / {total}',
       'titles.breakdown': 'PLL {pll}/{pllTotal} · OLL {oll}/{ollTotal}',
