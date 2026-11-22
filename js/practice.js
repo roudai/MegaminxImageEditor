@@ -1751,7 +1751,61 @@
   }, 30 * 1000);
   keepAwake();
 
+  // ---- 同期で読み直したときは、同じ問題を出す ----
+  // ログイン中にページを開くと、別の端末の記録などがあれば cloud-sync.js がクラウドの内容を反映するためにページを読み直す
+  // （開いて 1 秒ほどあと）。そのままだとスクランブルが作り直されて急に変わるので、ページを離れるときに今の問題を
+  // sessionStorage に残し、同期による読み直し（cloud-sync.js が残す印。30 秒以内）のときだけ、それを出す。
+  // 種類が違う・ケースが今の対象から外れた（同期で習得状況が変わったなど）ときは新しい問題にする。手で読み直したときは今までどおり新しい問題
+  const QUESTION_KEY = 'megaminx-image-editor:practice-question';
+  const SYNC_RELOAD_KEY = 'megaminx-image-editor:sync-reload';
+  window.addEventListener('pagehide', () => {
+    try {
+      if (!current) sessionStorage.removeItem(QUESTION_KEY);
+      else {
+        const q = { set: current.set, scramble: current.scramble };
+        if (current.c) q.name = current.c.name;
+        if (current.oll) Object.assign(q, { oll: current.oll.name, plls: current.plls.map((x) => x.name) });
+        sessionStorage.setItem(QUESTION_KEY, JSON.stringify(q));
+      }
+    } catch (e) {
+      // 残せなくても続ける
+    }
+  });
+  function restoreQuestion() {
+    let q = null;
+    try {
+      const at = Number(sessionStorage.getItem(SYNC_RELOAD_KEY));
+      sessionStorage.removeItem(SYNC_RELOAD_KEY);
+      if (at && Date.now() - at < 30 * 1000) q = JSON.parse(sessionStorage.getItem(QUESTION_KEY));
+    } catch (e) {
+      q = null;
+    }
+    if (!q || !current || q.set !== prefs.set || !q.scramble) return;
+    if (isFull()) {
+      if (!Array.isArray(q.scramble) && typeof q.scramble !== 'string') return;
+      current = { set: 'full', scramble: q.scramble };
+      window.WcaScramble.render($('scramble'), current.scramble);
+      return;
+    }
+    if (isLl()) {
+      const oll = DATA.oll.find((c) => c.name === q.oll);
+      const plls = (q.plls || []).map((name) => DATA.pll.find((c) => c.name === name));
+      const allowed = (set, c) => llMode(set) === 'all' || P.statusOf(set, c.name) === 'learned';
+      if (!oll || !plls.length || plls.some((x) => !x) || !allowed('oll', oll) || !plls.every((x) => allowed('pll', x))) return;
+      current = { set: 'll', oll: oll, plls: plls, scramble: q.scramble };
+      lastLl = oll.name;
+      $('scramble').textContent = q.scramble;
+      return;
+    }
+    const c = pool().find((x) => x.name === q.name);
+    if (!c) return;
+    current = { set: prefs.set, c: c, scramble: q.scramble };
+    lastName = c.name;
+    $('scramble').textContent = q.scramble;
+  }
+
   renderSettings();
   next();
+  restoreQuestion();
   renderHistory();
 })();
