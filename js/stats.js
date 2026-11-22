@@ -1486,6 +1486,85 @@
     }
     return nodes;
   }
+  // ---- 称号の札の共有（js/share-card.js）----
+  // スマホなどは共有シート（Web Share API）に画像と文を渡す。使えない環境（パソコンの一部）は、札の下に画像・「画像を保存」・
+  // 「X に投稿」（投稿の画面を文と URL 入りで開く）を出す。画像は押す前に描いておく（押してから時間がかかると、
+  // ブラウザが「押したときの操作」とみなさず共有シートを開けないことがあるため）
+  const SC = window.ShareCard;
+  let sharePrepared = null; // { file, canvas }（の Promise）
+  let shareFallback = null; // { image, text, url }：共有シートが使えないときに出す中身
+  function prepareShare() {
+    sharePrepared = SC.draw(I).then(
+      (canvas) =>
+        new Promise((resolve) => {
+          canvas.toBlob((blob) => {
+            resolve({ canvas: canvas, file: blob ? new File([blob], 'megaminx-title.png', { type: 'image/png' }) : null });
+          }, 'image/png');
+        })
+    );
+  }
+  async function shareTitle() {
+    if (!sharePrepared) prepareShare();
+    const { canvas, file } = await sharePrepared;
+    const text = SC.text(I);
+    const url = SC.siteUrl();
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], text: text + '\n' + url });
+        return;
+      } catch (e) {
+        if (e && e.name === 'AbortError') return; // 共有シートを閉じた
+      }
+    }
+    shareFallback = { image: canvas.toDataURL('image/png'), text: text, url: url };
+    renderTitles();
+  }
+  function renderShare(show) {
+    const slot = $('statsTitleShare');
+    if (!slot) return null;
+    slot.replaceChildren();
+    if (!show || !SC || !SC.available()) {
+      sharePrepared = null;
+      shareFallback = null;
+      return null;
+    }
+    const button = el('button', 'btn btn-sm btn-outline-secondary stats-share-button');
+    button.type = 'button';
+    button.innerHTML =
+      '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M8 1.5v8.5M4.8 4.6 8 1.5l3.2 3.1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 8.5v5h10v-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    const label = el('span');
+    I.set(label, 'share.button');
+    button.append(label);
+    button.addEventListener('click', shareTitle);
+    slot.append(button);
+    prepareShare(); // 札の中身が変わるたびに描き直す
+    if (!shareFallback) return null;
+    const boxEl = el('div', 'stats-share-box');
+    const img = el('img');
+    img.src = shareFallback.image;
+    I.set(img, 'share.imageAlt', null, 'alt');
+    const actions = el('div', 'stats-share-actions');
+    const save = el('a', 'btn btn-sm btn-outline-secondary');
+    save.href = shareFallback.image;
+    save.download = 'megaminx-title.png';
+    I.set(save, 'share.save');
+    const post = el('a', 'btn btn-sm btn-outline-secondary');
+    post.href = 'https://x.com/intent/post?text=' + encodeURIComponent(shareFallback.text) + '&url=' + encodeURIComponent(shareFallback.url);
+    post.target = '_blank';
+    post.rel = 'noopener';
+    I.set(post, 'share.postX');
+    const close = el('button', 'btn btn-sm btn-link text-secondary');
+    close.type = 'button';
+    I.set(close, 'share.close');
+    close.addEventListener('click', () => {
+      shareFallback = null;
+      renderTitles();
+    });
+    actions.append(save, post, close);
+    boxEl.append(img, actions);
+    return boxEl;
+  }
+
   function renderTitles() {
     if (!T) return;
     const box = $('statsTitles');
@@ -1514,6 +1593,7 @@
         });
         card.append(button);
       }
+      renderShare(false);
       box.replaceChildren(card);
       return;
     }
@@ -1546,6 +1626,7 @@
         e.preventDefault();
         open();
       });
+      renderShare(false);
       box.replaceChildren(card);
       return;
     }
@@ -1580,6 +1661,8 @@
     card.append(foot);
     head.append(card);
     box.replaceChildren(head);
+    const shareBox = renderShare(true);
+    if (shareBox) box.append(shareBox);
     if (view.badges) {
       const list = T.renderBadges(I, renderTitles, { newSince: newSince });
       T.markSeen();

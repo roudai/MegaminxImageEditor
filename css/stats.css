@@ -953,8 +953,34 @@
   border: 0;
   background: none;
 }
-.stats-titles.compact .stats-title {
+.stats-titles.compact .stats-panel-head {
   display: none;
+}
+/* 札の共有（見出しの行の右端）と、共有シートが使えない環境の画像・保存・X に投稿 */
+.stats-titles-share {
+  margin-left: auto;
+}
+.stats-share-button {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+}
+.stats-share-box {
+  display: grid;
+  gap: .5rem;
+  max-width: 600px;
+  margin-top: .75rem;
+}
+.stats-share-box img {
+  width: 100%;
+  height: auto;
+  border: 1px solid #e9ecef;
+  border-radius: .6rem;
+}
+.stats-share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
 }
 /* 1 段目：称号（長ければ折り返す）と連続の日数、2 段目：バーとバッジ。バッジの欄が広くても称号の幅を取られないよう、
    連続の日数の列（3 列目）だけを 1 段目と共有する */

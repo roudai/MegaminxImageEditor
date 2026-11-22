@@ -66,7 +66,11 @@
     <!-- 称号とバッジ（js/stats.js・js/titles.js）。PLL・OLL・ソルブや期間に関係なく同じなので、切り替えの下のいちばん上に置く。
          ふだんは 1〜2 行の小さな札（.compact。押すと開く）、開くと大きな札とバッジの一覧 -->
     <section id="titles" class="stats-panel stats-titles mb-3">
-      <h2 class="stats-title" data-i18n="stats.titles">Titles and badges</h2>
+      <!-- 見出しの行：右端に札の「共有」（ログイン中で称号があるときだけ。js/stats.js・js/share-card.js） -->
+      <div class="stats-panel-head">
+        <h2 class="stats-title" data-i18n="stats.titles">Titles and badges</h2>
+        <div id="statsTitleShare" class="stats-titles-share"></div>
+      </div>
       <div id="statsTitles"></div>
     </section>
 
@@ -121,6 +125,7 @@
   <script type="text/javascript" src="js/progress.js"></script>
   <script type="text/javascript" src="js/wca-scramble.js"></script>
   <script type="text/javascript" src="js/titles.js"></script>
+  <script type="text/javascript" src="js/share-card.js"></script>
   <script type="text/javascript" src="js/stats.js"></script>
   <script type="text/javascript" src="js/firebase-config.js"></script>
   <script type="module" src="js/cloud-sync.js"></script>
