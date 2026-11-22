@@ -417,8 +417,8 @@
       b.setAttribute('aria-pressed', String(on));
     });
     $('groupClear').disabled = !chosen.size;
-    const total = scoped().length;
-    I.set($('caseCount'), 'list.count', { n: total });
+    // 見出しの横の数は全ケースの数で固定（範囲ごとの数は No Dot / Dot / All のボタンに出ているので繰り返さない）
+    I.set($('caseCount'), 'list.count', { n: DATA.length });
     // 今の範囲・絞り込みのまま練習ページを開くボタン
     const practice = $('practiceLink');
     if (practice) {
@@ -435,7 +435,7 @@
       I.set(zip, 'list.download');
     }
     if (zipConfirming) renderZipConfirm(); // 範囲（OLL の No Dot / Dot）を変えたら件数を直す
-    zip.title = I.t('list.downloadTitle', { n: total });
+    zip.title = I.t('list.downloadTitle', { n: scoped().length }); // ZIP は選んでいる範囲だけなので、範囲の数
     document.querySelectorAll('#progressBox [data-filter]').forEach((b) => {
       const on = b.dataset.filter === filter;
       b.classList.toggle('btn-secondary', on);

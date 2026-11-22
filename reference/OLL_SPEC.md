@@ -64,6 +64,7 @@ OLL  [Group ▼] [Case ▼] [‹ Prev][Next ›]
 - 習得状況の印・進み具合・絞り込みも PLL 一覧と同じ（`reference/PLL_SPEC.md`。保存は PLL と別）
 - **No Dot / Dot の切り替え**：上部のセグメント型の切り替え（`No Dot 178` / `Dot 81` / `All 259`）で表示する範囲を選ぶ（既定は No Dot）
   - No Dot は `algset` が `ND` のケース（グループ 1〜37）、Dot は `D` のケース（`1C`・38〜53）
+  - 見出しの横のケース数は、範囲に関係なく全ケースの数（`259 ケース`）で固定する（範囲ごとの数はこの切り替えに出ているので繰り返さない）。ZIP でダウンロードのボタンの説明の数は、選んでいる範囲の数
   - 件数・進捗バー・状態の絞り込み・グループのボタン・一括ダウンロードは、選んだ範囲だけを対象にする
     （ダウンロードのボタン名は `Download No Dot OLL (.zip)` などに変わり、ファイル名は `megaminx-oll-nd.zip` / `megaminx-oll-d.zip`。All は `megaminx-oll.zip`）
   - 習得状況の保存はケースごとなので、範囲を切り替えても印は共通。選んだ範囲は `megaminx-image-editor:list-filter` の `ollScope` に保存する
