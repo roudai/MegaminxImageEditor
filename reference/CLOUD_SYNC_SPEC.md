@@ -7,6 +7,7 @@
 ## 構成
 - サイトは GitHub Pages（静的ページ）のまま。Firebase（Authentication + Firestore）をブラウザの JS から直接使う（SDK は gstatic の CDN から ES モジュールで読み込む。バージョン固定）
 - ログイン：Google / Facebook / GitHub（ポップアップ。メニューもこの順）
+  - ポップアップが開けない・この環境ではログインできない（`auth/popup-blocked`・`auth/operation-not-supported-in-this-environment`・`auth/web-storage-unsupported`）ときは、「ログインできませんでした」の代わりに「アプリの中のブラウザではログインできないことがあります。Chrome や Safari で開いてください。」と「ページの URL をコピー」のボタンをメニューに出す（独自の WebView のアプリ内ブラウザ向け。コピーできない環境では URL を選んだ状態の欄を出す）。端末の判定で最初から案内することはしない（Android の X のアプリの中のブラウザは中身が Chrome で、Google でもログインでき、Chrome と同じアカウント・保存になるため）
 - 保存先：Firestore の `users/{uid}/apps/megaminx-image-editor` の1文書 `{ json, savedAt }`。`json` は下の snapshot を JSON にした文字列
   - PLL・OLL の練習の記録（`practice.log`。各最大 10000 件、約 90 万文字ずつ）は 1 文書（50 万文字未満）に入らないので、種類ごとの文書 `users/{uid}/apps/megaminx-image-editor-log-pll`・`-log-oll`（同じ `{ json, savedAt }`）に分ける（`Store.toCloud`・`fromCloud`）
     - 種類ごとの文書の `json` は `{ rows: [[日時, ケース, タイム（null＝解けなかった）, 判定（0 未習得・1 練習中・2 習得済み）, 1（ヒントを見たときだけ）], …] }`（新しい順。1 件 約 30 文字で 10000 件 約 31 万文字。48 万文字を超えるときは古い記録を捨てる）

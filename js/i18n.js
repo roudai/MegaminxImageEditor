@@ -471,6 +471,9 @@
       'titles.badge.ao100Sub60': 'Rock-Solid Sub-1',
       'titles.badge.ao100Sub60.desc': 'Full solve ao100 under 1:00',
       'account.signInFailed': 'Could not sign in. Please try again.',
+      'account.openInBrowser': "Signing in may not work in an app's built-in browser. Please open this page in Chrome or Safari.",
+      'account.copyUrl': 'Copy page URL',
+      'account.urlCopied': 'Copied',
       'account.localReplaced': 'Your account data has been loaded. Anything you did in this browser before signing in has been replaced.',
       'account.signedOutCleared': 'Signed out. The data in this browser has been cleared (it is still in your account).',
       'account.signedOutKept':
@@ -906,6 +909,9 @@
       'titles.badge.ao100Sub60': '揺るがないサブ 1',
       'titles.badge.ao100Sub60.desc': 'ソルブの ao100 で 1:00 を切る',
       'account.signInFailed': 'ログインできませんでした。もう一度お試しください。',
+      'account.openInBrowser': 'アプリの中のブラウザではログインできないことがあります。Chrome や Safari で開いてください。',
+      'account.copyUrl': 'ページの URL をコピー',
+      'account.urlCopied': 'コピーしました',
       'account.localReplaced': 'アカウントのデータを読み込みました。ログインする前にこのブラウザで使った内容は、アカウントのデータに置き換えました。',
       'account.signedOutCleared': 'ログアウトしました。このブラウザのデータは消しました（アカウントには残っています）。',
       'account.signedOutKept':
