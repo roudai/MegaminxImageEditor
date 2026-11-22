@@ -71,27 +71,26 @@
     return [label, input, swatch];
   }
 
-  function section(title, defs, perRow) {
+  // 1 つの row に並べ、1 行の数は Bootstrap の row-cols で決める（mobile：スマホ（幅 768px 未満）、wide：それより広い画面）
+  function section(title, defs, mobile, wide) {
     const heading = document.createElement('div');
     I.set(heading, title);
-    const nodes = [heading];
-    for (let i = 0; i < defs.length; i += perRow) {
-      const row = document.createElement('div');
-      row.className = 'row';
-      defs.slice(i, i + perRow).forEach((def) => {
-        const col = document.createElement('div');
-        col.className = 'col-12 col-md-2';
-        col.append(...sticker(def));
-        row.append(col);
-      });
-      nodes.push(row);
-    }
-    return nodes;
+    const row = document.createElement('div');
+    row.className = `row row-cols-${mobile} row-cols-md-${wide}`;
+    defs.forEach((def) => {
+      const col = document.createElement('div');
+      col.className = 'col';
+      col.append(...sticker(def));
+      row.append(col);
+    });
+    return [heading, row];
   }
 
   const editor = $('stateEditor');
   const center = sticker({ id: 'uface0', key: 'state.center' });
-  editor.append(...center, ...section('state.uFace', U_STICKERS, 5), ...section('state.sideFace', SIDE_STICKERS, 6));
+  // U 面：スマホは 2 列（1 行に 1 面ぶんの辺と角）、広い画面は 5 列。
+  // 側面：スマホは 3 列（1 行に 1 面ぶんの左・中・右。配色の設定と同じ 3 列）、広い画面は 6 列（2 面ぶん）
+  editor.append(...center, ...section('state.uFace', U_STICKERS, 2, 5), ...section('state.sideFace', SIDE_STICKERS, 3, 6));
 
   // ---- パレット（全ステッカーで1つを共有）----
   let current = null; // 開いているステッカー
