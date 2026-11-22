@@ -8,6 +8,14 @@
 - 古い URL（`pll.html`・`index.html` など）で開いても同じページが出る。そのときは `js/navbar.js` が読み込み直さずにアドレスバーを `.html` なしの URL に書き換える
 - ページと同じ名前のフォルダをルートに置かない（`/pll` が `pll/` フォルダの方を見てしまうため）。元データは `data/pll/`・`data/oll/` に置く（ページからは読まない。`tools/build-*-data.js` が `js/` のファイルを作るときに使う）
 
+## ページを開いたときのちらつきを防ぐ
+- どのページも JS を `<body>` の最後で順に読み込むので、JS を取りに行くあいだに、英語の仮の文字（`data-i18n` の中身）や空の一覧が一度描かれてちらつく（公開先では JS ごとに通信があるので目立つ）
+- そこで、JS で中身を作り終えるまでページを見せない：各ページの `<head>`（`css/common.css` の前）の短い script が `<html>` に `booting` を付け、`DOMContentLoaded`（body の最後のスクリプトと `cloud-sync.js` の最初の同期の部分を実行したあと。Firebase の SDK は `import()` で後から読むので待たない）で外す。極端に遅いときも 3 秒で外す
+  - `css/common.css` の `html.booting body { visibility: hidden }`。`display: none` にしないのは、隠している間もレイアウトを計算して、記録のページのグラフの幅などを正しく測れるようにするため
+  - ページを移るときは、見えない間は前のページが残る（ブラウザの paint holding）ので、白い画面もはさまらない
+  - JS が無効なら `booting` が付かないので、そのまま見える
+- 新しいページを作るときも、`<head>` に同じ script を入れる
+
 ## ローカルでの確認
 - `node tools/serve.js`（ポートを変えるなら `node tools/serve.js 8080`）→ `http://localhost:8765/`
   - GitHub Pages と同じく `.html` なしの URL で各ページを返す（`python3 -m http.server` は `/pll` を返せないので使わない）
