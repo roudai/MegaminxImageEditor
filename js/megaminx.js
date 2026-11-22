@@ -35,6 +35,8 @@
   });
 
   function render() {
+    // 背景の色とリセットは「色を指定」のときだけ出す（index.html の #bgColorBox）
+    $('bgColorBox').hidden = $('bg').value !== 'n';
     D.draw(canvas, ucolor, scolor, drawOptions());
   }
 

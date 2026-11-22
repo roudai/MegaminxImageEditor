@@ -730,7 +730,6 @@
   const COLUMNS = [
     { key: 'image', label: '', sortable: false },
     { key: 'name', label: 'stats.col.case' },
-    { key: 'group', label: 'stats.col.group' },
     { key: 'status', label: 'stats.col.status' },
     { key: 'weak', label: 'stats.col.recent', title: 'stats.recentTitle', num: true },
     { key: 'count', label: 'stats.col.count', num: true },
@@ -822,7 +821,7 @@
   function renderTable(log) {
     const head = el('tr');
     COLUMNS.forEach((col) => {
-      const th = el('th', (col.num ? 'text-end ' : '') + 'stats-col-' + col.key); // stats-col-group はスマホで隠す
+      const th = el('th', (col.num ? 'text-end ' : '') + 'stats-col-' + col.key);
       if (col.sortable !== false) {
         const b = el('button', 'stats-sort');
         b.type = 'button';
@@ -839,7 +838,8 @@
     $('statsHead').replaceChildren(head);
 
     const list = sortRows(rows(log));
-    $('statsEmpty').hidden = list.length > 0;
+    // 期間内に記録が無ければ表のパネルごと隠す（「まだ記録がありません。」はグラフの側だけに出す）
+    $('statsTablePanel').hidden = !list.length;
     const display = P.displaySettings(view.set);
     const ratio = window.devicePixelRatio || 1;
     $('statsBody').replaceChildren(
@@ -874,10 +874,10 @@
           recentTd.classList.add('stats-few');
           I.set(recentTd, 'stats.fewTitle', { n: rc.attempts }, 'title');
         }
-        const count = r.dnf ? `${r.count} (${r.dnf} DNF)` : String(r.count);
+        // 回数は解けなかった回も含めた数だけ（DNF は「最近」の列に出すので、ここでくり返さない）
+        const count = String(r.count);
         const date = `${last.getMonth() + 1}/${last.getDate()}`;
         const cells = [
-          el('td', 'text-muted stats-col-group', r.group),
           statusTd,
           recentTd,
           el('td', 'text-end stats-col-count cell-wide', count),
@@ -886,7 +886,7 @@
           el('td', 'text-end text-muted cell-wide', date),
         ];
         // スマホ：回数・ベスト・平均は 2 段目に 1 行の小さい字でまとめ、最後に練習した日はその右端に置く
-        // （上の 4 つの列は隠す。css/stats.css）。解けなかった回数は 1 段目の「最近」の DNF に任せる（1 行に収めるため）
+        // （上の 4 つの列は隠す。css/stats.css）。解けなかった回数はパソコンと同じく「最近」の DNF に任せる
         const meta = el('td', 'cell-meta');
         const countItem = el('span', 'stats-meta-item');
         I.set(countItem, 'stats.countShort', { n: r.count });
@@ -1219,7 +1219,7 @@
     });
     head.append(el('th', 'stats-shrink'));
     $('statsHead').replaceChildren(head);
-    $('statsEmpty').hidden = recs.length > 0;
+    $('statsTablePanel').hidden = !recs.length; // 期間内に記録が無ければ表のパネルごと隠す（削除のバーも出さない）
     renderDeleteBar(recs, shown);
     renderPager(recs.length);
     // その時点の平均は期間に関係なく、それまでの記録から出す
@@ -1313,7 +1313,7 @@
     });
     head.append(el('th'));
     $('statsHead').replaceChildren(head);
-    $('statsEmpty').hidden = recs.length > 0;
+    $('statsTablePanel').hidden = !recs.length; // 期間内に記録が無ければ表のパネルごと隠す（削除のバーも出さない）
     renderDeleteBar(recs, shown);
     renderPager(recs.length);
     $('statsBody').replaceChildren(

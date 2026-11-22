@@ -167,11 +167,10 @@
       <option value="state" data-i18n="editor.typeState">Set colors</option>
     </select>
 
+    <!-- PLL・OLL の選択。見えるラベル（PLL / OLL）は置かない（プルダウンの初期表示「-- PLL --」「-- OLL --」がラベルを兼ねる。
+         読み上げの名前は各プルダウンの aria-label「PLL group」など） -->
     <div id="algEditor">
       <div class="row g-2 mt-1 align-items-center">
-        <div class="col-12 col-md-auto">
-          <label class="col-form-label" for="pllGroup">PLL</label>
-        </div>
         <div class="col-12 col-md-4">
           <select id="pllGroup" class="form-select" aria-label="PLL group" data-i18n-aria-label="editor.groupAria" data-i18n-params='{"set":"PLL"}'></select>
         </div>
@@ -186,9 +185,6 @@
         </div>
       </div>
       <div class="row g-2 mt-0 align-items-center">
-        <div class="col-12 col-md-auto">
-          <label class="col-form-label" for="ollGroup">OLL</label>
-        </div>
         <div class="col-12 col-md-4">
           <select id="ollGroup" class="form-select" aria-label="OLL group" data-i18n-aria-label="editor.groupAria" data-i18n-params='{"set":"OLL"}'></select>
         </div>
@@ -250,20 +246,22 @@
           <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('border').value = '#000000'; imageChange();" data-i18n="common.reset">Reset</button>
         </div>
       </div>
+      <!-- 背景：透明 / 色を指定 の 1 つにまとめ、色を指定のときだけ色とリセットを出す（js/megaminx.js の render）。
+           保存の形は今までどおり bg（y：透明 / n：色）と bgColor -->
       <div class="col-12 col-md-6">
-        <label class="form-label" for="bgColor" data-i18n="editor.bgColor">Background color</label>
-        <div class="input-group">
-          <input id="bgColor" class="form-control" type="color" value="#ffffff" oninput="document.getElementById('bg').value = 'n'; imageChange();">
-          <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('bgColor').value = '#ffffff'; imageChange();" data-i18n="common.reset">Reset</button>
+        <label class="form-label" for="bg" data-i18n="editor.background">Background</label>
+        <div class="d-flex gap-2">
+          <select id="bg" class="form-select w-auto" onchange="imageChange();">
+            <option value="y" selected data-i18n="editor.transparent">Transparent</option>
+            <option value="n" data-i18n="editor.opaque">Color</option>
+          </select>
+          <div id="bgColorBox" class="input-group" hidden>
+            <input id="bgColor" class="form-control" type="color" value="#ffffff" oninput="imageChange();" data-i18n-aria-label="editor.bgColor" aria-label="Background color">
+            <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('bgColor').value = '#ffffff'; imageChange();" data-i18n="common.reset">Reset</button>
+          </div>
         </div>
       </div>
     </div>
-
-    <label class="form-label" for="bg" data-i18n="editor.background">Background</label>
-    <SELECT id="bg" class="form-select" onchange="imageChange();">
-      <OPTION value="y" selected data-i18n="editor.transparent">Transparent</OPTION>
-      <OPTION value="n" data-i18n="editor.opaque">Opaque</OPTION>
-    </SELECT>
   </div>
   <script type="text/javascript" src="js/store.js"></script>
   <script type="text/javascript" src="js/i18n.js"></script>
