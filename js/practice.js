@@ -191,7 +191,7 @@
   TOUCH.addEventListener('change', () => renderSettings());
 
   function renderSettings() {
-    // 種類と範囲は見出しの横に置く（設定の行を1行に収めるため）
+    // 種類と範囲は見出しの横に置く（記録のページの種類と同じ場所。設定の行を 1 行に収めるため）
     const setBox = $('practiceSetBox');
     setBox.replaceChildren();
     setBox.append(
@@ -206,8 +206,8 @@
         (v) => changeSettings({ set: v })
       )
     );
-    // OLL の範囲：広い画面は見出しの横、スマホは設定の中の「範囲」の欄（下の box）。
-    // スマホで見出しの横に出すと、OLL のときだけ次の行に落ちて設定・タイマーが下にずれるため（css/practice.css で出し分け）
+    // OLL の範囲：768px 以上は種類の右、768px 未満は設定の中の「範囲」の欄（下の box）。
+    // 狭い画面で種類の右に出すと、OLL のときだけ次の行に落ちて設定・タイマーが下にずれるため（css/practice.css で出し分け）
     if (prefs.set === 'oll') {
       const head = scopeSegment();
       head.classList.add('practice-scope-head');

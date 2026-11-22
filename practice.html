@@ -41,7 +41,7 @@
       </div>
     </nav>
 
-    <div class="page-head d-flex flex-wrap align-items-center gap-3 mt-3 mb-3">
+    <div class="page-head mt-3 mb-3">
       <!-- 練習と記録の切り替え（見出し）。今のページは h1、もう一方は薄い字のリンク（両ページとも「練習 → 記録」の順。css/common.css）。
            ナビバーのリンクが並ぶ広い画面（768px 以上）ではリンクを隠し、今のページの見出しだけにする。
            リンクには今の種類（?set=）を js/{practice,stats}.js が入れる -->
@@ -49,8 +49,8 @@
         <h1 class="h4 m-0" data-i18n="practice.heading" aria-current="page">Practice</h1>
         <a href="stats" id="pageSwitchLink" class="h4 m-0 page-switch-link" data-i18n="stats.heading">Stats</a>
       </div>
-      <!-- 種類（PLL / OLL / LL / ソルブ）と範囲（OLL・LL の No Dot / Dot / All）。js/practice.js が作る。
-           箱は display: contents（css/practice.css）で、中身を見出しの行に直接並べる -->
+      <!-- 種類（PLL / OLL / LL / ソルブ。記録のページの種類と同じ場所）と、768px 以上だけ OLL の範囲（No Dot / Dot / すべて）。
+           js/practice.js が作る。箱は display: contents（css/practice.css）で、中身を見出しの行に直接並べる -->
       <div id="practiceSetBox" class="practice-set-box"></div>
     </div>
 

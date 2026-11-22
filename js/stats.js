@@ -113,23 +113,11 @@
       { value: '30', key: 'stats.days', params: { n: 30 } },
       { value: 'all', key: 'stats.allTime' },
     ];
+    // 種類は見出しの横（練習ページの種類と同じ場所）、期間は称号とバッジの下（ここから下のカード・グラフ・表だけを絞るので）。
+    // 期間はどの幅でも 3 つのボタン
     const periodSeg = segment(periods, view.period, (v) => change({ period: v }));
-    periodSeg.classList.add('stats-period-segment');
-    // スマホ（幅 576px 未満）では期間をプルダウンにして、種類と同じ 1 行の右端に置く。
-    // 広い画面ではプルダウンを隠し、種類・期間のボタンの順に並べる（css/stats.css で出し分け）
-    const select = el('select', 'form-select form-select-sm stats-period-select');
-    I.set(select, 'stats.period', null, 'aria-label');
-    periods.forEach((item) => {
-      const option = el('option');
-      option.value = item.value;
-      // スマホの 1 行に収まるよう短い文にする（英語は 7d / 30d / All。日本語は「すべて」が範囲の「すべて」と並ぶので「全期間」）
-      I.set(option, item.value === 'all' ? 'stats.allTimeSelect' : 'stats.daysShort', item.params);
-      option.selected = item.value === view.period;
-      select.append(option);
-    });
-    select.addEventListener('change', () => change({ period: select.value }));
-    box.append(select);
-    box.append(periodSeg);
+    I.set(periodSeg, 'stats.period', null, 'aria-label');
+    $('statsPeriod').replaceChildren(periodSeg);
   }
 
   function change(next) {
