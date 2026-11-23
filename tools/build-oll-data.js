@@ -6,6 +6,8 @@
 //       s: [AUF] setup [AUF]         例: "F U2' F U2 R' U2' F' U2 R F' (U)"
 //   - 記法を読み替える（Br → BR, Bl → BL, Dfr → DR）。x（持ち替え）と LR のような同時回しには対応しない
 //   - 確認処理は js/case-check.js（エディタの「自分の手順」と共通）
+//   - 覚える順番 data/oll/learn_order.json（段階ごとのケース名の配列。tools/learn-order.js）から、各ケースに
+//       stage（段階 1〜54）と order（覚える順の通し番号 1〜259）を付ける。全ケースがちょうど1回ずつ無ければエラー
 //   - 次を確認し、合わないケースがあれば直し方の候補を表示してエラーで止める
 //       s は最後の層（U層）だけを崩す
 //       a が s のケースの上面の向きを揃える（F2L は崩さない。手順中の y による完成後の向きの違いは無視）
@@ -21,9 +23,11 @@ const SRC = path.join(ROOT, 'data', 'oll', 'algs_info.json');
 const OUT = path.join(ROOT, 'js', 'oll-data.js');
 const SCRAMBLES_SRC = path.join(ROOT, 'data', 'oll', 'scrambles.json');
 const SCRAMBLES_OUT = path.join(ROOT, 'js', 'oll-scrambles.js');
+const ORDER_SRC = path.join(ROOT, 'data', 'oll', 'learn_order.json');
 
 const C = require('../js/case-check.js');
 const { buildScrambles } = require('./scrambles-lib.js');
+const { learnOrder } = require('./learn-order.js');
 
 const convert = C.convert;
 
@@ -50,6 +54,7 @@ const suggest = (a, s) => C.fitSetup('oll', a, s);
 function buildAll() {
   const src = JSON.parse(fs.readFileSync(SRC, 'utf8'));
   const errors = [];
+  const learn = learnOrder(ORDER_SRC, Object.values(src).map((c) => c.name), errors);
   const cases = Object.values(src).map((c) => {
     if (typeof c.a !== 'string' || typeof c.s !== 'string') {
       errors.push(`${c.name}: a と s は手順1本の文字列にしてください`);
@@ -72,7 +77,8 @@ function buildAll() {
       );
       return null;
     }
-    return { name: c.name, group: c.group, algset: c.algset, alg: alg, setup: setup };
+    const at = learn[c.name] || {};
+    return { name: c.name, group: c.group, algset: c.algset, stage: at.stage, order: at.order, alg: alg, setup: setup };
   });
   if (errors.length) throw new Error('data/oll/algs_info.json に問題があります:\n  ' + errors.join('\n  '));
 

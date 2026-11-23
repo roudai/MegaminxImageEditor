@@ -188,7 +188,7 @@ PLLを選んでいる間は、種類に応じて入力欄 `#alg` に入れる手
 ## 覚える順番（`data/pll/learn_order.json`）
 - 出典：さむぶろぐ「Megaminx PLL 全手順会議議事録」[前編](http://sumblog.net/archives/40859395.html)・[後編](http://sumblog.net/archives/40977418.html)。PLL を全部覚えた4人が「大体この順番で覚えたら良い」という順にケースを出していく記事で、出てくる順をそのまま覚える順番とする
 - `data/pll/learn_order.json` は段階ごとのケース名の配列（27 段階・151 件。`algs_info.json` の全ケースをちょうど1回ずつ。`test/pll-data.test.js` で確認）
-- `tools/build-pll-data.js` がこれを読み、`js/pll-data.js` の各ケースに `stage`（段階 1〜27）と `order`（通し番号 1〜151）を付ける（全ケースがちょうど1回ずつ無ければエラー）
+- `tools/build-pll-data.js` がこれを読み（`tools/learn-order.js`。OLL と共通）、`js/pll-data.js` の各ケースに `stage`（段階 1〜27）と `order`（通し番号 1〜151）を付ける（全ケースがちょうど1回ずつ無ければエラー）
 - 基本は + と − を続けて並べる。逆手順の組（F2/F3、F4/F5、J2/J3、V1/V2、V3/V4、R1/R2、R3/R4、P1/P2、P3/P4、I1/I2、I4/I5、L5/L6）は「2+ 3+ 2− 3−」のように4つまとめる。K2 は L との見分けに関わるので L の直前、K1 は L のあと
 - 前編（87 ケース）
   1. F1+ F1−
@@ -220,7 +220,7 @@ PLLを選んでいる間は、種類に応じて入力欄 `#alg` に入れる手
   26. K1+ K1−
   27. X1 X2 X3 X4 X5+ X5− X6+ X6− X7+ X7−
 - 段階の短い名前は、中のケースの +/− を除いた名前の文字と番号の範囲（F1、A1–2、E1–3、D、F2–5、K2 …。`js/case-sections.js` の `stageLabel`）
-- 一覧・練習で「グループ順 / 覚える順」を切り替えられる（PLL だけ。区切りは `js/case-sections.js` の `CaseSections.list`）。選んだ並びは `list-filter` の `pllOrder`（`'learn'` / `'group'`）に保存し、一覧と練習で共通
+- 一覧・練習で「グループ順 / 覚える順」を切り替えられる（PLL・OLL。OLL は `reference/OLL_SPEC.md`「覚える順番」。区切りは `js/case-sections.js` の `CaseSections.list`）。選んだ並びは `list-filter` の `pllOrder`（`'learn'` / `'group'`）に保存し、一覧と練習で共通
   - 一覧：覚える順では、グループの見出しの代わりに段階の見出し（「2. A1–2」と覚えた数 / 全体）で並べ、段階の中も覚える順。上のグループのボタンも段階（F1、A1–2 …）になり、押すとその段階だけを表示する（選択はグループ順と別に保存）。カードは作り直さず入れ直す
   - 練習：グループを選ぶ欄の上に切り替えを置く。覚える順では、ボタンが段階（F1、A1–2 …）になり（欄の名前は日本語では「グループ」のまま、英語では Stages）、選んだ段階の中からランダムに出題する。選んだ段階は `practice.groups['pll-stage']`（段階の番号）に保存する（グループの選択 `groups.pll` とは別に残る）
 

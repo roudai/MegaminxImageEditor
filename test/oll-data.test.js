@@ -57,3 +57,17 @@ test('練習用のスクランブル js/oll-scrambles.js が最新で、全ケ�
   assert.deepEqual(Object.keys(scrambles), data.map((c) => c.name));
   Object.values(scrambles).forEach((list) => assert.ok(list.length > 0));
 });
+
+test('覚える順番（data/oll/learn_order.json）は全259ケースをちょうど1回ずつ含み、oll-data.js の stage・order と合う', () => {
+  const stages = require('../data/oll/learn_order.json');
+  const order = stages.flat();
+  const names = Object.values(SRC).map((c) => c.name);
+  assert.equal(stages.length, 54);
+  assert.equal(order.length, names.length);
+  assert.equal(new Set(order).size, order.length, '重複がある');
+  assert.deepEqual([...order].sort(), [...names].sort());
+  OLL.forEach((c) => {
+    assert.equal(c.order, order.indexOf(c.name) + 1, c.name);
+    assert.ok(stages[c.stage - 1].includes(c.name), c.name);
+  });
+});

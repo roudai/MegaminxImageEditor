@@ -7,7 +7,7 @@
 //   - 種類（PLL / OLL）・範囲（OLL の No Dot / Dot / All）・期間（7日 / 30日 / すべて）で絞る（選んだものは practice.stats に保存）
 //   - 集計（回数・平均・解けなかった・習得済みの数）、タイムの推移（横軸＝1回ごと、点＝タイム、線＝ao5・ao12）の SVG、
 //     グラフは「推移 / 分布」で切り替え（分布＝期間内のタイムを区間ごとに数えた棒グラフ。選んだものは practice.stats.chart に保存）、
-//     ケースごとの表（並び：苦手順（既定。直近 10 回の平均の遅い順）/ グループ順 / 覚える順（PLL）。見出しでも並べ替え。
+//     ケースごとの表（並び：苦手順（既定。直近 10 回の平均の遅い順）/ グループ順 / 覚える順（PLL・OLL）。見出しでも並べ替え。
 //     ケースを押すとそのケースを練習ページで出題）
 //   - 切り替えの下（集計のカードの上）に称号の札とバッジの一覧（titles.js の renderCard・renderBadges。取ったバッジを押すと称号として表示）。
 //     スマホではふだん小さな 2 段の札で、押すと大きな札とバッジの一覧を開く。広い画面は大きな札と「バッジ n / 40」の開け閉め
@@ -769,7 +769,7 @@
   }
 
   function sortRows(list) {
-    // 覚える順は PLL だけ（OLL で選ばれていたら苦手順）
+    // 覚える順は PLL・OLL だけ（覚える順の無い種類で選ばれていたら苦手順）
     const k = view.sort === 'learn' && !hasStages() ? 'weak' : view.sort;
     const dir = view.desc ? -1 : 1;
     const val = (r) => (k === 'status' ? STATUS_ORDER[r.status] : k === 'learn' ? r.c.order : r[k]);
@@ -784,7 +784,7 @@
     });
   }
 
-  // 表の上の並びの切り替え：苦手順 / グループ順 / 覚える順（PLL だけ）
+  // 表の上の並びの切り替え：苦手順 / グループ順 / 覚える順（PLL・OLL）
   function renderSortBar() {
     const box = $('statsSort');
     const show = !own() && view.tab !== 'solves';
@@ -792,9 +792,9 @@
     if (!show) return;
     const items = [
       { value: 'weak', key: 'stats.sortWeak', title: 'stats.sortWeakTitle' },
-      { value: 'group', key: 'list.orderGroup', title: 'list.orderGroupTitle' },
+      { value: 'group', key: 'list.orderGroup', title: 'list.orderGroupTitle.' + view.set },
     ];
-    if (hasStages()) items.push({ value: 'learn', key: 'list.orderLearn', title: 'list.orderLearnTitle' });
+    if (hasStages()) items.push({ value: 'learn', key: 'list.orderLearn', title: 'list.orderLearnTitle.' + view.set });
     const current = view.sort === 'learn' && !hasStages() ? 'weak' : view.sort;
     const pick = (v) => change({ sort: v, desc: v === 'weak' });
     const seg = segment(items, current, pick);

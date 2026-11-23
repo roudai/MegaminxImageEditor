@@ -1,17 +1,18 @@
 /*
  * ケースの区切り（一覧ページの見出し・練習ページのグループを選ぶ欄で共通）。DOM 非依存。
- * 仕様: reference/PLL_SPEC.md「覚える順番」
+ * 仕様: reference/PLL_SPEC.md・reference/OLL_SPEC.md「覚える順番」
  *
- *   CaseSections.hasStages(data)        覚える順番（各ケースの stage・order。pll-data.js にだけある）があるか
+ *   CaseSections.hasStages(data)        覚える順番（各ケースの stage・order。pll-data.js・oll-data.js）があるか
  *   CaseSections.list(data, byStage)    区切りの配列 [{ key, label, stage, cases }]
  *     byStage = false：グループ（c.group）ごと。並びはデータの順。key・label はグループ名（"A"）
  *     byStage = true ：覚える順番の段階（c.stage）ごと。段階の中も覚える順（c.order）。
  *                      key は "s<段階>"（"s9"）、label は中のケースから作る短い名前（stageLabel）
  *   CaseSections.stageLabel(names)      段階の短い名前。+/− を除いた名前の文字と番号の範囲
- *                                       例：[F2+, F3+, F2-, F3-, F4+, …] → "F2–5"、[E1, E2, E3] → "E1–3"、[D+, D-] → "D"、[K2+, K2-] → "K2"
+ *                                       PLL（文字＋番号）：[F2+, F3+, F2-, F3-, F4+, …] → "F2–5"、[E1, E2, E3] → "E1–3"、[D+, D-] → "D"、[K2+, K2-] → "K2"
+ *                                       OLL（番号＋文字。1 段階が 1 グループ）：[2A, 2B, 2C, 2D] → "2A–D"、[13+, 13-] → "13"、[1C] → "1C"
  *   CaseSections.keyOf(c, byStage)      そのケースが入る区切りの key
  *
- * 並びの選び方は store.js の 'list-filter' の pllOrder（'learn' なら覚える順。一覧と練習で共通）。
+ * 並びの選び方は store.js の 'list-filter' の pllOrder・ollOrder（'learn' なら覚える順。一覧と練習で共通）。
  * ブラウザでは window.CaseSections、node では module.exports として公開する。
  */
 (function (root, factory) {
@@ -28,6 +29,15 @@
 
   function stageLabel(names) {
     const bases = names.map((n) => String(n).replace(/[+-]$/, '')).filter((b, i, all) => all.indexOf(b) === i);
+    // OLL：番号が 1 つで、文字（無いこともある）の範囲
+    const oll = bases.map((b) => /^(\d+)([A-Z]*)$/.exec(b));
+    if (oll.every(Boolean) && oll.every((m) => m[1] === oll[0][1])) {
+      const letters = oll.map((m) => m[2]).filter(Boolean).sort();
+      if (!letters.length) return oll[0][1];
+      const lo = letters[0];
+      const hi = letters[letters.length - 1];
+      return lo === hi ? oll[0][1] + lo : `${oll[0][1]}${lo}–${hi}`;
+    }
     const parts = bases.map((b) => /^([A-Z]+)(\d*)$/.exec(b));
     const letters = parts.map((m) => (m ? m[1] : null)).filter((l, i, all) => all.indexOf(l) === i);
     // 文字が1種類で、番号が付いていればその範囲（付いていなければ文字だけ）

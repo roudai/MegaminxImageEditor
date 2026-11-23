@@ -5,9 +5,9 @@
 //     （直前と同じケースは避ける）、そのケースのスクランブル（js/<pll|oll>-scrambles.js）からランダムに選び、
 //     前後にランダムな AUF を足す（progress.js の wrapAuf）。
 //     ケースの名前と画像は解き終わるまで出さない
-//   - PLL は、グループを選ぶ欄で「グループ順 / 覚える順」を切り替えられる。覚える順では A〜Z の代わりに
-//     覚える順番の段階（F1、A1–2、… の 27。case-sections.js）を選んで出題する。並びは 'list-filter' の pllOrder（一覧ページと共通）、
-//     選んだ段階は prefs.groups['pll-stage']（段階の番号）に保存する
+//   - PLL・OLL は、グループを選ぶ欄で「グループ順 / 覚える順」を切り替えられる。覚える順ではグループの代わりに
+//     覚える順番の段階（PLL は F1、A1–2、… の 27、OLL は 2A–D、3A–B、… の 54。case-sections.js）を選んで出題する。
+//     並びは 'list-filter' の <set>Order（一覧ページと共通）、選んだ段階は prefs.groups['<set>-stage']（段階の番号）に保存する
 //   - タイマー：スペースを押す（画面ではタイマーをタップする）とスタート。何かのキー（タップ）でストップ。
 //     計測中の Esc は中止（記録しない）。計測中に「スキップ」「解けなかった」を押してもタイムは記録しない。
 //     押しっぱなしの繰り返しは無視する。計測中もスクランブルは出したまま。
@@ -435,12 +435,12 @@
     const chosen = chosenGroups(set) || new Set();
     const sections = CS.list(inScope(set), stage);
     const box = el('div', 'practice-groups');
-    // PLL：グループ順 / 覚える順（一覧ページと共通）
+    // グループ順 / 覚える順（PLL・OLL。一覧ページと共通）
     if (CS.hasStages(DATA[set])) {
       const order = segment(
         [
-          { value: false, key: 'list.orderGroup', title: 'list.orderGroupTitle' },
-          { value: true, key: 'list.orderLearn', title: 'list.orderLearnTitle' },
+          { value: false, key: 'list.orderGroup', title: 'list.orderGroupTitle.' + set },
+          { value: true, key: 'list.orderLearn', title: 'list.orderLearnTitle.' + set },
         ],
         stage,
         (v) => setOrder(set, v)

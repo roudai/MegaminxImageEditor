@@ -27,6 +27,7 @@ const ORDER_SRC = path.join(ROOT, 'data', 'pll', 'learn_order.json');
 
 const C = require('../js/case-check.js');
 const { buildScrambles } = require('./scrambles-lib.js');
+const { learnOrder } = require('./learn-order.js');
 
 const convert = C.convert;
 
@@ -50,27 +51,11 @@ function check(a, s) {
 // 候補が複数あるときは s に付ける AUF が少ない → s の前に AUF を付けない を優先する。
 const suggest = (a, s) => C.fitSetup('pll', a, s);
 
-// 覚える順番：ケース名 → { stage, order }。全ケースをちょうど1回ずつ含まなければエラーを足す
-function learnOrder(names, errors) {
-  const stages = JSON.parse(fs.readFileSync(ORDER_SRC, 'utf8'));
-  const at = {};
-  let order = 0;
-  stages.forEach((list, i) =>
-    list.forEach((name) => {
-      if (at[name]) errors.push(`learn_order.json: ${name} が2回あります`);
-      else if (!names.includes(name)) errors.push(`learn_order.json: ${name} は algs_info.json にありません`);
-      at[name] = { stage: i + 1, order: ++order };
-    })
-  );
-  names.filter((n) => !at[n]).forEach((n) => errors.push(`learn_order.json: ${n} がありません`));
-  return at;
-}
-
 // 生成するファイルの中身 { data: js/pll-data.js, scrambles: js/pll-scrambles.js }
 function buildAll() {
   const src = JSON.parse(fs.readFileSync(SRC, 'utf8'));
   const errors = [];
-  const learn = learnOrder(Object.values(src).map((c) => c.name), errors);
+  const learn = learnOrder(ORDER_SRC, Object.values(src).map((c) => c.name), errors);
   const cases = Object.values(src).map((c) => {
     if (typeof c.a !== 'string' || typeof c.s !== 'string') {
       errors.push(`${c.name}: a と s は手順1本の文字列にしてください`);

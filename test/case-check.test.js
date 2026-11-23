@@ -115,3 +115,14 @@ test('pllAfter：PLL のスクランブルに OLL のスクランブルをつな
   // OLL の手順が違えば上面が揃わない
   assert.deepEqual(C.pllAfter(O_SCR['1A'][0], 'R', PLL), []);
 });
+
+test('pllAfter：全 OLL ケースで、スクランブルに手順を当てると PLL が決まる', () => {
+  const O_SCR = require('../js/oll-scrambles.js');
+  OLL.forEach((c) => {
+    O_SCR[c.name].slice(0, 3).forEach((scramble) => {
+      const r = C.pllAfter(scramble, c.alg, PLL);
+      assert.ok(r.length >= 1, c.name);
+      r.forEach((x) => assert.ok(x === 'skip' || (x && x.name), c.name));
+    });
+  });
+});

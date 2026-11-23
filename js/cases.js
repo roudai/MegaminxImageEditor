@@ -8,8 +8,8 @@
 //   - ケースをクリックすると、そのケースを選んだ状態でエディタ（./?pll=… / ?oll=…）を開く
 //   - 習得状況：各カード右上のバッジをタップで 未着手 → 練習中 → 覚えた と切り替え、localStorage に保存する。
 //     上部に進み具合（積み上げバー・件数）と絞り込みチップ、グループ見出しに「覚えた数 / 全体」を出す
-//   - PLL は「グループ順 / 覚える順」を切り替えられる。覚える順は data/pll/learn_order.json の段階（27）ごとの見出しで、
-//     段階の中も覚える順（区切りは case-sections.js。選んだ並びは 'list-filter' の pllOrder に保存し、練習ページと共通）
+//   - PLL・OLL は「グループ順 / 覚える順」を切り替えられる。覚える順は data/<set>/learn_order.json の段階（PLL 27・OLL 54）ごとの見出しで、
+//     段階の中も覚える順（区切りは case-sections.js。選んだ並びは 'list-filter' の <set>Order に保存し、練習ページと共通）
 //   - 上のグループ（覚える順なら段階）のボタンは、押すとそのグループだけを表示する（複数選べる。もう一度押すと外す。
 //     1つも選んでいなければすべて。「選択を解除」で戻す）。選んだものは 'list-filter' の <set>Groups（覚える順は <set>Stages）に保存
 //   - OLL は No Dot（algset ND、1〜37）と Dot（algset D、1C・38〜53）を切り替えて表示する（All も選べる）。
@@ -198,6 +198,33 @@
     const box = $('progressBox');
     box.className = 'progress-summary mb-3';
     box.innerHTML = '';
+    // 並び（グループ順 / 覚える順）を先に置く（PLL・OLL に共通の切り替え。PLL の一覧と同じ左端に来るように）。範囲（No Dot / Dot）は OLL だけ
+    if (HAS_STAGES) {
+      const sw = el('div', 'scope-switch mb-2');
+      sw.setAttribute('role', 'group');
+      I.set(sw, 'list.orderAria', null, 'aria-label');
+      [
+        { value: false, label: 'list.orderGroup', title: 'list.orderGroupTitle.' + SET },
+        { value: true, label: 'list.orderLearn', title: 'list.orderLearnTitle.' + SET },
+      ].forEach((o) => {
+        const b = el('button', 'scope-option');
+        b.type = 'button';
+        b.dataset.order = String(o.value);
+        I.set(b, o.label);
+        I.set(b, o.title, null, 'title');
+        b.addEventListener('click', () => {
+          if (byStage === o.value) return;
+          byStage = o.value;
+          writeJSON(FILTER_KEY, Object.assign(readJSON(FILTER_KEY), { [SET + 'Order']: byStage ? 'learn' : 'group' }));
+          buildSections();
+          loadChosen();
+          updateSummary();
+          applyFilter();
+        });
+        sw.append(b);
+      });
+      box.append(sw);
+    }
     if (SCOPES.length > 1) {
       const sw = el('div', 'scope-switch mb-2');
       sw.setAttribute('role', 'group');
@@ -218,33 +245,7 @@
         });
         sw.append(b);
       });
-      box.append(sw);
-    }
-    if (HAS_STAGES) {
-      const sw = el('div', 'scope-switch mb-2');
-      sw.setAttribute('role', 'group');
-      I.set(sw, 'list.orderAria', null, 'aria-label');
-      [
-        { value: false, label: 'list.orderGroup', title: 'list.orderGroupTitle' },
-        { value: true, label: 'list.orderLearn', title: 'list.orderLearnTitle' },
-      ].forEach((o) => {
-        const b = el('button', 'scope-option');
-        b.type = 'button';
-        b.dataset.order = String(o.value);
-        I.set(b, o.label);
-        I.set(b, o.title, null, 'title');
-        b.addEventListener('click', () => {
-          if (byStage === o.value) return;
-          byStage = o.value;
-          writeJSON(FILTER_KEY, Object.assign(readJSON(FILTER_KEY), { [SET + 'Order']: byStage ? 'learn' : 'group' }));
-          buildSections();
-          loadChosen();
-          updateSummary();
-          applyFilter();
-        });
-        sw.append(b);
-      });
-      box.append(' ', sw);
+      box.append(HAS_STAGES ? ' ' : '', sw);
     }
     const bar = el('div', 'progress-stacked mb-2');
     I.set(bar, 'list.progressAria', null, 'aria-label');
