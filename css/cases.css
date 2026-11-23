@@ -365,7 +365,9 @@
     min-width: 1.55rem;
   }
 }
+/* 全部習得したグループ：緑の枠と文字。color・border-color を直接決めず Bootstrap のボタンの色（--bs-btn-*）にする
+   （タッチの画面で押したあとに残る :hover の色は、ふだんの色＝この緑を使う。css/common.css の (hover: none)） */
 .group-nav-complete {
-  border-color: var(--status-learned-soft);
-  color: var(--status-learned);
+  --bs-btn-color: var(--status-learned);
+  --bs-btn-border-color: var(--status-learned-soft);
 }
