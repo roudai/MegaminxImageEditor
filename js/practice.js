@@ -308,7 +308,7 @@
     );
   }
 
-  // スマホでたたんだときの 1 行：アイコン 練習中 · 目安 8.0秒 · 出題（OLL の範囲が No Dot / Dot ならその前に、グループを絞っていればそれも）。
+  // スマホでたたんだときの 1 行：アイコン 練習中 3 · 目安 8.0秒 · 出題（OLL の範囲が No Dot / Dot ならその前に、グループを絞っていればそれも）。
   // ソルブはインスペクション。1 行に収めるため「対象」の語は付けず「習得の目安」は「目安」。それでも入らなければ末尾を … で切る（css/practice.css）
   function settingsSummary() {
     const button = el('button', 'practice-settings-summary');
@@ -328,7 +328,8 @@
     } else if (!isFull()) {
       const chosen = chosenGroups(prefs.set);
       if (chosen) parts.push(I.t('practice.groupsCount', { n: chosen.size }));
-      parts.push(I.t(prefs.filter === 'all' ? 'list.filterAll' : 'status.' + prefs.filter));
+      // 対象と、その残りの数（開いたときの対象のボタンの数と同じ。範囲・グループで絞った中の数。解くたびに数え直す）
+      parts.push(I.t(prefs.filter === 'all' ? 'list.filterAll' : 'status.' + prefs.filter) + ' ' + pool().length);
       parts.push(I.t('practice.thresholdShort') + ' ' + I.t('practice.seconds', { n: threshold().toFixed(1) }));
       parts.push(I.t(weighted() ? 'practice.pickWeak' : 'practice.pickRandom'));
     }
