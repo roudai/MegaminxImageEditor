@@ -87,7 +87,7 @@ PLL（`reference/PLL_SPEC.md`）と同じ仕組みで、OLL を選ぶと手順�
 - 段階の名前はグループ名（2、3、28、35、1C …。`js/case-sections.js` の `list`）。ケース名の文字（2A〜2D の A〜D）はこのサイトの名前で記事には無いので、段階の名前には出さない
 - 一覧・練習・記録の「グループ順 / 覚える順」は PLL と同じ動き。選んだ並びは `list-filter` の `ollOrder`、一覧で選んだ段階は `ollStages`、練習で選んだ段階は `practice.groups['oll-stage']`
   - 範囲（No Dot / Dot / All）で表示を絞ると、段階のボタンも範囲のケースがある段階だけになる（No Dot の段階は No Dot のケースだけ、Dot の段階は Dot のケースだけ）
-- 並びのボタンの説明は種類ごと（`list.orderGroupTitle.oll`・`list.orderLearnTitle.oll`。記事の題名を出典として出す）
+- 並びのボタンの説明は種類ごと（`list.orderGroupTitle.oll`・`list.orderLearnTitle.oll`）。出典は書かない（使い方の最後の「参考にしたサイト」に載せている）
 
 ## 自分の手順
 - PLL と同じ（`reference/PLL_SPEC.md`「自分の手順」）。OLL では setup の最後の AUF だけを付け直し、上面の向きが揃うか（F2L を崩さないか）を確かめる
