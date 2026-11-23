@@ -736,7 +736,7 @@
     // 一度スタートしたら、その種類の説明は見たことにする。計測中は隠すだけ（場所は残す）にして、止めたら行ごと消す
     if (next === 'running' || next === 'inspecting') markTipSeen();
     else renderTip();
-    // 称号・バッジの知らせは、次の計測を始めるまで出したまま（インスペクションも始めたうちに入る）
+    // 称号・バッジの知らせは、10 秒たつか次の計測を始めたら閉じる（インスペクションも始めたうちに入る）
     if (next === 'running' || next === 'inspecting') hideToast();
     $('practiceStage').classList.toggle('running', next === 'running');
     $('practiceStage').classList.toggle('inspecting', next === 'inspecting');
@@ -934,7 +934,7 @@
 
   // ---- 記録と判定 ----
 
-  // ---- 称号とバッジ（titles.js）：段位が上がったとき・バッジを取ったときに、画面の下に数秒知らせる ----
+  // ---- 称号とバッジ（titles.js）：段位が上がったとき・バッジを取ったときに知らせる（10 秒か、次の計測を始めるまで） ----
   const T = window.Titles;
   const rankIndex = () => (T ? T.rankOf(S.get('progress')).index : 0);
   // 広い画面（幅 576px 以上）では、知らせを画面の下ではなく結果の行のすぐ下に出す（止めた直後に見るところ。画面の下だと見落としやすい）
@@ -950,6 +950,7 @@
   function hideToast() {
     const box = $('practiceToast');
     if (!box) return;
+    clearTimeout(box.hideTimer);
     box.classList.remove('show', 'pop');
     if (box.classList.contains('inline')) box.hidden = true; // 結果の下の場所を空ける
     // × を押したあと、スペースキーが隠れた × を押してしまわないようにフォーカスを外す
@@ -967,7 +968,7 @@
     // 広い画面は結果の行のすぐ下、スマホ・全画面は画面の下（固定）
     placeToast(box);
     box.hidden = false;
-    // 次の計測を始めるまで出したまま（setState）。× で先に閉じることもできる
+    // 10 秒で閉じる（その前に次の計測を始めたら閉じる。setState）。× で先に閉じることもできる
     const close = el('button', 'practice-toast-close', '×');
     close.type = 'button';
     I.set(close, 'practice.toastClose', null, 'aria-label');
@@ -1014,6 +1015,8 @@
     box.classList.remove('pop');
     void box.offsetWidth;
     box.classList.add('show', 'pop');
+    clearTimeout(box.hideTimer);
+    box.hideTimer = setTimeout(hideToast, 10000);
   }
   // 「称号が上がりました」「バッジを手に入れました」と名前に分ける（スマホは名前を次の行に。css/practice.css）
   // 名前は複数でもよい（同時に取ったバッジは「バッジを手に入れました」を 1 回にまとめる）
