@@ -7,13 +7,16 @@
 // 札の中身は記録のページの札と同じ：称号（選んだバッジがあればその名前）・習得したケースの数のバー・PLL / OLL の内訳・
 // 連続の日数・バッジの数（隠しバッジは「+k」）。名前やアイコンなどアカウントの情報は入れない。
 // 色は css/common.css の .title-card の段階（銅・銀・金・虹）と同じ。右にメガミンクスの絵（megaminx-draw.js）：習得するほど揃っていく
-// （上の層のパーツ単位で崩し、OLL の割合だけ向きを、PLL の割合だけ位置を合わせる。全部習得で揃った状態。stickers）
-// titles.js・store.js・megaminx-draw.js の後に読み込む。
+// （上の層のパーツ単位で崩し、OLL の割合だけ向きを、PLL の割合だけ位置を合わせる。全部習得で揃った状態。stickers）。
+// 絵の色と線はエディタの配色・Body Color（PLL の一覧のケース画像と同じ。progress.js の displaySettings）
+// titles.js・store.js・megaminx-state.js・megaminx-draw.js・progress.js の後に読み込む。
 (function () {
   'use strict';
   const T = window.Titles;
   const S = window.Store;
   const D = window.MegaminxDraw;
+  const M = window.MegaminxState;
+  const P = window.Progress;
 
   const W = 1200;
   const H = 630;
@@ -48,21 +51,21 @@
   }
 
   // メガミンクスの絵の色：上の層のパーツ（エッジ 5・コーナー 5）単位で崩す（ステッカーを 1 枚ずつ塗ると、
-  // 同じパーツに同じ色が 2 つなど、ありえない配色になるため）。揃った状態は U が白、側面（辺 0〜4 の下の面）が赤・青・紫・黄・黄緑
-  // （megaminx-draw.js の色コード）。
-  //   - OLL の習得の割合 → 向きが合っている（白が上）パーツの数。向きが合っていないパーツは、エッジは裏返し、コーナーはひねる
+  // 同じパーツに同じ色が 2 つなど、ありえない配色になるため）。揃った状態の色はエディタの配色（PLL の一覧と同じ。
+  // OLL 配色のままなら OLL を選ぶ前の配色、無ければ Standard。progress.js の displaySettings）。辺 k の下の面は UPPER[(k + 3) % 5]（k = 2 が F。
+  // megaminx-state.js の toImageColors と同じ対応）。
+  //   - OLL の習得の割合 → 向きが合っている（U の色が上）パーツの数。向きが合っていないパーツは、エッジは裏返し、コーナーはひねる
   //   - PLL の習得の割合 → 正しい位置にあるパーツの数。ほかのパーツは、残りの位置どうしで入れ替える（どれも元の位置に来ないように）
   // どちらも切り捨てで、全部習得したときだけ揃った状態。どのパーツから揃うかは F・R・BR・BL・L の順（各面のエッジ・コーナー）。
   // 本物のパズルで作れる状態にそろえる（ひねりの合計は 3 の倍数、裏返しは偶数枚、入れ替えは偶置換）
-  const SOLVED_U = 'w';
-  const SOLVED_SIDE = ['r', 'b', 's', 'y', 'l'];
   // ステッカーの場所（megaminx-draw.js）：エッジ k は ucolor[2+2k]・scolor[3k+1]（辺 k の下の面）。
   // コーナー k（頂点 k）は ucolor[1+2k]・scolor[3k]（辺 k の下の面）・scolor[3(k-1)+2]（辺 k-1 の下の面）を、この順（一周の向き）で持つ
   const prevK = (k) => (k + 4) % 5;
   const edgeSlot = (k) => [{ u: 2 + 2 * k }, { s: 3 * k + 1 }];
   const cornerSlot = (k) => [{ u: 1 + 2 * k }, { s: 3 * k }, { s: 3 * prevK(k) + 2 }];
-  const edgeColors = (k) => [SOLVED_U, SOLVED_SIDE[k]];
-  const cornerColors = (k) => [SOLVED_U, SOLVED_SIDE[k], SOLVED_SIDE[prevK(k)]];
+  const sideFace = (k) => M.UPPER[(k + 3) % 5];
+  const edgeColors = (scheme, k) => [scheme.U, scheme[sideFace(k)]];
+  const cornerColors = (scheme, k) => [scheme.U, scheme[sideFace(k)], scheme[sideFace(prevK(k))]];
   const ORDER = [2, 3, 4, 0, 1]; // F・R・BR・BL・L
 
   // 偶置換か
@@ -105,9 +108,11 @@
     return perm;
   }
 
-  function stickers(learned, random) {
+  // 戻り値 { ucolor, scolor } は色（#rrggbb）の配列。scheme（面 → 色）を省いたらエディタの配色
+  function stickers(learned, random, scheme) {
     const rnd = random || Math.random;
-    const u = [SOLVED_U, '', '', '', '', '', '', '', '', '', ''];
+    const sc = scheme || P.displaySettings('pll').scheme;
+    const u = [sc.U, '', '', '', '', '', '', '', '', '', ''];
     const side = new Array(15).fill('');
     const put = (slot, colors, turn) => {
       slot.forEach((place, i) => {
@@ -142,10 +147,10 @@
       }
     }
     ORDER.forEach((slotK, i) => {
-      put(edgeSlot(slotK), edgeColors(edgePerm[slotK]), flips[i]);
-      put(cornerSlot(slotK), cornerColors(cornerPerm[slotK]), twists[i]);
+      put(edgeSlot(slotK), edgeColors(sc, edgePerm[slotK]), flips[i]);
+      put(cornerSlot(slotK), cornerColors(sc, cornerPerm[slotK]), twists[i]);
     });
-    return { ucolor: u.join(''), scolor: side.join('') };
+    return { ucolor: u, scolor: side };
   }
 
   function siteUrl() {
@@ -293,13 +298,14 @@
     ctx.fillText(siteUrl().replace(/^https?:\/\//, '').replace(/\/$/, ''), left, H - 64);
 
     // メガミンクスの絵（習得するほど揃っていく）
-    if (D) {
+    if (D && M && P) {
       const size = 330;
       const mm = document.createElement('canvas');
       mm.width = size;
       mm.height = size;
-      const colors = stickers(x.rank.learned);
-      D.draw(mm, colors.ucolor, colors.scolor, { border: '#1b1b1b' });
+      const settings = P.displaySettings('pll'); // エディタの配色と Body Color（一覧のケース画像と同じ）
+      const colors = stickers(x.rank.learned, null, settings.scheme);
+      D.draw(mm, colors.ucolor, colors.scolor, { border: settings.border });
       ctx.drawImage(mm, right + 20, (H - size) / 2 + 10);
     }
     return canvas;
