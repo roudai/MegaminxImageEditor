@@ -856,26 +856,34 @@
     resetTimer();
     const result = $('practiceResult');
     result.hidden = false;
-    // 「スクランブルを変える」：押し間違いでなく崩し直したいときなど、スクランブルを作り直す（スキップと同じ）
-    const again = el('button', 'btn btn-link btn-sm p-0 align-baseline ms-2');
-    again.type = 'button';
-    I.set(again, 'practice.newScramble');
-    again.addEventListener('click', () => {
-      if (performance.now() < ignoreClicksUntil) return;
-      next();
-      clearTooFast();
-    });
-    const line = el('div', 'text-muted small');
-    const text = el('span');
-    I.set(text, 'practice.tooFast', { time: format(sec), sec: MIN_FULL_SEC });
-    line.append(text, again);
-    result.replaceChildren(line);
+    // ok(e)：「スクランブルを変える」のクリックを効かせるか
+    const makeLine = (ok) => {
+      // 「スクランブルを変える」：押し間違いでなく崩し直したいときなど、スクランブルを作り直す（スキップと同じ）
+      const again = el('button', 'btn btn-link btn-sm p-0 align-baseline ms-2');
+      again.type = 'button';
+      I.set(again, 'practice.newScramble');
+      again.addEventListener('click', (e) => {
+        if (!ok(e, again)) return;
+        next();
+        clearTooFast();
+      });
+      const line = el('div', 'text-muted small');
+      const text = el('span');
+      I.set(text, 'practice.tooFast', { time: format(sec), sec: MIN_FULL_SEC });
+      line.append(text, again);
+      return line;
+    };
+    result.replaceChildren(makeLine(() => performance.now() >= ignoreClicksUntil));
+    // 全画面のときはタイマーの下の行にも出す（結果の欄は隠れるため）。タイマーのすぐ下にあるので、
+    // 止めたタップがそのまま届かないよう、ボタンの上で押し始めたときだけ効かせる（pressedOn）
+    $('focusVerdict').replaceChildren(makeLine(pressedOn));
     tooFastShown = true;
   }
   function clearTooFast() {
     if (!tooFastShown) return;
     tooFastShown = false;
     $('practiceResult').hidden = true;
+    $('focusVerdict').replaceChildren();
   }
 
   // ---- 記録と判定 ----
@@ -884,7 +892,15 @@
   const T = window.Titles;
   const rankIndex = () => (T ? T.rankOf(S.get('progress')).index : 0);
   // 広い画面（幅 576px 以上）では、知らせを画面の下ではなく結果の行のすぐ下に出す（止めた直後に見るところ。画面の下だと見落としやすい）
+  // 全画面（スクランブルとタイマーだけの画面）では結果の欄が隠れるので、広い画面でも画面の下に出す（setFocus で置き直す）
   const WIDE = window.matchMedia('(min-width: 576px)');
+  let focusOn = false; // 全画面か（setFocus）
+  function placeToast(box) {
+    const inline = WIDE.matches && !focusOn;
+    box.classList.toggle('inline', inline);
+    if (inline) $('practiceResult').after(box);
+    else if (box.parentNode !== document.body) document.body.append(box);
+  }
   function hideToast() {
     const box = $('practiceToast');
     if (!box) return;
@@ -902,11 +918,8 @@
       box.id = 'practiceToast';
       box.setAttribute('role', 'status');
     }
-    // 広い画面は結果の行のすぐ下、スマホは画面の下（固定）
-    const inline = WIDE.matches;
-    box.classList.toggle('inline', inline);
-    if (inline) $('practiceResult').after(box);
-    else if (box.parentNode !== document.body) document.body.append(box);
+    // 広い画面は結果の行のすぐ下、スマホ・全画面は画面の下（固定）
+    placeToast(box);
     box.hidden = false;
     // 次の計測を始めるまで出したまま（setState）。× で先に閉じることもできる
     const close = el('button', 'practice-toast-close', '×');
@@ -1041,6 +1054,8 @@
       renderSettings();
       const result = $('practiceResult');
       result.replaceChildren(note('practice.undone'));
+      // 全画面のときはタイマーの下の行にも出す（結果の欄は隠れるため）
+      $('focusVerdict').replaceChildren(note('practice.undone'));
     };
     // 「練習中にする」：習得済みと判定されたけれど、練習中にしておきたいとき（揃っていなかった・まだ自信が無いなど）。
     // ケースとこの回の判定だけを練習中にし、タイムはそのまま残す。そのあとも「取り消す」はできる。
@@ -1686,8 +1701,9 @@
 
   // ---- 全画面（スクランブルとタイマーだけの画面）----
   // iPhone の Safari は要素の Fullscreen API が使えないので、CSS でタイマーのカードを画面いっぱいに広げる（body.practice-focus）。
-  // Fullscreen API が使える端末では、ブラウザのバーも隠す（失敗しても CSS の全画面だけで動く）。保存はしない
-  let focusOn = false;
+  // 指で操作する端末（TOUCH）で Fullscreen API が使えるときは、ブラウザのバーも隠す（Android の Chrome はアドレスバーが残るため。
+  // 失敗しても CSS の全画面だけで動く）。マウスのある端末（パソコンなど）は画面が大きいので、ブラウザの中いっぱいに広げるだけにする
+  // （画面ごとの全画面にすると、Mac では別のデスクトップに切り替わり、ほかのウインドウも見えなくなるため）。保存はしない
   let focusScrollY = 0;
   function setFocus(on) {
     if (on === focusOn) return;
@@ -1698,12 +1714,15 @@
     button.setAttribute('aria-pressed', String(on));
     I.set(button, on ? 'practice.focusExit' : 'practice.focus', null, 'aria-label');
     const root = document.documentElement;
-    if (on && root.requestFullscreen && !document.fullscreenElement) {
+    if (on && TOUCH.matches && root.requestFullscreen && !document.fullscreenElement) {
       root.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
     } else if (!on && document.fullscreenElement && document.exitFullscreen) {
       document.exitFullscreen().catch(() => {});
     }
     if (!on) window.scrollTo({ top: focusScrollY, behavior: 'instant' });
+    // 出ている称号・バッジの知らせを置き直す（全画面では画面の下、閉じたら広い画面では結果の下）
+    const box = $('practiceToast');
+    if (box && box.classList.contains('show')) placeToast(box);
   }
   $('focusButton').addEventListener('click', () => setFocus(!focusOn));
   // ブラウザの全画面から抜けた（Android の戻る・Esc など）ときは、こちらの全画面も閉じる
