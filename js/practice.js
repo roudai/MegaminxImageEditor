@@ -1700,10 +1700,9 @@
   if (T) T.update();
 
   // ---- 全画面（スクランブルとタイマーだけの画面）----
-  // iPhone の Safari は要素の Fullscreen API が使えないので、CSS でタイマーのカードを画面いっぱいに広げる（body.practice-focus）。
-  // 指で操作する端末（TOUCH）で Fullscreen API が使えるときは、ブラウザのバーも隠す（Android の Chrome はアドレスバーが残るため。
-  // 失敗しても CSS の全画面だけで動く）。マウスのある端末（パソコンなど）は画面が大きいので、ブラウザの中いっぱいに広げるだけにする
-  // （画面ごとの全画面にすると、Mac では別のデスクトップに切り替わり、ほかのウインドウも見えなくなるため）。保存はしない
+  // CSS でタイマーのカードをブラウザの中いっぱいに広げる（body.practice-focus）。保存はしない。
+  // ブラウザの全画面（Fullscreen API）は使わない：画面に出すものは少なくアドレスバーが残っても困らないうえ、
+  // Mac では別のデスクトップに切り替わってほかのウインドウも見えなくなり、iPhone の Safari ではもともと使えないため
   let focusScrollY = 0;
   function setFocus(on) {
     if (on === focusOn) return;
@@ -1713,22 +1712,12 @@
     document.body.classList.toggle('practice-focus', on);
     button.setAttribute('aria-pressed', String(on));
     I.set(button, on ? 'practice.focusExit' : 'practice.focus', null, 'aria-label');
-    const root = document.documentElement;
-    if (on && TOUCH.matches && root.requestFullscreen && !document.fullscreenElement) {
-      root.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
-    } else if (!on && document.fullscreenElement && document.exitFullscreen) {
-      document.exitFullscreen().catch(() => {});
-    }
     if (!on) window.scrollTo({ top: focusScrollY, behavior: 'instant' });
     // 出ている称号・バッジの知らせを置き直す（全画面では画面の下、閉じたら広い画面では結果の下）
     const box = $('practiceToast');
     if (box && box.classList.contains('show')) placeToast(box);
   }
   $('focusButton').addEventListener('click', () => setFocus(!focusOn));
-  // ブラウザの全画面から抜けた（Android の戻る・Esc など）ときは、こちらの全画面も閉じる
-  document.addEventListener('fullscreenchange', () => {
-    if (!document.fullscreenElement && focusOn) setFocus(false);
-  });
 
   // ---- 画面を消さない（Screen Wake Lock API）----
   // 両手でパズルを回している間は画面に触れないので、スマホの画面が暗くなって消え、止められなくなるのを防ぐ。
