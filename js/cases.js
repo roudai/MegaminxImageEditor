@@ -37,7 +37,6 @@
   const savedSettings = () => P.displaySettings(SET);
   let zipConfirming = false; // ZIP でダウンロードの確認を出しているか（renderZipConfirm）
 
-  const groupLabel = (g) => (NOTES[g] ? `${g} (${NOTES[g]})` : g);
   const el = (tag, className, text) => {
     const e = document.createElement(tag);
     if (className) e.className = className;
@@ -475,8 +474,13 @@
   // カードは1回だけ作り、並びを変えたら見出しの下に入れ直す（画像を描き直さない）
   const CARDS = {};
 
-  // 見出し（グループ：「A (3 corner CP)」、段階：「2. A」）
-  const sectionTitle = (s) => (s.stage ? `${s.stage}. ${s.label}` : groupLabel(s.key));
+  // 見出し：名前とグループの補足（「A (3 corner CP)」）。段階も連番は付けない（並びで順番が分かる。OLL は名前も数字で紛らわしい）。
+  // グループの一部の段階（F1・F2–5・K2・K1）も、そのグループの補足を付ける（「F1 (3x1 and 2x1(s))」）
+  const groupOf = (s) => (s.cases.every((c) => c.group === s.cases[0].group) ? s.cases[0].group : null);
+  const sectionTitle = (s) => {
+    const note = NOTES[groupOf(s)];
+    return note ? `${s.label} (${note})` : s.label;
+  };
 
   // 今の並びで、ジャンプのボタンと見出しごとのカードを作り直す
   function buildSections() {

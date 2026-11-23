@@ -455,7 +455,9 @@
       const b = el('button', 'practice-group-chip' + (chosen.has(s.key) ? ' active' : ''));
       b.type = 'button';
       b.textContent = s.label;
-      const note = stage ? I.t('practice.stageTitle', { n: s.stage }) : (NOTES[set] || {})[s.key];
+      // 補足はグループの補足（段階は中のケースのグループの補足。グループの一部の段階 F1 なども。連番は出さない）
+      const group = s.cases.every((c) => c.group === s.cases[0].group) ? s.cases[0].group : null;
+      const note = (NOTES[set] || {})[group];
       const n = s.cases.length;
       b.title = note ? `${s.label} (${note}) · ${n}` : `${s.label} · ${n}`;
       b.setAttribute('aria-pressed', String(chosen.has(s.key)));
