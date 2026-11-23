@@ -11,7 +11,7 @@
 //     ケースを押すとそのケースを練習ページで出題）
 //   - 切り替えの下（集計のカードの上）に称号の札とバッジの一覧（titles.js の renderCard・renderBadges。取ったバッジを押すと称号として表示）。
 //     スマホではふだん小さな 2 段の札で、押すと大きな札とバッジの一覧を開く。広い画面は大きな札と「バッジ n / 40」の開け閉め
-//     （既定は閉じる。practice.stats.badges に保存）
+//     （保存せず、ほかのページから来たときは閉じる。読み直し・戻る・進むのときだけ前の状態。navbar.js の UiState）
 (function () {
   'use strict';
   const S = window.Store;
@@ -19,6 +19,7 @@
   const P = window.Progress;
   const D = window.MegaminxDraw;
   const CA = window.CustomAlgs;
+  const U = window.UiState; // 開け閉めする欄が開いているか（navbar.js）
   const $ = (id) => document.getElementById(id);
   const el = (tag, className, text) => {
     const e = document.createElement(tag);
@@ -55,14 +56,17 @@
     sortV: 2,
     tab: saved.tab === 'solves' ? 'solves' : 'cases', // PLL・OLL の表：ケースごと / 記録の一覧
     chart: saved.chart === 'dist' ? 'dist' : 'trend', // グラフ：推移（折れ線） / 分布（棒グラフ）
-    badges: saved.badges === true, // バッジの一覧を開いているか（既定は閉じる）
+    // バッジの一覧を開いているか。保存せず、ほかのページから来たときは閉じる（読み直し・戻る・進むのときだけ前の状態。navbar.js の UiState）
+    badges: U.isOpen('stats-badges'),
   };
   // 練習ページの見出しの「記録」から開いたとき（?set=oll など）は、その種類を出す（表示の設定として保存する）
   const params = new URLSearchParams(location.search);
   if (SETS.includes(params.get('set'))) view.set = params.get('set');
   if (params.has('set')) saveView();
   function saveView() {
-    S.set('practice', Object.assign({}, practice(), { set: view.set, stats: Object.assign({}, view) }));
+    const stats = Object.assign({}, view);
+    delete stats.badges; // 開いているかは保存しない（以前は保存していた。アカウントに同期しないように消す）
+    S.set('practice', Object.assign({}, practice(), { set: view.set, stats: stats }));
   }
 
   const fmt = (sec) => (typeof sec === 'number' ? P.formatTime(sec) : '–'); // 60 秒以上は分表記（1:05.23）
@@ -1617,7 +1621,7 @@
       card.append(summary);
       const open = () => {
         view.badges = true;
-        saveView();
+        U.setOpen('stats-badges', true);
         renderTitles();
       };
       card.addEventListener('click', open);
@@ -1647,7 +1651,7 @@
     toggle.title = I.t(view.badges ? 'titles.badgesHide' : 'titles.badgesShow');
     toggle.addEventListener('click', () => {
       view.badges = !view.badges;
-      saveView();
+      U.setOpen('stats-badges', view.badges);
       renderTitles();
     });
     // 開け閉めのボタンは札の中のいちばん下の行に入れる（左に連続の日数、右下にボタン。入らなければボタンを次の行の右に。

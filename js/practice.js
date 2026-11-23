@@ -35,6 +35,7 @@
   const P = window.Progress;
   const D = window.MegaminxDraw;
   const CA = window.CustomAlgs;
+  const U = window.UiState; // 開け閉めする欄が開いているか（navbar.js）
   const $ = (id) => document.getElementById(id);
   const el = (tag, className, text) => {
     const e = document.createElement(tag);
@@ -93,6 +94,7 @@
   function savePrefs(change) {
     const current = S.get('practice');
     const next = Object.assign({}, current && typeof current === 'object' ? current : {}, change);
+    delete next.settingsOpen; // 以前は設定を開いているかも保存していた（今は UiState。アカウントに同期しないように消す）
     S.set('practice', next);
     Object.assign(prefs, next);
   }
@@ -217,9 +219,9 @@
     $('pageSwitchLink').href = 'stats?' + new URLSearchParams({ set: prefs.set });
     const box = $('practiceSettings');
     box.replaceChildren();
-    // スマホ（狭い画面）では、設定を今の選択を並べた 1 行にたたむ（押すと開く。開いているかは prefs.settingsOpen）。
-    // 広い画面では 1 行の要約は出さず、いつも開いている（css/practice.css）
-    box.classList.toggle('open', prefs.settingsOpen === true);
+    // スマホ（狭い画面）では、設定を今の選択を並べた 1 行にたたむ（押すと開く）。開いているかは保存せず、ほかのページから来たときはたたむ
+    // （読み直し・戻る・進むのときだけ前の状態。navbar.js の UiState）。広い画面では 1 行の要約は出さず、いつも開いている（css/practice.css）
+    box.classList.toggle('open', U.isOpen('practice-settings'));
     box.append(settingsSummary());
     document.body.classList.toggle('practice-full', isFull());
     document.body.classList.toggle('practice-ll', isLl());
@@ -308,7 +310,7 @@
   function settingsSummary() {
     const button = el('button', 'practice-settings-summary');
     button.type = 'button';
-    const open = prefs.settingsOpen === true;
+    const open = U.isOpen('practice-settings');
     button.setAttribute('aria-expanded', String(open));
     button.setAttribute('aria-controls', 'practiceSettings');
     const parts = [];
@@ -340,7 +342,7 @@
     });
     button.append(icon, text, el('span', 'practice-settings-caret', open ? '▴' : '▾'));
     button.addEventListener('click', () => {
-      savePrefs({ settingsOpen: !open });
+      U.setOpen('practice-settings', !open);
       renderSettings();
     });
     return button;
