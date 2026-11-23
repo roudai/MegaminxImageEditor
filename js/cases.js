@@ -475,7 +475,7 @@
   // カードは1回だけ作り、並びを変えたら見出しの下に入れ直す（画像を描き直さない）
   const CARDS = {};
 
-  // 見出し（グループ：「A (3 corner CP)」、段階：「2. A1–2」）
+  // 見出し（グループ：「A (3 corner CP)」、段階：「2. A」）
   const sectionTitle = (s) => (s.stage ? `${s.stage}. ${s.label}` : groupLabel(s.key));
 
   // 今の並びで、ジャンプのボタンと見出しごとのカードを作り直す

@@ -6,10 +6,10 @@
  *   CaseSections.list(data, byStage)    区切りの配列 [{ key, label, stage, cases }]
  *     byStage = false：グループ（c.group）ごと。並びはデータの順。key・label はグループ名（"A"）
  *     byStage = true ：覚える順番の段階（c.stage）ごと。段階の中も覚える順（c.order）。
- *                      key は "s<段階>"（"s9"）、label は中のケースから作る短い名前（stageLabel）
+ *                      key は "s<段階>"（"s9"）。label は、段階が 1 つのグループのケースをすべて含むならグループ名（"A"・"35"・"1C"）、
+ *                      グループの一部だけ（PLL の F1・F2–5・K1・K2）なら中のケースから作る短い名前（stageLabel）
  *   CaseSections.stageLabel(names)      段階の短い名前。+/− を除いた名前の文字と番号の範囲
- *                                       PLL（文字＋番号）：[F2+, F3+, F2-, F3-, F4+, …] → "F2–5"、[E1, E2, E3] → "E1–3"、[D+, D-] → "D"、[K2+, K2-] → "K2"
- *                                       OLL（番号＋文字。1 段階が 1 グループ）：[2A, 2B, 2C, 2D] → "2A–D"、[13+, 13-] → "13"、[1C] → "1C"
+ *                                       [F2+, F3+, F2-, F3-, F4+, …] → "F2–5"、[E1, E2, E3] → "E1–3"、[D+, D-] → "D"、[K2+, K2-] → "K2"
  *   CaseSections.keyOf(c, byStage)      そのケースが入る区切りの key
  *
  * 並びの選び方は store.js の 'list-filter' の pllOrder・ollOrder（'learn' なら覚える順。一覧と練習で共通）。
@@ -29,15 +29,6 @@
 
   function stageLabel(names) {
     const bases = names.map((n) => String(n).replace(/[+-]$/, '')).filter((b, i, all) => all.indexOf(b) === i);
-    // OLL：番号が 1 つで、文字（無いこともある）の範囲
-    const oll = bases.map((b) => /^(\d+)([A-Z]*)$/.exec(b));
-    if (oll.every(Boolean) && oll.every((m) => m[1] === oll[0][1])) {
-      const letters = oll.map((m) => m[2]).filter(Boolean).sort();
-      if (!letters.length) return oll[0][1];
-      const lo = letters[0];
-      const hi = letters[letters.length - 1];
-      return lo === hi ? oll[0][1] + lo : `${oll[0][1]}${lo}–${hi}`;
-    }
     const parts = bases.map((b) => /^([A-Z]+)(\d*)$/.exec(b));
     const letters = parts.map((m) => (m ? m[1] : null)).filter((l, i, all) => all.indexOf(l) === i);
     // 文字が1種類で、番号が付いていればその範囲（付いていなければ文字だけ）
@@ -66,7 +57,12 @@
       }
       at[key].cases.push(c);
     });
-    if (stage) sections.forEach((s) => (s.label = stageLabel(s.cases.map((c) => c.name))));
+    // 段階が 1 つのグループのケースをすべて含むなら、段階の名前はグループ名（A1–2 ではなく A、OLL の 2A–D ではなく 2）。
+    // グループの一部だけ（PLL の F1・F2–5・K1・K2）は中のケースから作る（stageLabel）
+    const size = {};
+    data.forEach((c) => (size[c.group] = (size[c.group] || 0) + 1));
+    const groupOf = (s) => (s.cases.every((c) => c.group === s.cases[0].group) && s.cases.length === size[s.cases[0].group] ? s.cases[0].group : null);
+    if (stage) sections.forEach((s) => (s.label = groupOf(s) || stageLabel(s.cases.map((c) => c.name))));
     return sections;
   }
 
