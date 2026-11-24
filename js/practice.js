@@ -489,6 +489,46 @@
     changeSettings({ groups: groups });
   }
 
+  // 選んだグループ（段階）のケースがすべて習得済みのとき、次に練習するグループ。
+  // 返り値：null（グループを選んでいない・まだ習得済みでないケースがある）/ { section }（次のグループ）/ { section: null }（すべて習得済み）。
+  // 「次」は今の並び（覚える順なら段階、グループ順ならグループ）で、選んでいる中でいちばん後ろのものの次。
+  // すべて習得済みのグループは飛ばし、後ろに無ければ前に戻って探す（飛ばしたグループがあれば、それを練習する）
+  function nextGroup(set) {
+    const chosen = chosenGroups(set);
+    if (!chosen || !DATA[set]) return null;
+    const cases = inSelection(set);
+    if (!cases.length || cases.some((c) => P.statusOf(set, c.name) !== 'learned')) return null;
+    const sections = CS.list(inScope(set), byStage(set));
+    let last = -1;
+    sections.forEach((s, i) => {
+      if (chosen.has(s.key)) last = i;
+    });
+    const order = sections.slice(last + 1).concat(sections.slice(0, last + 1));
+    const section = order.find((s) => !chosen.has(s.key) && s.cases.some((c) => P.statusOf(set, c.name) !== 'learned'));
+    return { section: section || null };
+  }
+  // 次のグループに置き換えて練習する（対象は、そのグループにケースのある最初の状態：未習得 → 練習中）
+  function goNextGroup(set, section) {
+    const stage = byStage(set);
+    const groups = Object.assign({}, prefs.groups, { [groupsKey(set)]: [stage ? section.stage : section.key] });
+    const filter = FILTER_FLOW.find((f) => section.cases.some((c) => P.statusOf(set, c.name) === f)) || 'new';
+    hideToast();
+    changeSettings({ groups: groups, filter: filter });
+  }
+  // 知らせの中の「次のグループ（E）へ」のボタン。次が無い・まだのときは null。
+  // 設定の欄には出さない（覚え終えたグループをわざと選んで復習しているときも出続けて邪魔になるため。あとから進むときはグループの欄で選ぶ）
+  function nextGroupButton(cls) {
+    const set = prefs.set;
+    const info = nextGroup(set);
+    if (!info || !info.section) return null;
+    const b = el('button', 'btn btn-sm ' + cls);
+    b.type = 'button';
+    const section = info.section;
+    I.set(b, byStage(set) ? 'practice.nextStage' : 'practice.nextGroup', { name: section.label });
+    b.addEventListener('click', () => goNextGroup(set, section));
+    return b;
+  }
+
   // 設定を変えたら保存し、（しきい値以外なら）次の問題を出し直す
   function changeSettings(change, renew) {
     savePrefs(change);
@@ -591,7 +631,9 @@
   // 対象（未習得 → 練習中 → 習得済み）を、ケースのある次の状態に進める。進めたら true。
   // 解いたあと（next(true)）に今の対象のケースが無くなったときだけ呼ぶ（自分で対象を選んだ直後・スキップでは進めない）。
   // 戻る向き（取り消して未習得が戻ったなど）・「すべて」では切り替えない。進めたら称号・バッジと同じ枠で知らせる
-  // （広い画面は結果の行のすぐ下、スマホ・全画面は画面の下。同じ回にバッジの知らせが出ていれば、その下に行を足す）
+  // （同じ回にバッジの知らせが出ていれば、その下に行を足す）。
+  // グループを選んでいて、そのケースがすべて習得済みになったときは「選んだグループはすべて習得済みになりました」と、
+  // 「次のグループ（E）へ」のボタンを出す（すべてのグループを習得済みなら「すべてのグループを習得しました」）
   const FILTER_FLOW = ['new', 'learning', 'learned'];
   function advanceFilter() {
     const from = prefs.filter;
@@ -601,6 +643,13 @@
     if (!to) return false;
     savePrefs({ filter: to });
     renderSettings();
+    const done = to === 'learned' ? nextGroup(prefs.set) : null;
+    if (done) {
+      const stage = byStage(prefs.set);
+      const key = done.section ? (stage ? 'practice.stagesLearned' : 'practice.groupsLearned') : stage ? 'practice.allStagesLearned' : 'practice.allGroupsLearned';
+      toast([{ plain: true, text: () => I.t(key), action: () => nextGroupButton('practice-toast-action') }], { append: true });
+      return true;
+    }
     const text = () => I.t('practice.filterAdvanced', { from: I.t('status.' + from), to: I.t('status.' + to) });
     toast([{ plain: true, text: text }], { append: true });
     return true;
@@ -950,7 +999,16 @@
       ...lines.map((make) => {
         const line = el('div', 'practice-toast-line');
         if (typeof make === 'function' || make.plain) {
-          I.live(line, make.plain ? make.text : make);
+          if (!make.action) {
+            I.live(line, make.plain ? make.text : make);
+            return line;
+          }
+          // ボタン付きの行（「次のグループ（E）へ」）。ボタンは文の下に置く
+          const text = el('div');
+          I.live(text, make.text);
+          line.append(text);
+          const button = make.action();
+          if (button) line.append(button);
           return line;
         }
         // 名前は「、」でつなぐ。スマホは「、」を出さず、名前を 1 つずつ次の行に並べる（css/practice.css）

@@ -1115,6 +1115,22 @@ body.practice-focus.practice-full .practice-stage-top {
 .practice-toast-name {
   white-space: nowrap;
 }
+/* 知らせの中の「次のグループ（E）へ」（白地に緑の枠と字。塗りつぶすと目立ちすぎるため） */
+.practice-toast-action {
+  margin-top: .4rem;
+  padding: .2rem .8rem;
+  border: 1px solid #198754;
+  border-radius: 50rem;
+  background: #fff;
+  color: #198754;
+  font-size: .85rem;
+}
+.practice-toast-action:hover,
+.practice-toast-action:focus-visible {
+  border-color: #198754;
+  background: #e8f3ee;
+  color: #146c43;
+}
 .practice-toast-line + .practice-toast-line {
   margin-top: .2rem;
 }
