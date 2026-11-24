@@ -745,6 +745,7 @@
     $('practiceStage').classList.toggle('running', next === 'running');
     $('practiceStage').classList.toggle('inspecting', next === 'inspecting');
     if (next !== 'inspecting') timerEl.classList.remove('warn8', 'warn12', 'over');
+    if (next !== 'running') clearWarn(); // 15 秒未満で止めなかった知らせは、止めた・中止したら消す
   }
 
   function resetTimer() {
@@ -830,7 +831,6 @@
   function inspect() {
     setState('inspecting');
     clearShown();
-    clearTooFast();
     inspectAt = performance.now();
     const tick = () => {
       const t = (performance.now() - inspectAt) / 1000;
@@ -853,7 +853,6 @@
     }
     setState('running');
     clearShown();
-    clearTooFast();
     startAt = performance.now();
     const tick = () => {
       timerEl.textContent = format((performance.now() - startAt) / 1000);
@@ -878,13 +877,14 @@
   const MIN_RUN_MS = 500;
   function stop() {
     if (performance.now() - startAt < MIN_RUN_MS) return;
+    // ソルブは MIN_FULL_SEC 秒未満では止めない（押し間違いとみなす。止めると途中の解きが無駄になるため）。知らせだけ出し、計測は続ける
+    if (isFull() && performance.now() - startAt < MIN_FULL_SEC * 1000) return warnNotStopped();
     ignoreClicksUntil = performance.now() + 400;
     startCooldown();
     cancelAnimationFrame(frame);
     const sec = Math.round((performance.now() - startAt) / 10) / 100; // 0.01 秒単位
     timerEl.textContent = format(sec);
     setState('idle');
-    if (isFull() && sec < MIN_FULL_SEC) return tooFast(sec);
     if (isFull()) recordFull(sec, penalty);
     else if (isLl()) recordLl(sec);
     else record(sec);
@@ -895,45 +895,22 @@
     I.set(d, key, params);
     return d;
   }
-  // ソルブで MIN_FULL_SEC 秒未満で止めたとき：押し間違いとみなして記録しない（累計・バッジも数えない）。
-  // タイマーを 0.00 に戻し、スクランブルはそのまま（同じスクランブルでやり直せる）。
-  // js/titles.js のバッジの判定でも、同じ秒数未満の記録は数えない（MIN_FULL_SEC）
-  // 知らせは止めたタイムを添え（続けて短く止めても、新しい知らせだと分かるように）、次のインスペクション・計測を始めたら消す
+  // ソルブで MIN_FULL_SEC 秒未満で止めようとしたとき：止めずに計測を続け、タイマーのすぐ下に
+  // 「15 秒未満のため、計測を続けています」を数秒出す。重ねて出すのでタイマーやボタンは動かない。全画面の計測中も見える（css/practice.css の .practice-timer-warn）。
+  // やめたいときは「中止」（Esc）。js/titles.js のバッジの判定でも、前に記録された同じ秒数未満の記録は数えない（MIN_FULL_SEC）
   const MIN_FULL_SEC = 15;
-  let tooFastShown = false;
-  function tooFast(sec) {
-    penalty = '';
-    resetTimer();
-    const result = $('practiceResult');
-    result.hidden = false;
-    // ok(e)：「スクランブルを変える」のクリックを効かせるか
-    const makeLine = (ok) => {
-      // 「スクランブルを変える」：押し間違いでなく崩し直したいときなど、スクランブルを作り直す（スキップと同じ）
-      const again = el('button', 'btn btn-link btn-sm p-0 align-baseline ms-2');
-      again.type = 'button';
-      I.set(again, 'practice.newScramble');
-      again.addEventListener('click', (e) => {
-        if (!ok(e, again)) return;
-        next();
-        clearTooFast();
-      });
-      const line = el('div', 'text-muted small');
-      const text = el('span');
-      I.set(text, 'practice.tooFast', { time: format(sec), sec: MIN_FULL_SEC });
-      line.append(text, again);
-      return line;
-    };
-    result.replaceChildren(makeLine(() => performance.now() >= ignoreClicksUntil));
-    // 全画面のときはタイマーの下の行にも出す（結果の欄は隠れるため）。タイマーのすぐ下にあるので、
-    // 止めたタップがそのまま届かないよう、ボタンの上で押し始めたときだけ効かせる（pressedOn）
-    $('focusVerdict').replaceChildren(makeLine(pressedOn));
-    tooFastShown = true;
+  const WARN_MS = 3000;
+  let warnTimer = 0;
+  function warnNotStopped() {
+    const box = $('timerWarn');
+    I.set(box, 'practice.notStopped', { sec: MIN_FULL_SEC });
+    box.hidden = false;
+    clearTimeout(warnTimer);
+    warnTimer = setTimeout(clearWarn, WARN_MS);
   }
-  function clearTooFast() {
-    if (!tooFastShown) return;
-    tooFastShown = false;
-    $('practiceResult').hidden = true;
-    $('focusVerdict').replaceChildren();
+  function clearWarn() {
+    clearTimeout(warnTimer);
+    $('timerWarn').hidden = true;
   }
 
   // ---- 記録と判定 ----
@@ -1160,7 +1137,6 @@
     const result = $('practiceResult');
     result.hidden = false;
     result.replaceChildren();
-    tooFastShown = false; // 結果を出したら、15 秒未満の知らせではない
 
     const display = P.displaySettings(set);
     const canvas = el('canvas');
@@ -1267,7 +1243,6 @@
     const result = $('practiceResult');
     result.hidden = false;
     result.replaceChildren();
-    tooFastShown = false; // 結果を出したら、15 秒未満の知らせではない
     const body = el('div', 'practice-result-body w-100');
     const head = el('div', 'd-flex flex-wrap align-items-center gap-2');
     head.append(el('span', 'practice-result-time', showTime(rec)));
@@ -1352,7 +1327,6 @@
     const result = $('practiceResult');
     result.hidden = false;
     result.replaceChildren();
-    tooFastShown = false;
     const body = el('div', 'practice-result-body w-100');
     const head = el('div', 'd-flex flex-wrap align-items-baseline gap-2');
     head.append(el('span', 'practice-result-time', showTime(rec)));

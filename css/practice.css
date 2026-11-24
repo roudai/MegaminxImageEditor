@@ -449,6 +449,35 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* ソルブで 15 秒未満で止めようとしたときの知らせ（止めずに続ける。js/practice.js の warnNotStopped）。
+   タイマーのすぐ下に重ねて出し、出し入れでタイマー・ボタンが動かないようにする。並びから外し（position: absolute。top は決めず、
+   並んでいたときの場所のまま）、1 行分上にずらす。並びに残すと、タイマーの下と「中止」の上の余白がたたまれなくなり「中止」が下がる。
+   ほかの要素に position は付けない（全画面で画面の下に置いている「中止」の基準の要素が変わるため）。全画面の計測中も見える。
+   押してもタイマーの操作の邪魔をしない（pointer-events: none） */
+.practice-timer-warn {
+  position: absolute;
+  left: 0;
+  right: 0;
+  transform: translateY(-1.2em);
+  white-space: nowrap; /* 2 行になると下の「中止」に重なるので 1 行（文も 1 行に収まる長さ） */
+  color: #b02a37;
+  font-size: .8rem;
+  line-height: 1.2;
+  text-align: center;
+  pointer-events: none;
+}
+.practice-timer-warn[hidden] {
+  display: none;
+}
+/* 全画面でないソルブ：メッセージの行の分だけ、タイマーとボタン（「中止」）の間をいつも空けておく（出し入れでボタンが動かないように、
+   メッセージとボタンの間も詰まりすぎないように）。メッセージはその間の真ん中に来るよう、少し上げる。
+   全画面の計測中はボタンを画面の下に置くので、ここは変えない */
+body.practice-full:not(.practice-focus) .practice-buttons {
+  margin-top: 1.5rem !important; /* Bootstrap の mt-2（!important）より優先 */
+}
+body:not(.practice-focus) .practice-timer-warn {
+  transform: translateY(calc(-1.2em - .5rem));
+}
 /* ケース名のすぐ下にタイマーを置く（通しはケース名を出さないので今までの間隔のまま） */
 body:not(.practice-full) .practice-stage-top + .practice-timer {
   margin-top: 0;

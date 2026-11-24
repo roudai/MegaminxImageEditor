@@ -84,6 +84,8 @@
       <button id="timer" type="button" class="practice-timer" aria-live="off">0.00</button>
       <!-- タイマーの下 -->
       <div class="practice-stage-bottom">
+        <!-- ソルブで 15 秒未満で止めようとしたときの知らせ（止めずに続ける。タイマーのすぐ下に重ねて出し、ほかを動かさない。js/practice.js の warnNotStopped） -->
+        <div id="timerWarn" class="practice-timer-warn" role="status" hidden></div>
         <!-- 全画面のときだけ：止めたあとの判定の 1 行（PLL・OLL。js/practice.js の showResult） -->
         <div id="focusVerdict" class="practice-focus-verdict" aria-live="polite"></div>
         <!-- 操作の説明（Tips）。その種類で一度スタートするまでだけ出す（js/practice.js の renderTip） -->
