@@ -167,6 +167,8 @@
 
   // 手順から計算した色は表示を切り替えたときに反映する
   document.querySelectorAll('input[name="algType"]').forEach((r) => r.addEventListener('change', paintAll));
+  // 再読み込みで色を戻したとき（alg-input.js の restoreSession）も塗り直す
+  document.addEventListener('stickers-change', paintAll);
 
   // ---- 画像のクリック ----
   // 色を直接指定のときだけ、クリックした位置のステッカーのパレットを開く。

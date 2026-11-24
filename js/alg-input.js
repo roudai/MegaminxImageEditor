@@ -594,10 +594,77 @@
     update();
   });
 
+  // ---- 再読み込みで今の状態に戻す（sessionStorage。そのタブの中だけ）----
+  // 手順・種類・選んでいる PLL / OLL とケース（書き換え中の手順も）・色を直接指定した色・ファイル名を、ページを離れるときに覚えておき、
+  // 再読み込み（と戻る・進むでこのページに戻ったとき）だけ戻す。新しく開いたとき・一覧などのリンクから来たときは URL の指定（無ければ初期表示）。
+  // 再読み込みは URL も同じなので、URL の指定より覚えた状態を優先する（?pll=A1+ で開いて書き換えたあとも、書き換えた手順に戻る）。
+  // 配色・画像サイズなどは saveSettings でずっと保存しているので、ここでは扱わない
+  const SESSION_KEY = 'megaminx-image-editor:editor-session';
+  const STICKER = /^([a-z]|#[0-9a-f]{6})$/i;
+  const stickerIds = () => Array.from({ length: 11 }, (_, i) => 'uface' + i).concat(Array.from({ length: 15 }, (_, i) => 'sface' + (i + 1)));
+
+  function saveSession() {
+    const sel = selected();
+    const shown = [...setRadios].find((r) => r.checked);
+    const session = {
+      alg: input.value,
+      type: algType(),
+      shownSet: shown ? shown.value : 'pll',
+      set: sel ? sel.set.key : null,
+      name: sel ? sel.c.name : null,
+      stickers: stickerIds().map((id) => $(id).value),
+      fname: $('fname').value,
+    };
+    try {
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    } catch (e) {
+      // 保存できない環境（プライベートモードなど）では何もしない
+    }
+  }
+
+  function readSession() {
+    const nav = window.performance && performance.getEntriesByType ? performance.getEntriesByType('navigation')[0] : null;
+    if (!nav || (nav.type !== 'reload' && nav.type !== 'back_forward')) return null;
+    try {
+      const s = JSON.parse(sessionStorage.getItem(SESSION_KEY));
+      if (!s || typeof s !== 'object' || typeof s.alg !== 'string' || !['case', 'alg', 'state'].includes(s.type)) return null;
+      return s;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // 覚えた状態を入力欄に戻して描き直す。戻せたら true
+  function restoreSession(s) {
+    const set = SETS[s.set];
+    const c = set && typeof s.name === 'string' ? findCase(set, s.name) : null;
+    if (c) selectCase(set, c); // ケース・グループ・PLL / OLL の配色（ファイル名もここで入る）
+    else if (SETS[s.shownSet]) showSet(s.shownSet);
+    setAlgType(s.type); // 手順・種類をそろえる（ケースの手順が入るので、このあと覚えた手順で上書きする）
+    input.value = s.alg;
+    if (Array.isArray(s.stickers) && s.stickers.length === 26 && s.stickers.every((v) => typeof v === 'string' && STICKER.test(v))) {
+      if (s.type === 'state') stickerIds().forEach((id, i) => ($(id).value = s.stickers[i]));
+    }
+    if (typeof s.fname === 'string') $('fname').value = s.fname;
+    if (s.type === 'state') imageChange();
+    else update();
+    showCaseBar(); // 書き換え中なら「編集中」
+    document.dispatchEvent(new Event('stickers-change')); // state-editor.js のステッカーのボタンの色を塗り直す
+    return true;
+  }
+
+  window.addEventListener('pagehide', saveSession);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') saveSession();
+  });
+
   const params = new URLSearchParams(location.search);
   const urlPll = params.has('pll') ? findCase(SETS.pll, params.get('pll')) : null;
   const urlOll = params.has('oll') ? findCase(SETS.oll, params.get('oll')) : null;
-  if (urlPll) {
+  const session = readSession();
+  if (session && restoreSession(session)) {
+    // 再読み込み：覚えた状態に戻した
+  } else if (urlPll) {
     selectCase(SETS.pll, urlPll);
   } else if (urlOll) {
     selectCase(SETS.oll, urlOll);
