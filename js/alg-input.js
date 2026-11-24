@@ -62,11 +62,29 @@
     });
   }
 
-  // 面記号の前には必要に応じて空白を入れ、' 2 ) は直前に続ける
+  // 入力欄のカーソルの位置（選んでいる範囲）。ボタンを押すと入力欄からフォーカスが外れるので、最後の位置を覚えておく。
+  // value はそのときの入力欄の中身：ケースを選ぶなどで中身が入れ替わったら、その位置は使わない（最後に足す）
+  let caret = null; // { value, start, end }
+  function rememberCaret() {
+    if (document.activeElement !== input || input.selectionStart == null) return;
+    caret = { value: input.value, start: input.selectionStart, end: input.selectionEnd };
+  }
+
+  // 記号のボタン：カーソルの位置に入れる（選んでいる範囲は置き換える。カーソルを入れていなければ最後に足す）。
+  // 面記号の前には必要に応じて空白を入れ、' 2 ) は直前の記号に続ける（前の空白は詰める）。後ろに記号が続くときは空白を挟む。
+  // 入れたあとは入力欄にフォーカスを戻さない（スマホでキーボードが出てボタンが隠れないように）。カーソルは入れた記号の後ろに進める
   function addToken(token) {
-    let value = input.value;
-    if (!SUFFIXES.includes(token) && value && !/[\s(]$/.test(value)) value += ' ';
-    input.value = value + token;
+    const value = input.value;
+    const at = caret && caret.value === value ? caret : { start: value.length, end: value.length };
+    let before = value.slice(0, at.start);
+    const after = value.slice(at.end);
+    if (SUFFIXES.includes(token)) before = before.replace(/\s+$/, '');
+    else if (before && !/[\s(]$/.test(before)) before += ' ';
+    const gap = token !== '(' && /^[A-Za-z(]/.test(after) ? ' ' : '';
+    input.value = before + token + gap + after;
+    const pos = before.length + token.length;
+    caret = { value: input.value, start: pos, end: pos };
+    if (document.activeElement === input) input.setSelectionRange(pos, pos);
     showCaseBar(); // ケースを選んだまま書き換えた（編集中）
     update();
   }
@@ -457,6 +475,9 @@
     showCaseBar();
     update();
   });
+  // カーソルの位置を覚える（ボタンで記号を入れる場所）
+  ['input', 'keyup', 'mouseup', 'touchend', 'select', 'focus', 'blur'].forEach((type) => input.addEventListener(type, rememberCaret));
+  document.addEventListener('selectionchange', rememberCaret);
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !$('myAlgSave').disabled) saveMyAlg();
   });
