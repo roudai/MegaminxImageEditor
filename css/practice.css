@@ -627,6 +627,16 @@ body.practice-focus .practice-stage:is(.running, .inspecting) #hintButton {
   white-space: pre-line;
   word-spacing: .1em;
 }
+/* 全画面のソルブ：スクランブルを大きく（最大 1.6rem）し、タイマーより上の余白の真ん中に置く（タイマーに寄せると窮屈なため。
+   高さのある画面ほど上に上がる）。大きさは画面の高さにも合わせ（低い画面で 7 行が上にはみ出さないように）、
+   通常の大きさ（1.05rem）より小さくはしない。横は今までどおり画面の幅で止める（1 行約 41 文字が収まるように） */
+body.practice-focus .practice-scramble.full {
+  max-width: none;
+  font-size: clamp(.55rem, min(2.95vw, max(1.05rem, 2.1vh)), 1.6rem);
+}
+body.practice-focus.practice-full .practice-stage-top {
+  align-self: center;
+}
 /* 通しでは「解けなかった」「スキップ」「ヒント」は出さない（DNF は結果の OK / +2 / DNF で付ける）。「中止」は出す */
 .practice-full #hintButton,
 .practice-full #dnfButton,
