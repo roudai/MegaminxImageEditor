@@ -400,18 +400,19 @@
     counted('focus', 'speed', casesIn30min, 100),
     counted('perfect50', 'speed', perfectRun, 50, true),
     counted('perfect100', 'speed', perfectRun, 100, true),
-    // 通し
+    // 通し（取りやすい順。PLL・OLL まで練習する人を目安に、回数・続けた回数・タイムを混ぜて並べる）
     { id: 'fullFirst', group: 'full', test: (d) => fullLog(d.practice).length >= 1 },
     { id: 'fullAo12', byLog: true, group: 'full', test: (d) => bestFullAverage(d, 12) < Infinity },
     counted('clean50', 'full', bestCleanRun, 50, true),
+    // 90 秒の壁：ao12 が 1:30 未満（id は以前の「2 分の壁」（単発で 2:00 未満）のときの名前のまま。取ったバッジの保存に使っているので変えない）
+    { id: 'fullSub120', byLog: true, group: 'full', test: (d) => bestFullAverage(d, 12) < 90 },
     counted('full100', 'full', fullCount, 100),
-    { id: 'fullSub120', byLog: true, group: 'full', test: (d) => bestFullSingle(d) < 120 },
+    counted('pb10', 'full', pbCount, 10, true),
+    counted('clean100', 'full', bestCleanRun, 100, true),
     // ソルブ漬けの一日：24 時間のうちに 100 回（id は以前の 50 回のときの名前のまま。取ったバッジの保存に使っているので変えない）
     counted('day50', 'full', fullIn24h, 100),
-    counted('clean100', 'full', bestCleanRun, 100, true),
-    counted('pb10', 'full', pbCount, 10, true),
-    counted('full1000', 'full', fullCount, 1000),
     { id: 'fullSub60', byLog: true, group: 'full', test: (d) => bestFullSingle(d) < 60 },
+    counted('full1000', 'full', fullCount, 1000),
     { id: 'ao12Sub60', byLog: true, group: 'full', test: (d) => bestFullAverage(d, 12) < 60 },
     { id: 'fullSub45', byLog: true, group: 'full', test: (d) => bestFullSingle(d) < 45 },
     { id: 'ao100Sub60', byLog: true, group: 'full', test: (d) => bestFullAverage(d, 100) < 60 },

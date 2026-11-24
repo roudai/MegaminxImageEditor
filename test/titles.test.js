@@ -283,12 +283,11 @@ test('バッジ：通しのタイム（未満。+2 を含める）と ao（DNF �
   assert.deepEqual(ids([]), []);
   assert.deepEqual(ids([rec('')]), ['fullFirst']);
   assert.deepEqual(ids([rec('', 180)]), ['fullFirst']);
-  assert.deepEqual(ids([rec('', 119.99)]), ['fullFirst', 'fullSub120']);
-  assert.deepEqual(ids([rec('+2', 118.5)]), ['fullFirst']); // +2 を含めて 120.5 秒
-  assert.deepEqual(ids([rec('', 59.99)]), ['fullFirst', 'fullSub120', 'fullSub60']);
+  assert.deepEqual(ids([rec('', 89.99)]), ['fullFirst']); // 90 秒の壁は ao12 で数える（単発では取れない）
+  assert.deepEqual(ids([rec('', 59.99)]), ['fullFirst', 'fullSub60']);
   assert.deepEqual(ids([rec('DNF', 30)]), ['fullFirst']);
-  assert.deepEqual(ids([rec('', 44)]), ['fullFirst', 'fullSub120', 'fullSub60', 'fullSub45']);
-  assert.deepEqual(ids([rec('', 29.99)]), ['fullFirst', 'fullSub120', 'fullSub60', 'fullSub45', 'fullSub30']);
+  assert.deepEqual(ids([rec('', 44)]), ['fullFirst', 'fullSub60', 'fullSub45']);
+  assert.deepEqual(ids([rec('', 29.99)]), ['fullFirst', 'fullSub60', 'fullSub45', 'fullSub30']);
   assert.ok(!ids(Array(99).fill(rec(''))).includes('full100'));
   assert.ok(ids(Array(100).fill(rec('DNF'))).includes('full100')); // DNF も 1 回に数える
   assert.deepEqual(ids(Array(11).fill(rec(''))), ['fullFirst']);
@@ -314,6 +313,12 @@ test('バッジ：通しのタイム（未満。+2 を含める）と ao（DNF �
   assert.equal(clean(Array(100).fill(rec(''))), true);
   assert.equal(clean(Array(100).fill(rec('+2'))), true);
   assert.equal(clean(Array(50).fill(rec('')).concat([rec('DNF')], Array(60).fill(rec('')))), false);
+  // 90 秒の壁：ao12 が 1:30 未満（+2 を含める）
+  const ao12Sub90 = (log) => ids(log).includes('fullSub120');
+  assert.equal(ao12Sub90(Array(12).fill(rec('', 89.99))), true);
+  assert.equal(ao12Sub90(Array(12).fill(rec('', 90))), false); // ちょうど 1:30 は切っていない
+  assert.equal(ao12Sub90(Array(12).fill(rec('+2', 88.5))), false); // +2 を含めて 90.5 秒
+  assert.equal(ao12Sub90(Array(11).fill(rec('', 60))), false); // 12 回に足りない
   // ao12：速い方・遅い方を 1 回ずつ除いた 10 回の平均が 1:00 未満（DNF 1 回までは除ける）
   const ao12 = (secs) => ids(secs.map((t) => (t === 'DNF' ? rec('DNF') : rec('', t)))).includes('ao12Sub60');
   assert.equal(ao12(Array(10).fill(59).concat([30, 'DNF'])), true);
@@ -452,14 +457,14 @@ test('recheck：記録だけで決まるバッジを判定し直し、満たさ�
     const slow = { at: 900, sec: 90, penalty: '' };
     Store.set('practice', { full: { log: [fast, slow] } });
     const got = T.update(10);
-    assert.ok(got.includes('fullSub30') && got.includes('fullSub120') && got.includes('fullFirst'));
+    assert.ok(got.includes('fullSub30') && got.includes('fullFirst'));
     T.setShown('fullSub30');
-    // 20 秒の記録を消す：30 秒未満・45 秒未満・1:00 未満は外し、2:00 未満・はじめてのソルブは残す
+    // 20 秒の記録を消す：30 秒未満・45 秒未満・1:00 未満は外し、はじめてのソルブは残す
     Store.set('practice', { full: { log: [slow] } });
     assert.deepEqual(T.recheck(20).sort(), ['fullSub30', 'fullSub45', 'fullSub60']);
     const t = T.read();
     assert.equal(t.shown, null); // 表示していたバッジを外したら段位に戻す
-    assert.ok(t.earned.fullSub120 && t.earned.fullFirst && !t.earned.fullSub30);
+    assert.ok(t.earned.fullFirst && !t.earned.fullSub30);
     assert.deepEqual(t.revoked, { fullSub30: 20, fullSub45: 20, fullSub60: 20 });
     assert.deepEqual(T.recheck(21), []); // もう外すものは無い
     // 取り直したら、外した日時より後の日時で付く
