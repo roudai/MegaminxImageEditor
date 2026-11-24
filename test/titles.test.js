@@ -546,11 +546,12 @@ test('judgeRule：作り物の条件の表で、数え方ごとに数える', ()
     { at: at(13, 2), sec: 33.33, penalty: '+2' },
     { at: at(13, 1), sec: 40, penalty: 'DNF' },
   ];
-  const d = { practice: { log: log, full: { log: full } }, customAlgs: { pll: { A: {} }, oll: { B: {}, C: {} } } };
+  const ll = [{ at: at(12, 30), sec: 20, o: '1', p: 'A1+' }];
+  const d = { practice: { log: log, full: { log: full }, ll: { log: ll } }, customAlgs: { pll: { A: {} }, oll: { B: {}, C: {} } } };
   const J = (r) => T.judgeRule(r, d);
   assert.equal(J({ s: 'c', v: 'r', p: ['r', 5, 10], a: 'n' }), 2);
   assert.equal(J({ s: 'c', v: 'i', p: ['e', 1], a: 'run' }), 2);
-  assert.equal(J({ s: 'a', v: 'h', p: ['e', 12], a: 'day' }), 5);
+  assert.equal(J({ s: 'a', v: 'h', p: ['e', 12], a: 'day' }), 6); // PLL・OLL の 5 件と LL の 1 件
   assert.equal(J({ s: 'c', a: 'dc' }), 3); // 同じ日の pll A
   assert.equal(J({ s: 'c', v: 't', a: 'same' }), 1); // 4 → 4
   assert.equal(J({ s: 'c', v: 'l', a: 'seq', m: [0, 0, 1] }), 1);
