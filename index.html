@@ -35,7 +35,7 @@
     }
     .sticker-palette {
       position: absolute;
-      z-index: 1000;
+      z-index: 1025; /* 上に残す画像（sticky-top：1020）より上に。画像のクリックで開いたときに隠れないように */
       display: grid;
       grid-template-columns: repeat(7, 28px);
       gap: 6px;

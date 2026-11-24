@@ -2,6 +2,7 @@
 // - 色は hidden input（uface0..10 / sface1..15）に持つ。imageChange()（megaminx.js）がこの値を読む
 // - 色は既定14色のカラーパレットから選ぶ
 // - 初期値は canvas の ucolor / scolor 属性
+// - 上の画像（#canvas）のステッカーをクリックしても、そのステッカーのパレットを開く（色を直接指定のときだけ）
 // - 見出し・ラベルは i18n.js で日本語・英語を切り替える（ステッカーの def は key と params を持つ）
 // megaminx-state.js と megaminx.js（color_convert）の後、alg-input.js の前に読み込む。
 (function () {
@@ -110,32 +111,39 @@
   });
   document.body.append(palette);
 
-  function open(item) {
+  let fromImage = false; // 画像のクリックで開いたか
+
+  // anchor：パレットを出す位置の矩形（省略時はステッカーのボタン）
+  function open(item, anchor) {
     if (current === item && !palette.hidden) {
       close();
       return;
     }
     current = item;
+    fromImage = !!anchor;
     palette.querySelectorAll('.sticker-palette-color').forEach((b) => {
       b.classList.toggle('selected', b.dataset.value === item.input.value);
     });
     palette.hidden = false;
 
-    // ステッカーの真下に表示（画面からはみ出さないよう左右を調整）
-    const rect = item.swatch.getBoundingClientRect();
+    // ステッカー（画像から開いたときはクリックした位置）の真下に表示（画面からはみ出さないよう左右を調整）
+    const rect = anchor || item.swatch.getBoundingClientRect();
     const width = palette.offsetWidth;
     const left = Math.max(8, Math.min(rect.left, document.documentElement.clientWidth - width - 8));
     palette.style.left = left + window.scrollX + 'px';
     palette.style.top = rect.bottom + window.scrollY + 4 + 'px';
 
-    (palette.querySelector('.selected') || palette.firstElementChild).focus();
+    // 画像から開いたときはスクロールさせない（下のボタンへフォーカスで飛ばないように）
+    (palette.querySelector('.selected') || palette.firstElementChild).focus({ preventScroll: fromImage });
   }
 
   function close(returnFocus) {
     if (palette.hidden) return;
     palette.hidden = true;
-    if (returnFocus && current) current.swatch.focus();
+    // 画像から開いたときはボタンにフォーカスを戻さない（画面が下に飛ばないように）
+    if (returnFocus && current && !fromImage) current.swatch.focus();
     current = null;
+    fromImage = false;
   }
 
   function choose(value) {
@@ -160,6 +168,29 @@
   // 手順から計算した色は表示を切り替えたときに反映する
   document.querySelectorAll('input[name="algType"]').forEach((r) => r.addEventListener('change', paintAll));
 
+  // ---- 画像のクリック ----
+  // 色を直接指定のときだけ、クリックした位置のステッカーのパレットを開く。
+  // 表示は CSS で縮む（画面の高さの 35% まで）ので、表示の座標を canvas の座標に直す
+  const isState = () => {
+    const checked = document.querySelector('input[name="algType"]:checked');
+    return !!checked && checked.value === 'state';
+  };
+  // カーソル（.pickable）は種類を変えたときに alg-input.js の onTypeChange が付け外しする。ここでは初期値だけ
+  canvas.classList.toggle('pickable', isState());
+
+  canvas.addEventListener('click', (e) => {
+    if (!isState()) return;
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const x = ((e.clientX - rect.left) * canvas.width) / rect.width;
+    const y = ((e.clientY - rect.top) * canvas.height) / rect.height;
+    const id = window.MegaminxDraw.hitTest(canvas.width, x, y);
+    const item = id && items.find((it) => it.input.id === id);
+    if (!item) return; // 背景・枠の外：document の click で閉じる
+    e.stopPropagation();
+    open(item, { left: e.clientX, bottom: e.clientY });
+  });
+
   document.addEventListener('click', (e) => {
     if (!palette.contains(e.target)) close();
   });
@@ -167,4 +198,8 @@
     if (e.key === 'Escape') close(true);
   });
   window.addEventListener('resize', () => close());
+  // 画像は画面の上に残るが、パレットはページに置いているので、画像から開いたときはスクロールで閉じる
+  window.addEventListener('scroll', () => {
+    if (fromImage) close();
+  }, { passive: true });
 })();

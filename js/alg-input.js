@@ -436,6 +436,7 @@
     const isState = algType() === 'state';
     $('algEditor').hidden = isState;
     $('stateEditor').hidden = !isState;
+    $('canvas').classList.toggle('pickable', isState); // 画像のクリックで色を選べる（state-editor.js）ことをカーソルで示す
     fillCaseAlg();
     update();
     setMyAlgMessage(''); // 前のメッセージ（保存のエラーなど）は消す

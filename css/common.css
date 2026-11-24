@@ -606,6 +606,10 @@ html {
   height: auto;
   margin: 0 auto;
 }
+/* 色を直接指定のときは画像のステッカーをクリックして色を選べる（js/state-editor.js） */
+.editor-preview canvas.pickable {
+  cursor: pointer;
+}
 /* 入力欄にフォーカスしたときなどのスクロールで、上に残した画像の下に隠れないように（高さは js/megaminx.js が入れる） */
 html {
   scroll-padding-top: calc(var(--editor-preview-height, 0px) + .5rem); /* 画像のすぐ下にくっつかないよう少し空ける */
