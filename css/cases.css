@@ -388,9 +388,11 @@
     min-width: 1.55rem;
   }
 }
-/* 全部習得したグループ：緑の枠と文字。color・border-color を直接決めず Bootstrap のボタンの色（--bs-btn-*）にする
+/* 全部習得したグループ：薄い緑の背景に緑の枠と文字（緑の文字と半透明の枠だけでは、灰色のボタンと明るさが近く見分けにくかった。
+   塗りつぶすと目立ちすぎる）。color・border-color を直接決めず Bootstrap のボタンの色（--bs-btn-*）にする
    （タッチの画面で押したあとに残る :hover の色は、ふだんの色＝この緑を使う。css/common.css の (hover: none)） */
 .group-nav-complete {
   --bs-btn-color: var(--status-learned);
-  --bs-btn-border-color: var(--status-learned-soft);
+  --bs-btn-bg: #e8f3ee;
+  --bs-btn-border-color: var(--status-learned);
 }

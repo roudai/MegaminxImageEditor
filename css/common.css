@@ -754,7 +754,7 @@ html {
 @media (hover: none) {
   .btn[class*="btn-outline-"] {
     --bs-btn-hover-color: var(--bs-btn-color);
-    --bs-btn-hover-bg: transparent;
+    --bs-btn-hover-bg: var(--bs-btn-bg); /* ふだんの背景（ふつうは透明。一覧の習得済みのグループは薄い緑） */
     --bs-btn-hover-border-color: var(--bs-btn-border-color);
   }
 }
