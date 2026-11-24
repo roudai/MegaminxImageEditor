@@ -14,6 +14,7 @@
  *   全角アポストロフィ ’ や全角括弧（）も可
  *   大文字・小文字は区別しない（br = BR、Y = y）。DFR・DFL は DR・DL の別名（Dfr のような表記も読める）
  *   canonicalAlg(alg) で、記号を正しい表記（BR・DR・y など）に書き直した文字列にできる
+ *   simplifyAlg(alg) で、続けて並んだ同じ面をまとめた手順にできる（R R' は消し、R R は R2 に。自分の手順を保存するとき）
  *
  * 面の配置（上から見て反時計回り）:
  *   上段: F, R, BR, BL, L    下段: DR, DBR, B, DBL, DL    底: D
@@ -200,6 +201,71 @@
     return seq(0);
   }
 
+  /**
+   * 無駄な手順をまとめる。戻り値 { alg, changed }（changed：何かまとめた・消したか）
+   *   - 同じ深さで続けて並んだ同じ面（y も）を足し合わせる（R R → R2、R2 R → R2'）。合計 0 回（R R'・R5）は消す。
+   *     スタックで処理するので、消えたあとに並んだ同じ面もまとめる（R U U' R' → 空）
+   *   - 括弧はまたがない（(R U) U' はそのまま）。中身が空になった括弧は回数ごと消す
+   *   - まとめなかった記号は書いたまま（R3 単独も変えない）。記号は正しい表記（canonicalAlg）、空白は 1 つにそろえる
+   * 読めない手順は parseAlg と同じエラーを投げる
+   */
+  function simplifyAlg(alg) {
+    parseAlg(alg); // 読めない手順は同じエラーにする
+    const src = normalize(alg);
+    let pos = 0;
+    let changed = false;
+    const SUFFIX = ['', '', '2', "2'", "'"]; // turns → ふつうの表記（既定データと同じ書き方）
+
+    // 1 つの深さを読み、まとめた項目の列を返す。項目は { face, turns, text } か { group: 文字列 }
+    function seq() {
+      const out = [];
+      for (;;) {
+        while (src[pos] === ' ') pos++;
+        if (pos >= src.length) return out;
+        const ch = src[pos];
+        if (ch === ')') {
+          pos++;
+          return out;
+        }
+        if (ch === '(') {
+          const start = pos;
+          pos++;
+          const inner = seq();
+          const a = readAmount(src, pos, start);
+          const suffix = src.slice(pos, a.end);
+          pos = a.end;
+          if (!inner.length) {
+            changed = true; // 中身が空になった括弧は消す
+            continue;
+          }
+          out.push({ group: '(' + inner.map(text).join(' ') + ')' + suffix });
+          continue;
+        }
+        FACE_RE.lastIndex = pos;
+        const fm = FACE_RE.exec(src);
+        const a = readAmount(src, pos + fm[0].length, pos);
+        const face = canonicalFace(fm[0]);
+        const n = a.prime ? -a.n : a.n;
+        const turns = ((n % 5) + 5) % 5;
+        const written = face + src.slice(pos + fm[0].length, a.end);
+        pos = a.end;
+        const top = out[out.length - 1];
+        if (top && top.face === face) {
+          changed = true;
+          const sum = (top.turns + turns) % 5;
+          if (sum === 0) out.pop();
+          else Object.assign(top, { turns: sum, text: face + SUFFIX[sum] });
+        } else if (turns === 0) {
+          changed = true; // R5 など、回さないのと同じ
+        } else {
+          out.push({ face: face, turns: turns, text: written });
+        }
+      }
+    }
+    const text = (item) => item.group || item.text;
+    return { alg: seq().map(text).join(' '), changed: changed };
+  }
+
   // ---- 状態 ----
   /** 揃った状態（各位置の色 = 初期の面名） */
   function solved() {
@@ -323,6 +389,7 @@
     solved: solved,
     parseAlg: parseAlg,
     canonicalAlg: canonicalAlg,
+    simplifyAlg: simplifyAlg,
     invertMoves: invertMoves,
     applyMoves: applyMoves,
     applyAlg: applyAlg,

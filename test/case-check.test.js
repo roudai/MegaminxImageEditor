@@ -94,6 +94,24 @@ test('自分の手順：小文字で入力しても正しい表記にして保�
   assert.equal(CA.validate('pll', c, c.alg.toLowerCase(), PLL).isDefault, true);
 });
 
+test("自分の手順：無駄な手順（R R' など）はまとめてから確かめる", () => {
+  const c = pll('A1+');
+  // 既定の前に R R' を足しても、まとめると既定と同じ
+  assert.equal(CA.validate('pll', c, `R R' ${c.alg}`, PLL).isDefault, true);
+  // 途中に U U' を挟んだ別の手順：まとめて保存し、知らせる
+  const j3 = "R2 U R2' U' R2 U2' R2' U2 R2 U' R2' U2 R2 U2 R2'";
+  const r = CA.validate('pll', pll('J3+'), j3.replace("U2' R2'", "U2' U U' R2'"), PLL);
+  assert.ok(r.ok);
+  assert.equal(r.alg, j3);
+  assert.deepEqual(r.notes, ['simplified']);
+  // 最後の U U' はまとめで消える（最後の AUF を外したことにはしない）
+  const s = CA.validate('pll', pll('J3+'), `${j3} U U'`, PLL);
+  assert.equal(s.alg, j3);
+  assert.deepEqual(s.notes, ['simplified']);
+  // まとめて何も残らなければ解けない
+  assert.equal(CA.validate('pll', c, "R R'", PLL).code, 'notSolved');
+});
+
 test('pllAfter：PLL のスクランブルに OLL のスクランブルをつなぎ、OLL の手順を当てたあとの PLL が分かる', () => {
   const P_SCR = require('../js/pll-scrambles.js');
   const O_SCR = require('../js/oll-scrambles.js');

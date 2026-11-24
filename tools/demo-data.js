@@ -106,7 +106,8 @@ function build(opts) {
 //   - 記録：PLL・OLL それぞれ 10000 件（Progress.addLog の上限）、ソルブ・LL それぞれ 5000 件（FULL_LOG_MAX・LL_LOG_MAX）。
 //     過去 400 日、毎日練習したことにする（今日まで続いている）
 //   - 習得状況：すべて習得済み（最上位の称号）。最近のタイムは全ケース 10 件ずつ
-//   - 自分の手順：全ケース（既定の手順の前に R R' を足したもの。CustomAlgs.validate を通した形）
+//   - 自分の手順：全ケース（既定の手順の前に AUF (U) を足したもの。CustomAlgs.validate を通した形。
+//     R R' のような打ち消し合う手順はまとめて既定と同じになるので使わない）
 //   - 称号とバッジ：すべて取った状態（titles.earned）。累計（stats）も上限に見合う数。新しく取った 3 つだけ NEW
 //   - 記録のタイム・判定で決まるバッジ（瞬殺・続けて正解・DNF なし・自己ベスト・タイム）は、記録そのものでも満たす
 //     （記録を消して判定し直しても外れないように）
@@ -205,11 +206,11 @@ function buildMax(opts) {
     });
   });
 
-  // 自分の手順：全ケース
+  // 自分の手順：全ケース（前に (U) を足す。R R' は validate でまとめられて既定と同じになるので使えない）
   const customAlgs = { pll: {}, oll: {} };
   [['pll', PLL], ['oll', OLL]].forEach(([set, cases]) => {
     cases.forEach((c) => {
-      const v = CA.validate(set, c, "R R' " + c.alg, cases);
+      const v = CA.validate(set, c, '(U) ' + c.alg, cases);
       if (v.ok && !v.isDefault) customAlgs[set][c.name] = { alg: v.alg, setup: v.setup };
     });
   });

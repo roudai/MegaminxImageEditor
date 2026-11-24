@@ -157,3 +157,26 @@ test('canonicalAlg：記号を正しい表記に書き直し、空白・括弧�
   assert.equal(M.canonicalAlg("(u') r u bR' Y dbr2 Dfr"), "(U') R U BR' y DBR2 DR");
   assert.equal(M.canonicalAlg("(R U R' U')2 F’"), "(R U R' U')2 F'");
 });
+
+test('simplifyAlg：続けて並んだ同じ面をまとめ、打ち消し合う手順を消す（括弧はまたがない）', () => {
+  const S = (alg) => M.simplifyAlg(alg);
+  assert.deepEqual(S("R R'"), { alg: '', changed: true });
+  assert.deepEqual(S('R R'), { alg: 'R2', changed: true });
+  assert.deepEqual(S('R2 R'), { alg: "R2'", changed: true }); // 3 回は R2'
+  assert.deepEqual(S("R2' R'"), { alg: 'R2', changed: true }); // 4 + 3 = 7 → 2 回
+  assert.deepEqual(S("R U U' R'"), { alg: '', changed: true }); // 消えたあとに並んだ R・R' もまとめる
+  assert.deepEqual(S("y y'"), { alg: '', changed: true });
+  assert.deepEqual(S('F6 R5 U'), { alg: 'F6 U', changed: true }); // 回さないのと同じ R5 は消す。F6 単独はそのまま
+  assert.deepEqual(S("(R R')2 U"), { alg: 'U', changed: true }); // 空になった括弧は回数ごと消す
+  assert.deepEqual(S('(R R) U2'), { alg: '(R2) U2', changed: true });
+  // まとめるものが無ければそのまま（括弧・回数・書き方は変えない。記号は正しい表記、空白は 1 つに）
+  assert.deepEqual(S("R U R' U'"), { alg: "R U R' U'", changed: false });
+  assert.deepEqual(S("(R U) U'"), { alg: "(R U) U'", changed: false });
+  assert.deepEqual(S("(U) R  U R' U' (R U R')'2"), { alg: "(U) R U R' U' (R U R')'2", changed: false });
+  assert.deepEqual(S('R3'), { alg: 'R3', changed: false });
+  assert.deepEqual(S("r bR'"), { alg: "R BR'", changed: false });
+  // まとめても回し方は同じ
+  const alg = "R U U2 R' F F' DBR (L L)2 y y U";
+  assert.deepEqual(M.applyAlg(S(alg).alg), M.applyAlg(alg));
+  assert.throws(() => S('R X'), /Invalid move/);
+});
