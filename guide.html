@@ -30,6 +30,31 @@
       font-size: .925rem;
       line-height: 1.75;
     }
+    /* LL を覚えるおすすめの流れ：使い方の最初に、目立つ囲みで出す */
+    .guide-tip {
+      margin-top: 1.5rem;
+      padding: 1rem 1.25rem;
+      border: 1px solid #b6d4fe;
+      border-left: 4px solid #0d6efd;
+      border-radius: .5rem;
+      background: #f1f7ff;
+    }
+    .policy .guide-tip h2 {
+      margin-top: 0;
+      color: #0a58ca;
+    }
+    .guide-tip ol {
+      margin-bottom: .25rem;
+      padding-left: 1.4rem;
+    }
+    .guide-tip ol li + li {
+      margin-top: .25rem;
+    }
+    .policy .guide-tip p {
+      margin-bottom: 0;
+      font-size: .875rem;
+      color: #495057;
+    }
   </style>
 </head>
 <body>
@@ -72,6 +97,19 @@
           <li><a href="practice">練習</a>：タイマーでケースを解く。ソルブ（最初から最後まで 1 回解く）も練習できる</li>
           <li><a href="stats">記録</a>：タイムの推移や、苦手なケースを見る</li>
         </ul>
+
+        <section class="guide-tip">
+          <h2>💡 LL を覚えるおすすめの流れ</h2>
+          <ol>
+            <li><a href="pll">PLL</a>（または <a href="oll">OLL</a>）の一覧を「覚える順」にして、これから覚えたいグループを選びます。手順は各ケースのカードに出ています。</li>
+            <li>「練習する」を押すと練習のページが開き、選んだケースのうち<strong>未習得</strong>のものから練習が始まります。</li>
+            <li>「習得の目安」以内に解けたケースは<strong>習得済み</strong>、超えたケースは<strong>練習中</strong>になります。</li>
+            <li>未習得を一通り解き終えると、練習の対象が自動で<strong>練習中 → 習得済み</strong>と進みます。目安に届かなかったケースを繰り返し、最後に覚えたケースを復習する流れです。</li>
+            <li>覚えたら一覧に戻って次のグループを選び、同じように練習します。</li>
+            <li>PLL と OLL がそろってきたら、練習のページの <strong>LL</strong> で OLL から完成まで通して練習し、<a href="stats">記録</a>で苦手なケースを確かめます。</li>
+          </ol>
+          <p>手順を自分のものに変えたいケースは、エディタで手順を書き換えて「保存」すると、一覧や練習でもその手順を使えます。</p>
+        </section>
 
         <h2>エディタ</h2>
         <ul>
@@ -163,6 +201,19 @@
           <li><a href="practice">Practice</a>: solve cases with a timer, or practice full solves</li>
           <li><a href="stats">Stats</a>: see how your times change and which cases are slowest</li>
         </ul>
+
+        <section class="guide-tip">
+          <h2>💡 Recommended steps for learning LL</h2>
+          <ol>
+            <li>Open the <a href="pll">PLL</a> (or <a href="oll">OLL</a>) list, switch to "By learning order", and pick the group you want to learn next. Each card shows the algorithm.</li>
+            <li>Click "Practice". The practice page opens and starts with the selected cases that are <strong>To learn</strong>.</li>
+            <li>Cases you solve within the "Learned within" time become <strong>Learned</strong>; slower ones become <strong>Learning</strong>.</li>
+            <li>Once you have gone through every To learn case, practice moves on to <strong>Learning → Learned</strong> automatically: you repeat the cases you missed, then review the ones you know.</li>
+            <li>When you have learned them, go back to the list, pick the next group, and repeat.</li>
+            <li>As your PLL and OLL fill in, practice <strong>LL</strong> on the practice page to go from OLL to a solved puzzle, and check your weak cases in <a href="stats">Stats</a>.</li>
+          </ol>
+          <p>To use your own algorithm for a case, edit it in the editor and click "Save". The list and practice will use it too.</p>
+        </section>
 
         <h2>Editor</h2>
         <ul>
