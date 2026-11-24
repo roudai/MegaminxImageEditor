@@ -556,6 +556,8 @@
     // 解き終わって対象のケースが無くなったときは、対象を次の状態に進める（未習得 → 練習中 → 習得済み）
     if (!list.length && keepTime && !forced && advanceFilter()) list = pool();
     $('practiceEmpty').hidden = list.length > 0;
+    const toastBox = $('practiceToast');
+    if (toastBox && toastBox.classList.contains('show')) placeToast(toastBox); // 「出せるケースがありません」と重ならないように
     $('timer').disabled = !list.length;
     $('dnfButton').disabled = !list.length;
     $('skipButton').disabled = !list.length;
@@ -585,7 +587,8 @@
 
   // 対象（未習得 → 練習中 → 習得済み）を、ケースのある次の状態に進める。進めたら true。
   // 解いたあと（next(true)）に今の対象のケースが無くなったときだけ呼ぶ（自分で対象を選んだ直後・スキップでは進めない）。
-  // 戻る向き（取り消して未習得が戻ったなど）・「すべて」では切り替えない。進めたら画面の下に知らせる
+  // 戻る向き（取り消して未習得が戻ったなど）・「すべて」では切り替えない。進めたら称号・バッジと同じ枠で知らせる
+  // （広い画面は結果の行のすぐ下、スマホ・全画面は画面の下。同じ回にバッジの知らせが出ていれば、その下に行を足す）
   const FILTER_FLOW = ['new', 'learning', 'learned'];
   function advanceFilter() {
     const from = prefs.filter;
@@ -595,32 +598,9 @@
     if (!to) return false;
     savePrefs({ filter: to });
     renderSettings();
-    notice('practice.filterAdvanced', { from: I.t('status.' + from), to: I.t('status.' + to) });
+    const text = () => I.t('practice.filterAdvanced', { from: I.t('status.' + from), to: I.t('status.' + to) });
+    toast([{ plain: true, text: text }], { append: true });
     return true;
-  }
-  // 画面の下の短い知らせ（css/common.css の .site-toast。cloud-sync.js の知らせと同じ形）。× か 10 秒で閉じる。全画面でも見える
-  function notice(key, params) {
-    let box = $('siteToast');
-    if (!box) {
-      box = el('div', 'site-toast');
-      box.id = 'siteToast';
-      box.setAttribute('role', 'status');
-      document.body.append(box);
-    }
-    const text = el('div', 'site-toast-text');
-    I.set(text, key, params);
-    const close = el('button', 'site-toast-close', '×');
-    close.type = 'button';
-    I.set(close, 'practice.toastClose', null, 'aria-label');
-    const hide = () => {
-      box.classList.remove('show');
-      if (box.contains(document.activeElement)) document.activeElement.blur(); // スペースキーが隠れた × を押さないように
-    };
-    close.addEventListener('click', hide);
-    box.replaceChildren(close, text);
-    requestAnimationFrame(() => box.classList.add('show'));
-    clearTimeout(box.hideTimer);
-    box.hideTimer = setTimeout(hide, 10000);
   }
 
   // スクランブルの候補から、今の手順（自分の手順があればそれ。DATA は CustomAlgs.merged 済み）をそのまま逆にしたものと、
@@ -918,27 +898,32 @@
   // ---- 称号とバッジ（titles.js）：段位が上がったとき・バッジを取ったときに知らせる（10 秒か、次の計測を始めるまで） ----
   const T = window.Titles;
   const rankIndex = () => (T ? T.rankOf(S.get('progress')).index : 0);
-  // 広い画面（幅 576px 以上）では、知らせを画面の下ではなく結果の行のすぐ下に出す（止めた直後に見るところ。画面の下だと見落としやすい）
-  // 全画面（スクランブルとタイマーだけの画面）では結果の欄が隠れるので、広い画面でも画面の下に出す（setFocus で置き直す）
-  const WIDE = window.matchMedia('(min-width: 576px)');
+  // 知らせはタイマーのカードの、ボタン（スキップ・ヒント）のすぐ下に重ねて出す（どの画面の幅でも、全画面でも）。
+  // 止めた直後に見ているところで、重ねるのでほか（結果・最近の記録）を押し下げない。長いときは下（結果の上の方）に重なって伸びる。
+  // 「出せるケースがありません」が出ているときは、その文の下に出す（重ならないように。next で置き直す）
   let focusOn = false; // 全画面か（setFocus）
   function placeToast(box) {
-    const inline = WIDE.matches && !focusOn;
-    box.classList.toggle('inline', inline);
-    if (inline) $('practiceResult').after(box);
-    else if (box.parentNode !== document.body) document.body.append(box);
+    let anchor = $('practiceToastAnchor');
+    if (!anchor) {
+      anchor = el('div', 'practice-toast-anchor');
+      anchor.id = 'practiceToastAnchor';
+    }
+    const after = $('practiceEmpty').hidden ? document.querySelector('.practice-buttons') : $('practiceEmpty');
+    if (after.nextElementSibling !== anchor) after.after(anchor);
+    if (box.parentNode !== anchor) anchor.append(box);
   }
   function hideToast() {
     const box = $('practiceToast');
     if (!box) return;
     clearTimeout(box.hideTimer);
     box.classList.remove('show', 'pop');
-    if (box.classList.contains('inline')) box.hidden = true; // 結果の下の場所を空ける
     // × を押したあと、スペースキーが隠れた × を押してしまわないようにフォーカスを外す
     if (box.contains(document.activeElement)) document.activeElement.blur();
   }
-  // lines：文を作る関数、または { head, name }（見出しと名前）の配列（言語を切り替えたら、出ている間も訳し直す。I.live）
-  function toast(lines) {
+  // lines：文を作る関数、{ plain: true, text }（メダルを付けない文。対象を進めた知らせ）、
+  // または { head, name }（見出しと名前）の配列（言語を切り替えたら、出ている間も訳し直す。I.live）
+  // options.append：出ている知らせがあれば、その下に行を足す（同じ回の称号・バッジの知らせを消さないように）
+  function toast(lines, options) {
     if (!lines.length) return;
     let box = $('practiceToast');
     if (!box) {
@@ -946,7 +931,10 @@
       box.id = 'practiceToast';
       box.setAttribute('role', 'status');
     }
-    // 広い画面は結果の行のすぐ下、スマホ・全画面は画面の下（固定）
+    const shown = box.classList.contains('show') && !box.hidden && Array.isArray(box.lines);
+    if (options && options.append && shown) lines = box.lines.concat(lines);
+    box.lines = lines;
+    // タイマーのカードの、ボタンのすぐ下に重ねる
     placeToast(box);
     box.hidden = false;
     // 10 秒で閉じる（その前に次の計測を始めたら閉じる。setState）。× で先に閉じることもできる
@@ -958,8 +946,8 @@
     body.append(
       ...lines.map((make) => {
         const line = el('div', 'practice-toast-line');
-        if (typeof make === 'function') {
-          I.live(line, make);
+        if (typeof make === 'function' || make.plain) {
+          I.live(line, make.plain ? make.text : make);
           return line;
         }
         // 名前は「、」でつなぐ。スマホは「、」を出さず、名前を 1 つずつ次の行に並べる（css/practice.css）
@@ -991,7 +979,9 @@
         sparkles.push(s);
       }
     }
-    box.replaceChildren(close, ...(T ? [T.medal()] : []), body, ...sparkles);
+    // メダルは称号・バッジの知らせのときだけ（対象を進めた知らせだけなら付けない）
+    const medal = T && lines.some((l) => !(l && l.plain));
+    box.replaceChildren(close, ...(medal ? [T.medal()] : []), body, ...sparkles);
     // 出るときに少し大きくなって戻る（動きを減らす設定では動かさない。css/practice.css）
     box.classList.remove('pop');
     void box.offsetWidth;
@@ -1596,7 +1586,9 @@
   // 画面ではタイマーのカード（スクランブル〜ボタンの上）のどこを押してもスタート（ソルブは長押しして離すとスタート）。
   // 計測中はどこをタップしても止まる。カードの中のボタン・リンクは、それぞれのボタンとして押す
   const stageEl = $('practiceStage');
-  const onTimerArea = (e) => stageEl.contains(e.target) && !e.target.closest('button:not(#timer), a, input, select, textarea');
+  // 重ねて出している知らせの上は押してもスタートしない（× で閉じる）
+  const onTimerArea = (e) =>
+    stageEl.contains(e.target) && !e.target.closest('button:not(#timer), a, input, select, textarea, .practice-toast');
   stageEl.addEventListener('pointerdown', (e) => {
     if (!onTimerArea(e) || e.button !== 0) return;
     e.preventDefault();
@@ -1690,6 +1682,7 @@
   // ヒントのボタンの文：出しているときは「ヒントを隠す」
   function showHint(shown) {
     if (!shown) $('practiceHintText').replaceChildren();
+    else hideToast(); // ヒントの文は知らせと同じところ（ボタンの下）に出るので、知らせは閉じる
     I.set($('hintButton'), shown ? 'practice.hintHide' : 'practice.hintButton');
     $('hintButton').setAttribute('aria-pressed', String(shown));
   }
@@ -1744,9 +1737,6 @@
     button.setAttribute('aria-pressed', String(on));
     I.set(button, on ? 'practice.focusExit' : 'practice.focus', null, 'aria-label');
     if (!on) window.scrollTo({ top: focusScrollY, behavior: 'instant' });
-    // 出ている称号・バッジの知らせを置き直す（全画面では画面の下、閉じたら広い画面では結果の下）
-    const box = $('practiceToast');
-    if (box && box.classList.contains('show')) placeToast(box);
     if (!fromHistory) {
       if (on) history.pushState(Object.assign({}, history.state, { practiceFocus: true }), '');
       else if (focusInHistory()) history.back();

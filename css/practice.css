@@ -1015,14 +1015,20 @@ body.practice-focus .practice-stage:is(.running, .inspecting) #hintButton {
   }
 }
 
-/* 称号が上がった・バッジを取ったときの知らせ（js/practice.js の toast） */
+/* 称号が上がった・バッジを取った・対象を進めたときの知らせ（js/practice.js の toast）。
+   タイマーのカードの、ボタンのすぐ下に重ねて出す（.practice-toast-anchor は高さ 0 で、ほかを押し下げない）。
+   長いときは下（結果の上の方）に重なって伸びる */
+.practice-toast-anchor {
+  position: relative;
+  height: 0;
+}
 .practice-toast {
-  position: fixed;
+  position: absolute;
   left: 50%;
-  bottom: 1.5rem;
+  top: .4rem;
   z-index: 1060;
   width: max-content;
-  max-width: calc(100vw - 2rem);
+  max-width: calc(100% + 1rem); /* カードの枠まで */
   padding: .6rem 1rem;
   border: 1px solid #ecd17f;
   border-radius: .75rem;
@@ -1043,24 +1049,9 @@ body.practice-focus .practice-stage:is(.running, .inspecting) #hintButton {
   pointer-events: auto;
   transform: translate(-50%, 0);
 }
-/* 出るときに少し大きくなって戻る（css/common.css の toast-pop-fixed・toast-pop） */
+/* 出るときに少し大きくなって戻る（css/common.css の toast-pop-fixed） */
 .practice-toast.show.pop {
   animation: toast-pop-fixed .5s ease;
-}
-/* 広い画面：結果の行のすぐ下に（画面の下だと見落としやすい。js/practice.js の toast） */
-.practice-toast.inline {
-  position: relative;
-  left: auto;
-  bottom: auto;
-  margin: .75rem auto 0;
-  transform: none;
-  font-size: 1rem;
-}
-.practice-toast.inline.show {
-  transform: none;
-}
-.practice-toast.inline.show.pop {
-  animation: toast-pop .5s ease;
 }
 .practice-toast[hidden] {
   display: none;
@@ -1131,9 +1122,6 @@ body.practice-focus .practice-stage:is(.running, .inspecting) #hintButton {
 .practice-toast.secret.show.pop {
   animation: secret-pop-fixed .7s cubic-bezier(.3, 1.5, .5, 1), secret-shine 3s linear infinite;
 }
-.practice-toast.secret.inline.show.pop {
-  animation: secret-pop .7s cubic-bezier(.3, 1.5, .5, 1), secret-shine 3s linear infinite;
-}
 .practice-toast-line.secret .practice-toast-head {
   background: linear-gradient(90deg, #d6336c, #7048e8, #1c7ed6);
   -webkit-background-clip: text;
@@ -1178,11 +1166,6 @@ body.practice-focus .practice-stage:is(.running, .inspecting) #hintButton {
   60% { opacity: 1; transform: translate(-50%, 0) scale(1.12) rotate(1.5deg); }
   100% { opacity: 1; transform: translate(-50%, 0) scale(1) rotate(0); }
 }
-@keyframes secret-pop {
-  0% { opacity: 0; transform: scale(.6) rotate(-4deg); }
-  60% { opacity: 1; transform: scale(1.12) rotate(1.5deg); }
-  100% { opacity: 1; transform: scale(1) rotate(0); }
-}
 @keyframes secret-medal {
   0%, 100% { transform: rotate(0) scale(1); }
   30% { transform: rotate(-18deg) scale(1.2); }
@@ -1198,7 +1181,6 @@ body.practice-focus .practice-stage:is(.running, .inspecting) #hintButton {
   }
   .practice-toast.secret,
   .practice-toast.secret.show.pop,
-  .practice-toast.secret.inline.show.pop,
   .practice-toast.secret .title-medal {
     animation: none;
   }
@@ -1206,8 +1188,7 @@ body.practice-focus .practice-stage:is(.running, .inspecting) #hintButton {
     animation: none;
     opacity: 1;
   }
-  .practice-toast.show.pop,
-  .practice-toast.inline.show.pop {
+  .practice-toast.show.pop {
     animation: none;
   }
 }
