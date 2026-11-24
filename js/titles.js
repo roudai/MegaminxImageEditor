@@ -307,14 +307,8 @@
       .map(Number)
       .some((n) => new Date(Date.UTC(1970, 0, 1 + n)).getUTCDay() === 6 && enough(n) && enough(n + 1));
   }
-  // PLL のケースを何種類練習したか（LL で出た PLL も数える。LL の記録の p は「J1+」か「J1+/J2-」）
-  const pllPracticed = (d) => {
-    const names = new Set(caseLog(d.practice).filter((e) => e && e.set === 'pll').map((e) => e.name));
-    llLog(d.practice).forEach((r) => {
-      if (r && typeof r.p === 'string') r.p.split('/').forEach((n) => names.add(n));
-    });
-    return names.size;
-  };
+  // PLL のケースを何種類練習したか（PLL の練習だけ。LL で出た PLL は数えない：LL は PLL を選んで練習するものではないため）
+  const pllPracticed = (d) => new Set(caseLog(d.practice).filter((e) => e && e.set === 'pll').map((e) => e.name)).size;
 
   // 通し：ペナルティを含めたタイム（DNF は Infinity）
   const fullTime = (r) => (!r || r.penalty === 'DNF' || typeof r.sec !== 'number' ? Infinity : r.sec + (r.penalty === '+2' ? 2 : 0));
