@@ -63,6 +63,8 @@
   const params = new URLSearchParams(location.search);
   if (SETS.includes(params.get('set'))) view.set = params.get('set');
   if (params.has('set')) saveView();
+  // URL の指定は、リンクから来たその 1 回だけ使う（保存したので、アドレスバーから消す。残すと種類を切り替えて再読み込みしたときに戻るため）
+  if (location.search && history.replaceState) history.replaceState(history.state, '', location.pathname + location.hash);
   function saveView() {
     const stats = Object.assign({}, view);
     delete stats.badges; // 開いているかは保存しない（以前は保存していた。アカウントに同期しないように消す）
