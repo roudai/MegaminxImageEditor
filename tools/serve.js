@@ -4,7 +4,8 @@
 //
 // テストデータで動かす：node tools/serve.js --demo [ポート]（既定 8766）→ http://localhost:8766/stats
 //   - 練習の記録（PLL・OLL・通し）・最近のタイム・習得状況にテストデータ（tools/demo-data.js）を入れた状態で開く
-//     （ページを開いたときにまだ入れていなければ入れる。/__demo/reset で入れ直す）
+//     （ページを開いたときにまだ入れていなければ入れる。/__demo/reset で入れ直す。
+//      tools/demo-data.js やそれが使う js を直したら、起動し直したあとに開いたときに入れ直す）
 //   - ログインは使えなくする（js/firebase-config.js の代わりに FIREBASE_CONFIG = null を返す）。テストデータがアカウントに送られないように
 //   - ポートを普段（8765）と分けるので、ブラウザの保存（localStorage）も普段のものとは別になる
 //   - 画面の右下に「テストデータ」の印とリセットのリンクを出す
@@ -19,6 +20,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const ROOT = path.join(__dirname, '..');
 const args = process.argv.slice(2);
@@ -70,13 +72,27 @@ function demoJson() {
   if (!maxJson) maxJson = JSON.stringify(D.buildMax({ now: Date.now() }));
   return maxJson;
 }
+// データの版：作るのに使ったファイル（tools/demo-data.js と、それが読み込む js/ のファイル）の中身から決める。
+// ブラウザに入れたときの印に残し、版が変わっていたら（作り方・手順の確かめ方などを直したら）次に開いたときに入れ直す
+function demoVersion() {
+  if (!DEMO) return '';
+  demoJson(); // 読み込むファイルを require.cache に入れる
+  const hash = crypto.createHash('sha1');
+  Object.keys(require.cache)
+    .filter((f) => f.startsWith(ROOT + path.sep))
+    .sort()
+    .forEach((f) => hash.update(f).update(fs.readFileSync(f)));
+  return hash.digest('hex').slice(0, 12);
+}
+const VERSION = demoVersion();
 const LABEL = MAX ? '最大のデータ（ログインしている扱い）' : 'テストデータ（ログインしている扱い）';
 
 // 各ページの <head> の最初に入れるスクリプト：まだ入れていなければテストデータを入れ（/__demo/data.json を同期で読む）、右下に印を出す。
-// 印には demo / max のどちらを入れたかも残し、同じポートでモードを変えて起動し直したときは、このサイトの保存を消して入れ直す
+// 印には demo / max のどちらを入れたかとデータの版（VERSION）も残し、同じポートでモードを変えて起動し直したときや、
+// データの作り方を直したときは、このサイトの保存を消して入れ直す（そのポートで変えた習得状況なども消える）
 function demoScript() {
   return `(function () {
-  var P = ${JSON.stringify(PREFIX)}, MARK = ${JSON.stringify(DEMO_MARK)}, MODE = ${JSON.stringify(MAX ? 'max' : 'demo')}, error = '';
+  var P = ${JSON.stringify(PREFIX)}, MARK = ${JSON.stringify(DEMO_MARK)}, MODE = ${JSON.stringify((MAX ? 'max' : 'demo') + '@' + VERSION)}, error = '';
   try {
     if (String(localStorage.getItem(MARK) || '').split(':')[0] !== MODE) {
       Object.keys(localStorage).forEach(function (k) { if (k.indexOf(P) === 0) localStorage.removeItem(k); });

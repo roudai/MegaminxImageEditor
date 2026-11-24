@@ -26,7 +26,7 @@
   - GitHub Pages と同じく `.html` なしの URL で各ページを返す（`python3 -m http.server` は `/pll` を返せないので使わない）
 - テストデータで動かす：`node tools/serve.js --demo`（既定のポート 8766）→ `http://localhost:8766/stats`
   - 練習の記録（PLL 約 290 件・OLL 約 190 件・ソルブ約 210 件。PLL は過去 45 日、OLL は 30 日、ソルブは 60 日ぶん）・ケースごとの最近のタイム・習得状況を入れた状態で開く（`tools/demo-data.js`。乱数の種は固定）
-  - ページを開いたときに、まだ入れていなければ入れる（印は localStorage の `megaminx-image-editor:demo-seeded`。値は `demo:日時` / `max:日時`）。`/__demo/reset` でこのサイトの保存をすべて消して入れ直す。同じポートで `--max` の有無を変えて起動し直したときも、保存を消して入れ直す
+  - ページを開いたときに、まだ入れていなければ入れる（印は localStorage の `megaminx-image-editor:demo-seeded`。値は `demo@版:日時` / `max@版:日時`）。`/__demo/reset` でこのサイトの保存をすべて消して入れ直す。同じポートで `--max` の有無を変えて起動し直したときも、保存を消して入れ直す。版はデータを作るのに使ったファイル（`tools/demo-data.js` と、それが読み込む `js/` のファイル）の中身から起動したときに決め、変わっていれば（作り方や手順の確かめ方を直して起動し直したら）次に開いたときに保存を消して入れ直す（そのポートで変えた習得状況なども消える。古いデータで確かめてしまわないように）
   - ログインは使えなくする（`js/firebase-config.js` の代わりに `FIREBASE_CONFIG = null` を返す）。テストデータがアカウントに送られないように。ポートも普段と分けるので、普段の保存とは混ざらない
   - 画面の右下に「テストデータ（ログインしている扱い） · 入れ直す」を出す（称号とバッジはログイン中だけ出すので、`session` を in にしておく）
   - 最大のデータで動かす：`node tools/serve.js --demo --max`（既定のポート 8767。`--max` は起動のオプションで、URL には付けない。ポートを変えるなら `node tools/serve.js --demo --max 8766`）→ `http://localhost:8767/stats`。表示の崩れ・重さ・保存の容量を確かめる用
