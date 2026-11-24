@@ -22,7 +22,6 @@
   const SUFFIXES = ["'", '2', ')'];
 
   const input = $('alg');
-  const error = $('algError');
   const preset = $('algPreset');
   const typeRadios = document.querySelectorAll('input[name="algType"]');
   const faceInputs = {};
@@ -238,7 +237,13 @@
   // undo を渡すと、メッセージの右に「元に戻す」を出す（押すと保存・既定に戻す前の状態に戻す）。
   // メッセージが変わる（別のケースを選ぶ・書き換える・種類を切り替える など）と「元に戻す」も消える
   // message：文を作る関数（言語を切り替えたら、出ている間も訳し直す。I.live）。空にするときは '' か無し
+  // 手順が読めないときのエラーもこの行に出す（入力欄のすぐ下に出すと、入力の途中（R ( など）で出たり消えたりして下が上下するため）。
+  // 空にしようとしたときに手順のエラーがあれば、エラーを出したままにする
   function setMyAlgMessage(message, kind, undo) {
+    if (!message && parseError) {
+      message = parseError;
+      kind = 'error';
+    }
     myAlgMessage.replaceChildren();
     myAlgMessage.className = `small d-flex align-items-center gap-2 ${kind === 'error' ? 'text-danger' : 'text-success'}`;
     const span = document.createElement('span');
@@ -426,21 +431,34 @@
     input.value = HEX_CODE[hex] || hex;
   }
 
+  // 手順が読めないときのエラー（文を作る関数。読めれば null）。メッセージの行に出す（setMyAlgMessage）
+  let parseError = null;
+  function showParseError(make) {
+    const was = parseError;
+    parseError = make;
+    if (make) setMyAlgMessage(make, 'error');
+    else if (was) setMyAlgMessage(''); // 読めるようになったらエラーを消す（保存のメッセージなどは消さない）
+  }
+
   function update() {
     rememberCustomScheme();
     const type = algType();
-    if (type === 'state') return;
+    if (type === 'state') {
+      showParseError(null);
+      return;
+    }
 
     let state;
     try {
       // case は「この手順で揃う状態」。手順中の持ち替え（y）で完成後の向きが変わっても揃ったとみなす
       state = M.applyAlg(input.value, { inverse: type === 'case', cancelRotation: type === 'case' });
     } catch (e) {
-      error.textContent = I.error(e.message);
+      const message = e.message;
+      showParseError(() => I.error(message));
       input.classList.add('is-invalid');
       return;
     }
-    error.textContent = '';
+    showParseError(null);
     input.classList.remove('is-invalid');
 
     const colors = M.toImageColors(state, currentScheme());
