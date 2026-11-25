@@ -24,6 +24,11 @@
       // ナビバー・共通
       'nav.editor': 'Editor',
       'nav.menu': 'Menu',
+      'theme.title': '{action} ({state})',
+      'theme.toDark': 'Switch to dark',
+      'theme.toLight': 'Switch to light',
+      'theme.followingOs': 'now following your device setting',
+      'theme.fixed': 'now overriding your device setting; press to follow it again',
       'nav.pllList': 'PLL',
       'nav.ollList': 'OLL',
       'common.reset': 'Reset',
@@ -513,6 +518,11 @@
     ja: {
       'nav.editor': 'エディタ',
       'nav.menu': 'メニュー',
+      'theme.title': '{action}（{state}）',
+      'theme.toDark': 'ダークにする',
+      'theme.toLight': 'ライトにする',
+      'theme.followingOs': '今は端末の設定に合わせています',
+      'theme.fixed': '今は端末の設定と違うテーマにしています。押すと端末の設定に戻ります',
       'nav.pllList': 'PLL',
       'nav.ollList': 'OLL',
       'common.reset': 'リセット',

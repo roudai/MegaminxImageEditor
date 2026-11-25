@@ -6,6 +6,9 @@
   --status-learned-soft: rgba(25, 135, 84, .45);
   --status-new: #ced4da;
 }
+[data-bs-theme="dark"] {
+  --status-new: #5c636a;
+}
 
 /* ---- カード ---- */
 .case-card {
@@ -77,7 +80,7 @@
 /* 逆手順のケース（PLL）：名前の右に薄い字で「⇄ A1-」 */
 .case-inverse {
   margin-left: .3rem;
-  color: #868e96;
+  color: var(--mx-text-550);
   font-size: .75rem;
   font-weight: 400;
 }
@@ -87,7 +90,7 @@
   padding: .05rem .4rem;
   border-radius: 50rem;
   background-color: rgba(13, 110, 253, .1);
-  color: #0a58ca;
+  color: var(--mx-primary-text-2);
   font-size: .65rem;
   font-weight: 600;
   letter-spacing: .02em;
@@ -117,11 +120,11 @@
   height: 22px;
   border-radius: 50%;
   border: 1.5px solid var(--status-new);
-  background: #fff;
+  background: var(--mx-bg);
   transition: background-color .2s ease, border-color .2s ease, transform .2s ease;
 }
 .status-badge:hover::before {
-  border-color: #adb5bd;
+  border-color: var(--mx-line-500);
   transform: scale(1.08);
 }
 .status-badge:focus-visible {
@@ -216,7 +219,7 @@
 /* ---- 上部の進み具合 ---- */
 .progress-summary .progress-stacked {
   height: 8px;
-  background-color: #e9ecef;
+  background-color: var(--mx-bg-200);
 }
 .progress-summary .progress-bar {
   transition: width .35s ease;
@@ -244,24 +247,24 @@
   display: inline-flex;
   padding: 3px;
   border-radius: 50rem;
-  background-color: #eef0f3;
+  background-color: var(--mx-bg-175);
 }
 .scope-option {
   border: 0;
   border-radius: 50rem;
   padding: .3rem .95rem;
   background: transparent;
-  color: #495057;
+  color: var(--mx-text-700);
   font-size: .875rem;
   font-weight: 500;
   transition: background-color .2s ease, color .2s ease, box-shadow .2s ease;
 }
 .scope-option:hover {
-  color: #212529;
+  color: var(--mx-text);
 }
 .scope-option.active {
-  background-color: #fff;
-  color: #212529;
+  background-color: var(--mx-bg);
+  color: var(--mx-text);
   box-shadow: 0 1px 3px rgba(0, 0, 0, .14);
 }
 .scope-option:focus-visible {
@@ -308,13 +311,13 @@
 
 /* すべて未習得に戻す（目立たせない。押すと確認のバーを出す） */
 .reset-progress {
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: .78rem;
   text-decoration: none;
 }
 .reset-progress:hover,
 .reset-progress:focus-visible {
-  color: #212529;
+  color: var(--mx-text);
 }
 .reset-progress:disabled {
   visibility: hidden;
@@ -332,7 +335,7 @@
 }
 .zip-confirm-note {
   flex-basis: 100%;
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: .75rem;
 }
 .reset-bar {
@@ -347,7 +350,7 @@
   display: none;
 }
 .reset-confirm {
-  color: #b02a37;
+  color: var(--mx-danger-text-2);
   font-weight: 500;
 }
 .reset-bar .btn-link {
@@ -359,7 +362,7 @@
 .group-count {
   font-size: .8rem;
   font-weight: normal;
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-variant-numeric: tabular-nums;
 }
 .group-count.complete {
@@ -393,6 +396,11 @@
    （タッチの画面で押したあとに残る :hover の色は、ふだんの色＝この緑を使う。css/common.css の (hover: none)） */
 .group-nav-complete {
   --bs-btn-color: var(--status-learned);
-  --bs-btn-bg: #e8f3ee;
+  --bs-btn-bg: var(--mx-success-bg);
   --bs-btn-border-color: var(--status-learned);
+}
+/* ダーク：暗い緑の地に明るい緑の文字と枠 */
+[data-bs-theme="dark"] .group-nav-complete {
+  --bs-btn-color: #75b798;
+  --bs-btn-border-color: #3d8a66;
 }

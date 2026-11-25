@@ -1,5 +1,25 @@
 /* 記録のページ（stats.html）。処理は js/stats.js */
 
+/* このページだけの色（ライトの値は今までのまま。ダークは [data-bs-theme="dark"] で上書き。共通の色は css/common.css の --mx-*） */
+:root {
+  --stats-blue: #0d6efd;
+  --stats-purple: #6f42c1;
+  --stats-green: #198754;
+  --stats-tip-bg: rgba(255, 255, 255, .96);
+  --stats-toggle-bg: rgba(255, 255, 255, .6);
+  --stats-signin-mid: #fffdf6;
+  --stats-signin-end: #fdeccf;
+}
+[data-bs-theme="dark"] {
+  --stats-blue: #3d8bfd;
+  --stats-purple: #a98eda;
+  --stats-green: #3fae7c;
+  --stats-tip-bg: rgba(43, 48, 53, .96);
+  --stats-toggle-bg: rgba(255, 255, 255, .06);
+  --stats-signin-mid: #2e2814;
+  --stats-signin-end: #3a2a12;
+}
+
 /* 種類・期間の切り替え（練習ページと同じセグメント型） */
 .stats-segment {
   display: inline-flex;
@@ -7,22 +27,22 @@
   max-width: 100%;
   padding: 3px;
   border-radius: 50rem;
-  background-color: #eef0f3;
+  background-color: var(--mx-bg-175);
 }
 .stats-segment button {
   border: 0;
   border-radius: 50rem;
   padding: .2rem .75rem;
   background: transparent;
-  color: #495057;
+  color: var(--mx-text-700);
   font-size: .82rem;
   font-weight: 500;
   white-space: nowrap;
   transition: background-color .2s ease, color .2s ease, box-shadow .2s ease;
 }
 .stats-segment button.active {
-  background-color: #fff;
-  color: #212529;
+  background-color: var(--mx-bg);
+  color: var(--mx-text);
   box-shadow: 0 1px 3px rgba(0, 0, 0, .14);
 }
 .stats-segment button:focus-visible {
@@ -49,13 +69,13 @@
 }
 .stats-card {
   padding: .85rem 1rem;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--mx-line-200);
   border-radius: .85rem;
-  background: #fff;
+  background: var(--mx-bg);
   box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .04);
 }
 .stats-card-label {
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: .75rem;
 }
 .stats-card-value {
@@ -65,7 +85,7 @@
   line-height: 1.3;
 }
 .stats-card-sub {
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: .75rem;
   font-variant-numeric: tabular-nums;
 }
@@ -104,9 +124,9 @@
 /* パネル（グラフ・表） */
 .stats-panel {
   padding: 1rem;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--mx-line-200);
   border-radius: 1rem;
-  background: #fff;
+  background: var(--mx-bg);
 }
 .stats-title {
   margin: 0 0 .5rem;
@@ -141,16 +161,16 @@
   touch-action: pan-y; /* 縦のスクロールはそのまま、横になぞると値を出す */
 }
 .stats-grid {
-  stroke: #eef0f3;
+  stroke: var(--mx-line-175);
   stroke-width: 1;
 }
 .stats-axis {
-  fill: #adb5bd;
+  fill: var(--mx-text-500);
   font-size: 10px;
   font-variant-numeric: tabular-nums;
 }
 .stats-single {
-  fill: #ced4da;
+  fill: var(--mx-bg-400);
 }
 .stats-single.learned {
   fill: #8fd1b0;
@@ -170,33 +190,33 @@
   stroke-linecap: round;
 }
 .stats-avg-line.ao5 {
-  stroke: #0d6efd;
+  stroke: var(--stats-blue);
 }
 .stats-avg-line.ao12 {
-  stroke: #6f42c1;
+  stroke: var(--stats-purple);
   stroke-width: 2.4;
 }
 .stats-time-line {
   fill: none;
-  stroke: #0d6efd;
+  stroke: var(--stats-blue);
   stroke-width: 1.5;
   stroke-linejoin: round;
   opacity: .55;
 }
 .stats-target {
-  stroke: #198754;
+  stroke: var(--stats-green);
   stroke-width: 1;
   stroke-dasharray: 4 4;
   opacity: .7;
 }
 /* タイムの分布（棒＝区間ごとの回数。右の端の「〜以上」の棒は薄く） */
 .stats-bar {
-  fill: #0d6efd;
+  fill: var(--stats-blue);
   opacity: .55;
   transition: opacity .1s ease;
 }
 .stats-bar.fast {
-  fill: #198754; /* 目安以内（目安の破線と同じ緑） */
+  fill: var(--stats-green); /* 目安以内（目安の破線と同じ緑） */
 }
 .stats-bar.over {
   opacity: .3;
@@ -205,7 +225,7 @@
   opacity: .9;
 }
 .stats-cursor {
-  stroke: #adb5bd;
+  stroke: var(--mx-line-500);
   stroke-width: 1;
 }
 .stats-tip {
@@ -213,16 +233,16 @@
   z-index: 1;
   min-width: 9rem;
   padding: .4rem .6rem;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--mx-line-200);
   border-radius: .5rem;
-  background: rgba(255, 255, 255, .96);
+  background: var(--stats-tip-bg);
   box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .08);
   font-size: .75rem;
   font-variant-numeric: tabular-nums;
   pointer-events: none;
 }
 .stats-tip-head {
-  color: #6c757d;
+  color: var(--mx-text-600);
 }
 .stats-tip-case {
   font-weight: 600;
@@ -233,13 +253,13 @@
   gap: .75rem;
 }
 .stats-tip-label {
-  color: #6c757d;
+  color: var(--mx-text-600);
 }
 .stats-tip-label.ao5 {
-  color: #0d6efd;
+  color: var(--mx-primary-text);
 }
 .stats-tip-label.ao12 {
-  color: #6f42c1;
+  color: var(--stats-purple);
 }
 .stats-tip-value {
   font-weight: 600;
@@ -258,7 +278,7 @@
   align-items: center;
   gap: .35rem;
   margin-top: .3rem;
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: .75rem;
   font-variant-numeric: tabular-nums;
 }
@@ -269,15 +289,15 @@
   width: 1.6rem;
   height: 1.6rem;
   padding: 0 0 .1rem;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--mx-line-300);
   border-radius: 50%;
-  background: #fff;
-  color: #495057;
+  background: var(--mx-bg);
+  color: var(--mx-text-700);
   font-size: 1rem;
   line-height: 1;
 }
 .stats-trend-btn:hover:not(:disabled) {
-  background: #f1f3f5;
+  background: var(--mx-bg-150);
 }
 .stats-trend-btn:disabled {
   opacity: .35;
@@ -292,7 +312,7 @@
   height: 4px;
   margin: 0 .25rem;
   border-radius: 999px;
-  background: #e9ecef;
+  background: var(--mx-bg-200);
   cursor: grab;
   touch-action: none; /* 帯の上で指を横に動かしたら、ページではなく窓を動かす */
 }
@@ -316,7 +336,7 @@
   top: 0;
   bottom: 0;
   border-radius: 999px;
-  background: #adb5bd;
+  background: var(--mx-bg-500);
   transition: top .15s ease, bottom .15s ease, background-color .15s ease;
 }
 /* 触れている・掴んでいる間は、つまみを少し太く・濃く */
@@ -329,22 +349,22 @@
 }
 .stats-trend-latest {
   padding: .1rem .5rem;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--mx-line-300);
   border-radius: 999px;
-  background: #fff;
-  color: #495057;
+  background: var(--mx-bg);
+  color: var(--mx-text-700);
   font-size: .75rem;
   white-space: nowrap;
 }
 .stats-trend-latest:hover {
-  background: #f1f3f5;
+  background: var(--mx-bg-150);
 }
 .stats-legend {
   display: flex;
   flex-wrap: wrap;
   gap: .25rem 1rem;
   margin-top: .25rem;
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: .75rem;
 }
 .stats-legend-item {
@@ -359,7 +379,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #ced4da;
+  background: var(--mx-bg-400);
 }
 .stats-legend-mark.dot.learned {
   background: #8fd1b0;
@@ -377,33 +397,33 @@
   height: 2px;
 }
 .stats-legend-mark.line.ao5 {
-  background: #0d6efd;
+  background: var(--stats-blue);
 }
 .stats-legend-mark.line.ao12 {
-  background: #6f42c1;
+  background: var(--stats-purple);
 }
 .stats-legend-mark.line.time {
-  background: #0d6efd;
+  background: var(--stats-blue);
   opacity: .55;
 }
 .stats-legend-mark.bar {
   width: 10px;
   height: 10px;
   border-radius: 2px;
-  background: #0d6efd;
+  background: var(--stats-blue);
   opacity: .55;
 }
 .stats-legend-mark.bar.fast {
-  background: #198754;
+  background: var(--stats-green);
 }
 .stats-legend-mark.target {
   width: 14px;
-  border-top: 1px dashed #198754;
+  border-top: 1px dashed var(--stats-green);
 }
 
 /* ケースごとの表 */
 .stats-table th {
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: .75rem;
   font-weight: 500;
   white-space: nowrap;
@@ -420,7 +440,7 @@
   font: inherit;
 }
 .stats-sort:hover {
-  color: #212529;
+  color: var(--mx-text);
 }
 .stats-sort-mark {
   font-size: .65rem;
@@ -440,21 +460,21 @@
   padding: .05rem .5rem;
   border-radius: 50rem;
   font-size: .72rem;
-  background: #f1f3f5;
-  color: #6c757d;
+  background: var(--mx-bg-150);
+  color: var(--mx-text-600);
 }
 .stats-status.learning {
   background: rgba(240, 173, 0, .16);
-  color: #7a5a00;
+  color: var(--mx-warn-text-2);
 }
 .stats-hint {
   margin-left: .35rem;
-  color: #adb5bd;
+  color: var(--mx-text-500);
   font-size: .72rem;
 }
 .stats-status.learned {
   background: rgba(25, 135, 84, .12);
-  color: #146c43;
+  color: var(--mx-success-text-2);
 }
 
 /* 通しの記録の一覧：スクランブルは押すと開く */
@@ -462,7 +482,7 @@
   padding: 0;
   border: 0;
   background: none;
-  color: #0d6efd;
+  color: var(--mx-primary-text);
   font-size: .78rem;
   white-space: nowrap;
 }
@@ -480,7 +500,7 @@
 }
 .stats-scramble-row > td {
   padding-top: 0;
-  background: #fafbfc;
+  background: var(--mx-bg-50);
 }
 .stats-scramble-text {
   width: fit-content;
@@ -488,7 +508,7 @@
   font-family: var(--bs-font-monospace);
   font-size: .72rem;
   white-space: pre-line;
-  color: #495057;
+  color: var(--mx-text-700);
 }
 
 /* ケースごとの表の並び（苦手順 / グループ順 / 覚える順） */
@@ -511,18 +531,18 @@
   .stats-sort-select {
     display: block;
     width: auto;
-    border: 3px solid #eef0f3;
+    border: 3px solid var(--mx-line-175);
     border-radius: 50rem;
     padding: .2rem 1.5rem .2rem .6rem;
-    background-color: #eef0f3;
+    background-color: var(--mx-bg-175);
     background-position: right .45rem center;
-    color: #212529;
+    color: var(--mx-text);
     font-size: .78rem;
     font-weight: 500;
     line-height: 1.5;
   }
   .stats-sort-select:focus {
-    border-color: #eef0f3;
+    border-color: var(--mx-line-175);
     box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .35);
   }
 }
@@ -532,7 +552,7 @@
 }
 .stats-recent-dnf {
   margin-left: .35rem;
-  color: #dc3545;
+  color: var(--mx-danger-text);
   font-size: .72rem;
 }
 .stats-few {
@@ -558,7 +578,7 @@
   display: none;
 }
 .stats-pager-info {
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-variant-numeric: tabular-nums;
 }
 .stats-pager-nav {
@@ -571,14 +591,14 @@
   min-width: 2rem;
   height: 2rem;
   padding: 0 .55rem;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--mx-line-300);
   border-radius: .5rem;
-  background: #fff;
-  color: #495057;
+  background: var(--mx-bg);
+  color: var(--mx-text-700);
   font-variant-numeric: tabular-nums;
 }
 .stats-page:hover:not(:disabled):not(.active) {
-  background: #f1f3f5;
+  background: var(--mx-bg-150);
 }
 .stats-page.active {
   border-color: #0d6efd;
@@ -602,15 +622,15 @@
   width: auto;
   height: 2rem;
   padding: 0 1.75rem 0 .65rem;
-  border-color: #dee2e6;
+  border-color: var(--mx-line-300);
   border-radius: .5rem;
   background-position: right .5rem center;
-  color: #495057;
+  color: var(--mx-text-700);
   font-size: .82rem;
   font-variant-numeric: tabular-nums;
 }
 .stats-page-select:focus {
-  border-color: #dee2e6;
+  border-color: var(--mx-line-300);
   box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .35);
 }
 /* iPhone では 16px より小さいプルダウンを押すと勝手に拡大するので、タッチの端末では 16px にする（高さは行の高さを詰めて保つ） */
@@ -647,23 +667,23 @@
   font-size: .82rem;
 }
 .stats-delete-confirm {
-  color: #b02a37;
+  color: var(--mx-danger-text-2);
   font-weight: 500;
 }
 .stats-delete-message {
-  color: #6c757d;
+  color: var(--mx-text-600);
 }
 .stats-delete-all {
   order: 1; /* 削除のメッセージより後ろ（右端）に置く */
   margin-left: auto;
   padding: 0;
-  color: #6c757d; /* 普段は赤くしない（赤は確認のあとの「すべて削除する」だけ） */
+  color: var(--mx-text-600); /* 普段は赤くしない（赤は確認のあとの「すべて削除する」だけ） */
   font-size: .82rem;
   text-decoration: none;
 }
 .stats-delete-all:hover,
 .stats-delete-all:focus-visible {
-  color: #212529;
+  color: var(--mx-text);
   text-decoration: underline;
 }
 .stats-undo {
@@ -684,15 +704,15 @@
   border: 0;
   border-radius: 50%;
   background: transparent;
-  color: #adb5bd;
+  color: var(--mx-text-500);
   font-size: 1.05rem;
   line-height: 1;
 }
 .stats-row-delete:hover,
 .stats-row-delete:focus-visible {
   outline: none;
-  background: rgba(0, 0, 0, .06);
-  color: #212529;
+  background: var(--mx-hover);
+  color: var(--mx-text);
 }
 
 /* 通しの記録の一覧：日時・タイム・平均・削除の列は中身の幅だけにする（残りの幅はスクランブルの列へ） */
@@ -723,7 +743,7 @@
     align-items: center;
     gap: .35rem;
     margin-right: .25rem;
-    color: #6c757d;
+    color: var(--mx-text-600);
   }
   .stats-table.stats-full-table thead {
     display: none;
@@ -744,7 +764,7 @@
     column-gap: .45rem;
     align-items: center;
     padding: .45rem .25rem;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid var(--mx-line-200);
   }
   .stats-table.stats-full-table tbody tr > td,
   .stats-table.stats-full-table tbody tr > td.stats-shrink:last-child {
@@ -776,7 +796,7 @@
   .stats-table.stats-full-table .cell-avg {
     grid-row: 2;
     font-size: .75rem;
-    color: #6c757d;
+    color: var(--mx-text-600);
     text-align: left !important;
   }
   .stats-table.stats-full-table .cell-date {
@@ -795,7 +815,7 @@
   }
   .stats-table.stats-full-table .cell-avg::before {
     content: attr(data-label) ' ';
-    color: #adb5bd;
+    color: var(--mx-text-500);
   }
   .stats-table.stats-full-table tbody tr.table-active {
     background-color: rgba(13, 110, 253, .06);
@@ -806,7 +826,7 @@
   .stats-table.stats-full-table .stats-scramble-row > td {
     display: block;
     padding: .25rem .25rem .5rem 2rem;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid var(--mx-line-200);
   }  /* スクランブル（1 行約 41 文字・折り返さない）を、狭いスマホでも横にスクロールせずに読める大きさにする */
   .stats-table.stats-full-table .stats-scramble-text {
     font-size: min(.72rem, 2.6vw);
@@ -830,7 +850,7 @@
     column-gap: .5rem;
     align-items: center;
     padding: .45rem .25rem;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid var(--mx-line-200);
   }
   .stats-table.stats-caselog-table tbody tr > td,
   .stats-table.stats-caselog-table tbody tr > td.stats-shrink:last-child {
@@ -906,7 +926,7 @@
     row-gap: .1rem;
     align-items: center;
     padding: .45rem .25rem;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid var(--mx-line-200);
   }
   .stats-table.stats-case-table tbody tr > td {
     border: 0;
@@ -942,18 +962,18 @@
     grid-column: 2 / 5;
     grid-row: 2;
     font-size: .75rem;
-    color: #495057;
+    color: var(--mx-text-700);
   }
   /* 最後に練習した日は 2 段目の右端 */
   .stats-meta-date {
     margin-left: auto;
-    color: #adb5bd;
+    color: var(--mx-text-500);
   }
   .stats-meta-item {
     white-space: nowrap;
   }
   .stats-meta-label {
-    color: #adb5bd;
+    color: var(--mx-text-500);
   }
 }
 
@@ -986,7 +1006,7 @@
 .stats-share-box img {
   width: 100%;
   height: auto;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--mx-line-200);
   border-radius: .6rem;
 }
 .stats-share-actions {
@@ -1011,9 +1031,9 @@
 .title-empty.stats-titles-compact {
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas: 'name name' 'streak badges';
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--mx-line-200);
   border-radius: .6rem;
-  background: #f8f9fa;
+  background: var(--mx-bg-100);
 }
 .stats-titles-compact:hover {
   filter: brightness(.98);
@@ -1045,14 +1065,14 @@
   align-items: center;
   gap: .35rem;
   justify-self: end;
-  color: #495057;
+  color: var(--mx-text-700);
   font-size: .8rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 .stats-titles-chevron {
-  color: #adb5bd;
+  color: var(--mx-text-500);
   font-size: 1rem;
   line-height: 1;
 }
@@ -1069,10 +1089,10 @@
   position: relative;
   max-width: 34rem;
   padding: .9rem 1.1rem 1rem;
-  border: 1px solid #ecd17f;
+  border: 1px solid var(--mx-warn-line);
   border-radius: .75rem;
-  background: linear-gradient(135deg, #fff8e1 0%, #fffdf6 50%, #fdeccf 100%);
-  color: #7a5600;
+  background: linear-gradient(135deg, var(--mx-warn-bg) 0%, var(--stats-signin-mid) 50%, var(--stats-signin-end) 100%);
+  color: var(--mx-warn-text);
   box-shadow: 0 .25rem .9rem rgba(217, 164, 0, .15);
 }
 .stats-signin-head {
@@ -1094,7 +1114,7 @@
 .stats-signin-note {
   margin: .35rem 0 .75rem;
   font-size: .88rem;
-  color: #7a5a1c;
+  color: var(--mx-warn-text-4);
 }
 .stats-signin-button {
   padding: .35rem 1.1rem;
@@ -1148,9 +1168,9 @@
 }
 .title-empty.stats-titles-card {
   padding: .6rem .8rem;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--mx-line-200);
   border-radius: .6rem;
-  background: #f8f9fa;
+  background: var(--mx-bg-100);
 }
 .stats-titles-toggle {
   display: flex;
@@ -1161,10 +1181,10 @@
   border: 0;
   border-radius: .5rem;
   background: none;
-  color: #495057;
+  color: var(--mx-text-700);
 }
 .stats-titles-toggle:hover {
-  background: rgba(0, 0, 0, .05);
+  background: var(--mx-hover-05);
 }
 .stats-titles-toggle:focus-visible {
   outline: none;
@@ -1180,7 +1200,7 @@
   font-variant-numeric: tabular-nums;
 }
 .stats-titles-action {
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: .75rem;
 }
 /* スマホ（幅 576px 未満。開いたとき）：札のいちばん下の 1 行いっぱいのボタン（左に「バッジ 11 / 40」、右に「▾ バッジを閉じる」） */
@@ -1190,7 +1210,7 @@
     justify-content: space-between;
     margin: .2rem 0 0;
     padding: .45rem .65rem;
-    background: rgba(255, 255, 255, .6);
+    background: var(--stats-toggle-bg);
   }
   .stats-titles-foot .stats-titles-action {
     position: static;
@@ -1211,7 +1231,7 @@
 }
 .title-badge-group-name {
   margin: 0 0 .4rem;
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: .78rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -1226,10 +1246,10 @@
   align-items: center;
   gap: .6rem;
   padding: .55rem .7rem;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--mx-line-200);
   border-radius: .6rem;
-  background: #fafbfc;
-  color: #adb5bd;
+  background: var(--mx-bg-50);
+  color: var(--mx-text-500);
   text-align: left;
 }
 .title-badge .title-medal svg {
@@ -1250,17 +1270,17 @@
   font-size: .72rem;
 }
 .title-badge.earned {
-  background: #fff;
-  color: #212529;
+  background: var(--mx-bg);
+  color: var(--mx-text);
 }
 .title-badge.earned .title-medal {
   color: #d9a400;
 }
 .title-badge.earned .title-badge-desc {
-  color: #6c757d;
+  color: var(--mx-text-600);
 }
 .title-badge-date {
-  color: #adb5bd;
+  color: var(--mx-text-500);
 }
 /* まだ取っていないバッジの達成状況（細いバーと「39 / 410」） */
 .title-badge-progress {
@@ -1274,26 +1294,26 @@
   width: 6rem; /* 数の桁で長さが変わらないように決まった幅 */
   height: 4px;
   border-radius: 2px;
-  background: #e9ecef;
+  background: var(--mx-bg-200);
   overflow: hidden;
 }
 .title-badge-bar-fill {
   display: block;
   height: 100%;
-  background: #adb5bd;
+  background: var(--mx-bg-500);
 }
 .title-badge-count {
   font-size: .72rem;
   font-variant-numeric: tabular-nums;
-  color: #adb5bd;
+  color: var(--mx-text-500);
 }
 .title-badge.earned:hover {
-  border-color: #ecd17f;
+  border-color: var(--mx-warn-line);
 }
 .title-badge.chosen {
-  border-color: #ecd17f;
-  background: #fff8e1;
-  box-shadow: inset 0 0 0 1px #ecd17f;
+  border-color: var(--mx-warn-line);
+  background: var(--mx-warn-bg);
+  box-shadow: inset 0 0 0 1px var(--mx-warn-line);
 }
 .title-badge:disabled {
   cursor: default;

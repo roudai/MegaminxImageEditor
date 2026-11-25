@@ -19,6 +19,9 @@
       setTimeout(show, 3000);
     })();
   </script>
+  <meta name="color-scheme" content="light dark">
+  <!-- 画面の明るさ（ライト・ダーク。既定は端末の設定に合わせる）を描く前に決める（js/theme.js） -->
+  <script src="js/theme.js"></script>
   <link rel="stylesheet" href="css/common.css">
   <style>
     .sticker-swatch {
@@ -26,7 +29,7 @@
       width: 100%;
       height: calc(1.5em + .75rem + 2px);
       padding: 0;
-      border: 1px solid #ced4da;
+      border: 1px solid var(--mx-line-400);
       border-radius: .25rem;
     }
     .sticker-swatch:focus {
@@ -40,8 +43,8 @@
       grid-template-columns: repeat(7, 28px);
       gap: 6px;
       padding: 8px;
-      background: #fff;
-      border: 1px solid rgba(0, 0, 0, .15);
+      background: var(--mx-bg);
+      border: 1px solid var(--mx-popup-line-15);
       border-radius: .25rem;
       box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15);
     }
@@ -52,11 +55,11 @@
       width: 28px;
       height: 28px;
       padding: 0;
-      border: 1px solid #adb5bd;
+      border: 1px solid var(--mx-line-500);
       border-radius: .2rem;
     }
     .sticker-palette-color.selected {
-      box-shadow: 0 0 0 2px #fff, 0 0 0 4px #0d6efd;
+      box-shadow: 0 0 0 2px var(--mx-bg), 0 0 0 4px #0d6efd;
     }
     .case-alg-bar {
       min-height: 31px;
@@ -99,7 +102,7 @@
 </head>
 <body>
   <div class="container pb-5">
-    <nav class="navbar bg-light site-nav">
+    <nav class="navbar bg-body-tertiary site-nav">
       <div class="container-fluid">
         <a class="navbar-brand" href="./">Megaminx Image Editor 2.0</a>
         <!-- 右側：広い画面では 言語・アカウント・ページへのリンク・GitHub を1行に並べる。
@@ -110,7 +113,7 @@
             <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M3 5.5h14M3 10h14M3 14.5h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
           </button>
           <div class="nav-menu" id="navMenu">
-            <span id="langSwitch"></span>
+            <span class="nav-switches"><span id="langSwitch"></span><span id="themeSwitch"></span></span>
             <a href="./" class="nav-link-item" data-i18n="nav.editor" aria-current="page">Editor</a>
             <a href="pll" class="nav-link-item" data-i18n="nav.pllList">PLL</a>
             <a href="oll" class="nav-link-item" data-i18n="nav.ollList">OLL</a>

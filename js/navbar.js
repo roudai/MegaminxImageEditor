@@ -39,6 +39,40 @@
     },
   };
 
+  // 画面の明るさの切り替え（js/theme.js）：言語の切り替えの隣に、同じ形（.lang-switch）でボタンを 1 つ。
+  // 押すと今と反対のテーマにする（それが端末の設定と同じなら、端末の設定に合わせる状態に戻る）。
+  // アイコンは押したあとのテーマ（ライトのときは月、ダークのときは太陽）。説明（title）に、今は端末の設定に合わせているか・固定かを出す
+  const themeBox = document.getElementById('themeSwitch');
+  if (themeBox && window.Theme && window.I18N) {
+    const ICONS = {
+      // 太陽
+      light:
+        '<circle cx="8" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.2v1.6M8 13.2v1.6M1.2 8h1.6M13.2 8h1.6M3.2 3.2l1.1 1.1M11.7 11.7l1.1 1.1M3.2 12.8l1.1-1.1M11.7 4.3l1.1-1.1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+      // 月
+      dark: '<path d="M13.4 10.2A5.8 5.8 0 0 1 5.8 2.6a5.8 5.8 0 1 0 7.6 7.6z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>',
+    };
+    const I = window.I18N;
+    themeBox.className = 'lang-switch theme-switch';
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'lang-option theme-option';
+    b.addEventListener('click', () => window.Theme.toggle());
+    themeBox.append(b);
+    const text = () => {
+      const next = window.Theme.current() === 'dark' ? 'light' : 'dark';
+      const state = window.Theme.get() === 'auto' ? 'theme.followingOs' : 'theme.fixed';
+      return I.t('theme.title', { action: I.t(next === 'dark' ? 'theme.toDark' : 'theme.toLight'), state: I.t(state) });
+    };
+    const render = () => {
+      const next = window.Theme.current() === 'dark' ? 'light' : 'dark';
+      b.innerHTML = `<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">${ICONS[next]}</svg>`;
+      I.live(b, text, 'title');
+      I.live(b, text, 'aria-label');
+    };
+    window.Theme.onChange(render);
+    render();
+  }
+
   const toggle = document.getElementById('navToggle');
   const menu = document.getElementById('navMenu');
   if (!toggle || !menu) return;

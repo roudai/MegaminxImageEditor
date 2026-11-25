@@ -1,5 +1,121 @@
 /* エディタ・一覧ページ共通の見た目 */
 
+/* ---- 色（テーマ。js/theme.js が <html> に data-bs-theme="light|dark" を付ける。仕様: reference/SITE_SPEC.md「テーマ」）----
+   ライトの値は、トークンにする前に直接書いていた色そのまま（ライトの見た目は変えない）。名前の数字は Bootstrap の灰色の段階
+   （100 #f8f9fa … 900 #212529）に近いもの。ダークの値は Bootstrap 5.3 のダークの色に合わせる。
+   --mx-text*：文字 / --mx-bg*：背景 / --mx-line*：枠・区切り線 / そのほか：意味のある色（成功・危険・注意など）
+   メガミンクスの画像・ダウンロードする画像・共有カード（canvas）はテーマで変えない */
+:root {
+  --mx-text: #212529;
+  --mx-text-gh: #24292f;
+  --mx-text-800: #343a40;
+  --mx-text-700: #495057;
+  --mx-text-600: #6c757d;
+  --mx-text-550: #868e96;
+  --mx-text-500: #adb5bd;
+  --mx-text-400: #ced4da;
+  --mx-bg: #fff;
+  --mx-bg-50: #fafbfc;
+  --mx-bg-50b: #fbfbfc;
+  --mx-bg-100: #f8f9fa;
+  --mx-bg-150: #f1f3f5;
+  --mx-bg-170: #eef1f5;
+  --mx-bg-175: #eef0f3;
+  --mx-bg-200: #e9ecef;
+  --mx-bg-250: #e3e6ea;
+  --mx-bg-300: #dee2e6;
+  --mx-bg-400: #ced4da;
+  --mx-bg-500: #adb5bd;
+  --mx-line-100: #f8f9fa;
+  --mx-line-150: #f1f3f5;
+  --mx-line-175: #eef0f3;
+  --mx-line-200: #e9ecef;
+  --mx-line-250: #e3e6ea;
+  --mx-line-300: #dee2e6;
+  --mx-line-350: #d0d5db;
+  --mx-line-400: #ced4da;
+  --mx-line-500: #adb5bd;
+  --mx-popup-line: rgba(0, 0, 0, .08);
+  --mx-popup-line-15: rgba(0, 0, 0, .15);
+  --mx-hover: rgba(0, 0, 0, .06);
+  --mx-hover-05: rgba(0, 0, 0, .05);
+  --mx-track: rgba(0, 0, 0, .08);
+  --mx-primary-text: #0d6efd;
+  --mx-primary-text-2: #0a58ca;
+  --mx-primary-text-3: #084298;
+  --mx-primary-text-4: #3d6fb6;
+  --mx-info-bg: #f1f6ff;
+  --mx-info-line: #cfe2ff;
+  --mx-success-text: #198754;
+  --mx-success-text-2: #146c43;
+  --mx-success-bg: #e8f3ee;
+  --mx-danger-text: #dc3545;
+  --mx-danger-text-2: #b02a37;
+  --mx-warn-text: #7a5600;
+  --mx-warn-text-2: #7a5a00;
+  --mx-warn-text-3: #a07a1c;
+  --mx-warn-text-4: #7a5a1c;
+  --mx-warn-bg: #fff8e1;
+  --mx-warn-bg-2: #fff3cd;
+  --mx-warn-line: #ecd17f;
+  --mx-purple-text: #7c3aed;
+}
+[data-bs-theme="dark"] {
+  --mx-text: #dee2e6;
+  --mx-text-gh: #dee2e6;
+  --mx-text-800: #ced4da;
+  --mx-text-700: #bfc6cd;
+  --mx-text-600: #9aa3ad;
+  --mx-text-550: #8f979f;
+  --mx-text-500: #7c848c;
+  --mx-text-400: #5c636a;
+  --mx-bg: #212529;
+  --mx-bg-50: #25292d;
+  --mx-bg-50b: #25292d;
+  --mx-bg-100: #2b3035;
+  --mx-bg-150: #2b3035;
+  --mx-bg-170: #30353a;
+  --mx-bg-175: #30353a;
+  --mx-bg-200: #343a40;
+  --mx-bg-250: #373d43;
+  --mx-bg-300: #3d434a;
+  --mx-bg-400: #495057;
+  --mx-bg-500: #5c636a;
+  --mx-line-100: #2b3035;
+  --mx-line-150: #31363b;
+  --mx-line-175: #31363b;
+  --mx-line-200: #373b3e;
+  --mx-line-250: #3d434a;
+  --mx-line-300: #495057;
+  --mx-line-350: #495057;
+  --mx-line-400: #5c636a;
+  --mx-line-500: #6c757d;
+  --mx-popup-line: rgba(255, 255, 255, .12);
+  --mx-popup-line-15: rgba(255, 255, 255, .15);
+  --mx-hover: rgba(255, 255, 255, .08);
+  --mx-hover-05: rgba(255, 255, 255, .07);
+  --mx-track: rgba(255, 255, 255, .12);
+  --mx-primary-text: #6ea8fe;
+  --mx-primary-text-2: #8bb9fe;
+  --mx-primary-text-3: #9ec5fe;
+  --mx-primary-text-4: #6ea8fe;
+  --mx-info-bg: #0b2244;
+  --mx-info-line: #1c4a8a;
+  --mx-success-text: #75b798;
+  --mx-success-text-2: #75b798;
+  --mx-success-bg: #12301f;
+  --mx-danger-text: #ea868f;
+  --mx-danger-text-2: #ea868f;
+  --mx-warn-text: #ffda6a;
+  --mx-warn-text-2: #ffcf4d;
+  --mx-warn-text-3: #d9b25a;
+  --mx-warn-text-4: #e8c983;
+  --mx-warn-bg: #332a0a;
+  --mx-warn-bg-2: #3d3005;
+  --mx-warn-line: #7a6420;
+  --mx-purple-text: #b794f6;
+}
+
 /* ページを開いてから JS で中身を作り終えるまで（各ページの <head> の script が付け、DOMContentLoaded で外す）。
    英語の仮の文字・空の一覧が一瞬出てちらつくのを防ぐ。ページを移るときは、見えない間は前のページが残る（ブラウザの paint holding）。
    display: none ではなく visibility にして、隠している間もレイアウトは計算する（記録のページのグラフの幅などを正しく測れるように） */
@@ -15,7 +131,7 @@ html {
 }
 
 /* ---- ナビバー（js/navbar.js）----
-   広い画面：言語・アカウント・ページへのリンク・GitHub を1行に並べる（.nav-menu の中身も同じ行に出す）
+   広い画面：言語・画面の明るさ・アカウント・ページへのリンク・GitHub を1行に並べる（.nav-menu の中身も同じ行に出す）
    スマホ（md 未満）：タイトル・アカウント・メニューのボタンだけを1行に出し、言語とリンクはメニューの中 */
 .site-nav .container-fluid {
   flex-wrap: nowrap;
@@ -41,16 +157,16 @@ html {
   white-space: nowrap;
 }
 .nav-link-item:hover {
-  color: #212529;
+  color: var(--mx-text);
 }
 .nav-link-item[aria-current="page"] {
-  color: #212529;
+  color: var(--mx-text);
   font-weight: 600;
   text-decoration: none;
 }
 .nav-link-item.nav-github {
   margin-right: 0;
-  color: #212529;
+  color: var(--mx-text);
 }
 .nav-toggle {
   display: none;
@@ -59,10 +175,10 @@ html {
   width: 34px;
   height: 34px;
   padding: 0;
-  border: 1px solid #d0d5db;
+  border: 1px solid var(--mx-line-350);
   border-radius: .5rem;
-  background: #fff;
-  color: #343a40;
+  background: var(--mx-bg);
+  color: var(--mx-text-800);
 }
 .nav-toggle:focus-visible {
   outline: none;
@@ -73,7 +189,7 @@ html {
   .nav-menu {
     display: contents;
   }
-  #langSwitch {
+  .nav-switches {
     order: -1;
   }
   .nav-link-item {
@@ -103,15 +219,15 @@ html {
     align-items: stretch;
     min-width: 12rem;
     padding: .5rem;
-    border: 1px solid rgba(0, 0, 0, .08);
+    border: 1px solid var(--mx-popup-line);
     border-radius: .75rem;
-    background: #fff;
+    background: var(--mx-bg);
     box-shadow: 0 .75rem 2rem rgba(0, 0, 0, .14);
   }
   .nav-menu.open {
     display: flex;
   }
-  .nav-menu #langSwitch {
+  .nav-menu .nav-switches {
     align-self: flex-start;
     margin: .25rem .4rem .5rem;
   }
@@ -122,17 +238,28 @@ html {
     text-decoration: none;
   }
   .nav-link-item:hover {
-    background: #f1f3f5;
+    background: var(--mx-bg-150);
   }
 }
 
+/* 言語の切り替えと画面の明るさの切り替えは、いつも横に並べる（スマホのメニューの中でも 1 行） */
+.nav-switches {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  margin-right: .75rem;
+  vertical-align: middle;
+}
+.nav-switches .lang-switch {
+  margin-right: 0;
+}
 /* ナビバーの言語の切り替え（EN / 日本語）：セグメント型 */
 .lang-switch {
   display: inline-flex;
   padding: 2px;
   margin-right: .75rem;
   border-radius: 50rem;
-  background-color: #e3e6ea;
+  background-color: var(--mx-bg-250);
   vertical-align: middle;
 }
 .lang-option {
@@ -140,22 +267,33 @@ html {
   border-radius: 50rem;
   padding: .1rem .6rem;
   background: transparent;
-  color: #495057;
+  color: var(--mx-text-700);
   font-size: .78rem;
   line-height: 1.5;
   transition: background-color .2s ease, color .2s ease, box-shadow .2s ease;
 }
 .lang-option:hover {
-  color: #212529;
+  color: var(--mx-text);
 }
 .lang-option.active {
-  background-color: #fff;
-  color: #212529;
+  background-color: var(--mx-bg);
+  color: var(--mx-text);
   box-shadow: 0 1px 2px rgba(0, 0, 0, .15);
 }
 .lang-option:focus-visible {
   outline: none;
   box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .35);
+}
+/* 画面の明るさの切り替え（ボタン 1 つ。js/navbar.js）：言語の切り替えと同じ形で、文字の代わりにアイコン */
+.theme-option {
+  display: inline-flex;
+  align-items: center;
+  padding: .1rem .45rem;
+  line-height: 1.5;
+}
+.theme-option svg {
+  display: block;
+  margin: .1rem 0;
 }
 
 /* ナビバーのログイン（cloud-sync.js） */
@@ -290,8 +428,8 @@ html {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: #fff;
-  color: #24292f;
+  background: var(--mx-bg);
+  color: var(--mx-text-gh);
   box-shadow: 0 0 0 1px rgba(0, 0, 0, .12);
 }
 .account-provider-badge svg {
@@ -303,7 +441,7 @@ html {
   align-items: center;
   gap: .3rem;
   margin-top: .15rem;
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: .72rem;
 }
 .account-menu-via .account-icon svg {
@@ -318,7 +456,7 @@ html {
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  border: 2px solid #f8f9fa;
+  border: 2px solid var(--mx-line-100);
   background: #198754;
 }
 .sync-dot.inline {
@@ -351,9 +489,9 @@ html {
   z-index: 1050;
   min-width: 15rem;
   padding: .4rem;
-  border: 1px solid rgba(0, 0, 0, .08);
+  border: 1px solid var(--mx-popup-line);
   border-radius: .75rem;
-  background: #fff;
+  background: var(--mx-bg);
   box-shadow: 0 .75rem 2rem rgba(0, 0, 0, .14);
   text-align: left;
   animation: account-menu-in .14s ease-out;
@@ -376,21 +514,21 @@ html {
   border: 0;
   border-radius: .5rem;
   background: transparent;
-  color: #212529;
+  color: var(--mx-text);
   font-size: .85rem;
   text-align: left;
 }
 .account-menu-item:hover,
 .account-menu-item:focus-visible {
   outline: none;
-  background-color: #f1f3f5;
+  background-color: var(--mx-bg-150);
 }
 .account-menu-item.muted {
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: .8rem;
 }
 .account-menu-item.signout {
-  color: #6c757d;
+  color: var(--mx-text-600);
 }
 .account-menu-head {
   display: flex;
@@ -409,7 +547,7 @@ html {
   white-space: nowrap;
 }
 .account-menu-email {
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: .75rem;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -419,12 +557,12 @@ html {
   display: flex;
   align-items: center;
   padding: .15rem .6rem .4rem;
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: .75rem;
 }
 /* 称号の札（js/titles.js の renderCard。アカウントメニューと記録のページ）：銅 → 銀 → 金 → 十二面体の生まれ変わり（すべて習得）は虹色の枠 */
 .title-empty {
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: .75rem;
 }
 .title-card {
@@ -460,6 +598,29 @@ html {
     linear-gradient(#fbf8ff, #fbf8ff) padding-box,
     linear-gradient(120deg, #ff6b6b, #f5b84d, #5cc98a, #4d9bf5, #a06bff) border-box;
 }
+/* ダーク：札の地を暗くし、文字・枠を明るくする（塗りのグラデーションと虹の枠はそのまま） */
+[data-bs-theme="dark"] .title-card {
+  --title-ink: #e8b48a;
+  --title-bg: #33261b;
+  --title-line: #6e4a2e;
+}
+[data-bs-theme="dark"] .title-card.tier-silver {
+  --title-ink: #c3d2e6;
+  --title-line: #5a6f8c;
+  background: linear-gradient(135deg, #27303b 0%, #323c48 45%, #252d37 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 1px 2px rgba(0, 0, 0, .3);
+}
+[data-bs-theme="dark"] .title-card.tier-gold {
+  --title-ink: #f5cf4d;
+  --title-bg: #332a0a;
+  --title-line: #7a6420;
+}
+[data-bs-theme="dark"] .title-card.tier-rainbow {
+  --title-ink: #d4bdff;
+  background:
+    linear-gradient(#2a2533, #2a2533) padding-box,
+    linear-gradient(120deg, #ff6b6b, #f5b84d, #5cc98a, #4d9bf5, #a06bff) border-box;
+}
 .title-medal {
   display: inline-flex;
   flex: none;
@@ -485,7 +646,7 @@ html {
   height: 5px;
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(0, 0, 0, .08);
+  background: var(--mx-track);
 }
 .title-card-fill {
   height: 100%;
@@ -499,7 +660,7 @@ html {
 }
 .title-card-breakdown {
   margin-top: .15rem;
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: .7rem;
   font-variant-numeric: tabular-nums;
 }
@@ -509,17 +670,17 @@ html {
   align-items: center;
   gap: .3rem;
   margin-top: .35rem;
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: .75rem;
   font-variant-numeric: tabular-nums;
 }
 .title-streak-icon {
   display: inline-flex;
   line-height: 0;
-  color: #adb5bd;
+  color: var(--mx-text-500);
 }
 .title-streak.active {
-  color: #212529;
+  color: var(--mx-text);
   font-weight: 600;
 }
 .title-streak.active .title-streak-icon {
@@ -529,7 +690,7 @@ html {
 /* 「バッジ n / 40」の横の、取った隠しバッジの数「+k」（隠しバッジを取ったときの知らせと同じ紫） */
 .title-badge-secret-count {
   margin-left: .3rem;
-  color: #7c3aed;
+  color: var(--mx-purple-text);
   font-weight: 700;
 }
 .title-badge-new {
@@ -557,21 +718,21 @@ html {
   margin-left: .35rem;
   font-family: var(--bs-font-monospace);
   font-size: .7rem;
-  color: #dc3545;
+  color: var(--mx-danger-text);
 }
 .account-menu-divider {
   height: 1px;
   margin: .2rem .25rem;
-  background: #e9ecef;
+  background: var(--mx-bg-200);
 }
 .account-menu-message {
   padding: .35rem .65rem .2rem;
-  color: #dc3545;
+  color: var(--mx-danger-text);
   font-size: .75rem;
   white-space: normal;
 }
 .account-menu-message.ok {
-  color: #198754;
+  color: var(--mx-success-text);
 }
 /* アプリの中のブラウザでログインできなかったときの、URL をコピーするボタン（コピーできなければ URL の欄） */
 .account-menu-copy {
@@ -587,7 +748,7 @@ html {
 .account-menu-note {
   max-width: 16rem;
   padding: .35rem .65rem .4rem;
-  color: #495057;
+  color: var(--mx-text-700);
   font-size: .75rem;
   white-space: normal;
 }
@@ -596,8 +757,8 @@ html {
    表示は画面の高さの 35% まで（大きい画像サイズで画面をふさがないように）。描く大きさ・ダウンロードする PNG は画像サイズのまま */
 .editor-preview {
   padding: .5rem 0;
-  border-bottom: 1px solid #e9ecef;
-  background: #fff;
+  border-bottom: 1px solid var(--mx-line-200);
+  background: var(--mx-bg);
 }
 .editor-preview canvas {
   display: block;
@@ -628,7 +789,7 @@ html {
   white-space: nowrap;
 }
 .scramble-line:nth-child(odd) {
-  background-color: #eef1f5;
+  background-color: var(--mx-bg-170);
 }
 
 /* 練習と記録の切り替え（練習ページ・記録のページの見出し）。今のページは濃い字の h1、もう一方は同じ大きさの薄い字のリンク */
@@ -638,12 +799,12 @@ html {
   gap: .75rem;
 }
 .page-switch-link {
-  color: #adb5bd;
+  color: var(--mx-text-500);
   text-decoration: none;
 }
 .page-switch-link:hover,
 .page-switch-link:focus-visible {
-  color: #6c757d;
+  color: var(--mx-text-600);
 }
 /* ナビバーのリンクが並ぶ広い画面（768px 以上。css/common.css のナビバーと同じ境目）では、そこから行き来できるので見出しだけにする */
 @media (min-width: 768px) {
@@ -684,10 +845,10 @@ html {
   width: max-content;
   max-width: min(32rem, calc(100vw - 2rem));
   padding: .6rem 2rem .6rem 1rem;
-  border: 1px solid #cfe2ff;
+  border: 1px solid var(--mx-info-line);
   border-radius: .75rem;
-  background: #f1f6ff;
-  color: #084298;
+  background: var(--mx-info-bg);
+  color: var(--mx-primary-text-3);
   box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, .15);
   font-size: .875rem;
   font-weight: 500;
@@ -724,12 +885,12 @@ html {
   border: 0;
   border-radius: 50%;
   background: none;
-  color: #3d6fb6;
+  color: var(--mx-primary-text-4);
   font-size: 1.1rem;
   line-height: 1;
 }
 .site-toast-close:hover {
-  background: rgba(0, 0, 0, .06);
+  background: var(--mx-hover);
 }
 @media (prefers-reduced-motion: reduce) {
   .site-toast {

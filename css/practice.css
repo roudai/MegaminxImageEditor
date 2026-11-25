@@ -2,6 +2,14 @@
 :root {
   --practice-learned: #198754;
   --practice-learning: #b07d00;
+  --practice-warn8: #b07d00;
+  --practice-warn12: #d9480f;
+}
+[data-bs-theme="dark"] {
+  --practice-learned: #75b798;
+  --practice-learning: #ffc94d;
+  --practice-warn8: #ffc94d;
+  --practice-warn12: #ff8a4c;
 }
 
 /* ---- 設定 ---- */
@@ -11,9 +19,9 @@
   gap: .75rem 1.25rem;
   align-items: center;
   padding: .65rem 1rem;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--mx-line-200);
   border-radius: .75rem;
-  background: #fbfbfc;
+  background: var(--mx-bg-50b);
 }
 /* スマホでたたんだときの 1 行（js/practice.js の settingsSummary）。広い画面では出さない */
 .practice-settings-summary {
@@ -25,7 +33,7 @@
   padding: 0;
   border: 0;
   background: none;
-  color: #495057;
+  color: var(--mx-text-700);
   font-size: .8rem;
   text-align: left;
 }
@@ -33,7 +41,7 @@
   display: inline-flex;
   flex: none;
   line-height: 0;
-  color: #6c757d;
+  color: var(--mx-text-600);
 }
 /* 1 行に入らないときは項目の切れ目で折り返す（「…」で切ると、英語では出題などの設定が見えなくなるため） */
 .practice-settings-text {
@@ -49,7 +57,7 @@
 }
 .practice-settings-caret {
   flex: none;
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: .7rem;
 }
 .practice-settings-summary:focus-visible {
@@ -64,7 +72,7 @@
   flex-wrap: wrap;
 }
 .practice-field-label {
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: .78rem;
 }
 .practice-segment {
@@ -73,22 +81,22 @@
   max-width: 100%;
   padding: 3px;
   border-radius: 50rem;
-  background-color: #eef0f3;
+  background-color: var(--mx-bg-175);
 }
 .practice-segment button {
   border: 0;
   border-radius: 50rem;
   padding: .2rem .75rem;
   background: transparent;
-  color: #495057;
+  color: var(--mx-text-700);
   font-size: .82rem;
   font-weight: 500;
   white-space: nowrap;
   transition: background-color .2s ease, color .2s ease, box-shadow .2s ease;
 }
 .practice-segment button.active {
-  background-color: #fff;
-  color: #212529;
+  background-color: var(--mx-bg);
+  color: var(--mx-text);
   box-shadow: 0 1px 3px rgba(0, 0, 0, .14);
 }
 .practice-segment button:focus-visible {
@@ -132,25 +140,25 @@
 .practice-threshold-range::-webkit-slider-runnable-track {
   height: 4px;
   border-radius: 999px;
-  background: linear-gradient(90deg, #212529 var(--fill), #dee2e6 var(--fill));
+  background: linear-gradient(90deg, var(--mx-text) var(--fill), var(--mx-bg-300) var(--fill));
 }
 .practice-threshold-range::-moz-range-track {
   height: 4px;
   border-radius: 999px;
-  background: #dee2e6;
+  background: var(--mx-bg-300);
 }
 .practice-threshold-range::-moz-range-progress {
   height: 4px;
   border-radius: 999px;
-  background: #212529;
+  background: var(--mx-text);
 }
 .practice-threshold-range::-webkit-slider-thumb {
   width: 1.1rem;
   height: 1.1rem;
   margin-top: calc(2px - .55rem);
-  border: 2px solid #212529;
+  border: 2px solid var(--mx-text);
   border-radius: 50%;
-  background: #fff;
+  background: var(--mx-bg);
   -webkit-appearance: none;
   appearance: none;
 }
@@ -158,9 +166,9 @@
   width: 1.1rem;
   height: 1.1rem;
   box-sizing: border-box;
-  border: 2px solid #212529;
+  border: 2px solid var(--mx-text);
   border-radius: 50%;
-  background: #fff;
+  background: var(--mx-bg);
 }
 .practice-threshold-range:focus-visible {
   outline: none;
@@ -183,7 +191,7 @@
 .practice-threshold-tick {
   position: absolute;
   top: 0;
-  color: #adb5bd;
+  color: var(--mx-text-500);
   font-size: .65rem;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -196,7 +204,7 @@
   left: 50%;
   width: 1px;
   height: .2rem;
-  background: #ced4da;
+  background: var(--mx-bg-400);
 }
 .practice-threshold-step {
   display: inline-flex;
@@ -207,20 +215,20 @@
   height: 1.4rem;
   padding: 0;
   margin-bottom: .9rem; /* スライドバーの高さにそろえる */
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--mx-line-300);
   border-radius: 50%;
-  background: #fff;
-  color: #212529;
+  background: var(--mx-bg);
+  color: var(--mx-text);
   line-height: 0;
 }
 .practice-threshold-step svg {
   display: block;
 }
 .practice-threshold-step:hover:not(:disabled) {
-  background: #f1f3f5;
+  background: var(--mx-bg-150);
 }
 .practice-threshold-step:disabled {
-  color: #ced4da;
+  color: var(--mx-text-400);
   cursor: default;
 }
 .practice-threshold-step:focus-visible {
@@ -251,10 +259,10 @@
   gap: .35rem;
   max-width: 12rem; /* 長いときは「…」で切る（マウスを乗せると title で全部出す） */
   padding: .2rem .7rem;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--mx-line-300);
   border-radius: 50rem;
-  background: #fff;
-  color: #212529;
+  background: var(--mx-bg);
+  color: var(--mx-text);
   font-size: .82rem;
 }
 .practice-groups-toggle > span:first-child {
@@ -263,16 +271,16 @@
   white-space: nowrap;
 }
 .practice-groups-toggle[aria-expanded="true"] {
-  border-color: #adb5bd;
+  border-color: var(--mx-line-500);
 }
 .practice-groups-caret {
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: .7rem;
 }
 .practice-groups {
   flex-basis: 100%;
   padding-top: .5rem;
-  border-top: 1px dashed #e3e6ea;
+  border-top: 1px dashed var(--mx-line-250);
   /* 広い画面：欄の並び（1〜2 行）の下に回す。スマホは欄が縦に並ぶので、押した「グループ」のすぐ下（DOM の順。下の @media） */
   order: 1;
 }
@@ -286,15 +294,15 @@
   min-width: 1.6rem; /* 1〜2 文字（A〜Z、1〜53・1C、F1 など）は同じ幅にそろえる */
   font-variant-numeric: tabular-nums;
   padding: .15rem .2rem;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--mx-line-300);
   border-radius: .45rem;
-  background: #fff;
-  color: #495057;
+  background: var(--mx-bg);
+  color: var(--mx-text-700);
   font-size: .75rem;
   transition: background-color .15s ease, border-color .15s ease, color .15s ease;
 }
 .practice-group-chip:hover {
-  border-color: #adb5bd;
+  border-color: var(--mx-line-500);
 }
 .practice-group-chip.active {
   border-color: #0d6efd;
@@ -337,14 +345,14 @@
   -webkit-touch-callout: none;
   cursor: pointer;
   padding: 1.5rem 1rem 1.25rem;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--mx-line-200);
   border-radius: 1rem;
-  background: #fff;
+  background: var(--mx-bg);
   box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, .05);
   text-align: center;
 }
 .practice-label {
-  color: #adb5bd;
+  color: var(--mx-text-500);
   font-size: .72rem;
   letter-spacing: .08em;
   text-transform: uppercase;
@@ -367,7 +375,7 @@
   padding: .5rem 0;
   border: 0;
   background: none;
-  color: #212529;
+  color: var(--mx-text);
   font-size: clamp(3.5rem, 14vw, 6.5rem);
   font-weight: 300;
   font-variant-numeric: tabular-nums;
@@ -378,30 +386,30 @@
   transition: color .1s ease;
 }
 .practice-timer.warn8 {
-  color: #b07d00;
+  color: var(--practice-warn8);
 }
 .practice-timer.warn12 {
-  color: #d9480f;
+  color: var(--practice-warn12);
 }
 .practice-timer.over {
-  color: #dc3545;
+  color: var(--mx-danger-text);
 }
 /* 止めた直後（2 秒）：まだスタートしないあいだは目立つ赤（「待って」の合図） */
 .practice-timer.cooldown {
-  color: #dc3545;
+  color: var(--mx-danger-text);
 }
 /* 通し：長押し中（赤）→ 準備完了（緑）。離すとスタート。インスペクションの色より優先 */
 .practice-timer.holding {
-  color: #dc3545;
+  color: var(--mx-danger-text);
 }
 .practice-timer.ready {
-  color: #198754;
+  color: var(--mx-success-text);
 }
 .practice-timer:focus-visible {
   outline: none;
 }
 .practice-hint {
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: .78rem;
 }
 /* 操作の説明（Tips）：頭に小さな札、右に ×（一度スタートするまでだけ出す） */
@@ -410,8 +418,8 @@
   margin-right: .4rem;
   padding: 0 .4rem;
   border-radius: .3rem;
-  background: #fff3cd;
-  color: #7a5600;
+  background: var(--mx-warn-bg-2);
+  color: var(--mx-warn-text);
   font-size: .7rem;
   font-weight: 600;
   vertical-align: 1px;
@@ -422,16 +430,16 @@
   border: 0;
   border-radius: 50%;
   background: none;
-  color: #adb5bd;
+  color: var(--mx-text-500);
   font-size: .95rem;
   line-height: 1;
 }
 .practice-tip-close:hover {
-  background: #f1f3f5;
-  color: #6c757d;
+  background: var(--mx-bg-150);
+  color: var(--mx-text-600);
 }
 .practice-stage.running .practice-timer {
-  color: #0d6efd;
+  color: var(--mx-primary-text);
 }
 /* 計測中は操作の説明を隠す（スクランブルは計測中も出したまま） */
 .practice-stage.running .practice-hint {
@@ -441,7 +449,7 @@
 .practice-timer-case {
   height: 1.4em;
   margin-top: 1rem; /* スクランブルから離し、下のタイマーに寄せる */
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: .95rem;
   font-weight: 600;
   line-height: 1.4;
@@ -460,7 +468,7 @@
   right: 0;
   transform: translateY(-1.2em);
   white-space: nowrap; /* 2 行になると下の「中止」に重なるので 1 行（文も 1 行に収まる長さ） */
-  color: #b02a37;
+  color: var(--mx-danger-text-2);
   font-size: .8rem;
   line-height: 1.2;
   text-align: center;
@@ -525,7 +533,7 @@ body:not(.practice-full) .practice-stage.running #dnfButton,
 }
 .practice-empty {
   margin-top: 1rem;
-  color: #6c757d;
+  color: var(--mx-text-600);
 }
 
 /* ---- 全画面（スクランブルとタイマーだけの画面。js/practice.js の setFocus）---- */
@@ -545,11 +553,11 @@ body:not(.practice-full) .practice-stage.running #dnfButton,
   border: 0;
   border-radius: 50%;
   background: none;
-  color: #adb5bd;
+  color: var(--mx-text-500);
 }
 .practice-focus-button:hover {
-  background: #f1f3f5;
-  color: #495057;
+  background: var(--mx-bg-150);
+  color: var(--mx-text-700);
 }
 .practice-focus-button .focus-close,
 body.practice-focus .practice-focus-button .focus-open {
@@ -676,7 +684,7 @@ body.practice-focus.practice-full .practice-stage-top {
   min-width: 0;
 }
 .practice-ll-arrow {
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: 1.1rem;
 }
 
@@ -687,7 +695,7 @@ body.practice-focus.practice-full .practice-stage-top {
   max-width: 100%;
   text-align: left; /* スマホでは結果が中央寄せになるが、スクランブルは行の頭をそろえる */
   white-space: pre-line;
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: min(.75rem, 2.7vw);
 }
 /* ソルブの ao5・ao12 など：広い画面は「今」と「ベスト」の 2 行（列をそろえる）、スマホは 1 枚の表（js/practice.js の renderFullStats） */
@@ -705,13 +713,13 @@ body.practice-focus.practice-full .practice-stage-top {
   align-items: baseline;
   column-gap: 1.5rem;
   padding: .35rem 1rem;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--mx-line-200);
   border-radius: .6rem;
-  background: #fff;
+  background: var(--mx-bg);
 }
 .practice-stat-row-head {
   min-width: 3em;
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: .78rem;
   font-weight: 600;
 }
@@ -733,9 +741,9 @@ body.practice-focus.practice-full .practice-stage-top {
 .practice-full-card {
   display: none;
   padding: .5rem .75rem;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--mx-line-200);
   border-radius: .6rem;
-  background: #fff;
+  background: var(--mx-bg);
 }
 @media (max-width: 575.98px) {
   .practice-stat-chips {
@@ -751,7 +759,7 @@ body.practice-focus.practice-full .practice-stage-top {
   border-collapse: collapse;
 }
 .practice-full-table th {
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: .72rem;
   font-weight: 500;
 }
@@ -777,7 +785,7 @@ body.practice-focus.practice-full .practice-stage-top {
   gap: .25rem .5rem;
   margin-top: .4rem;
   padding-top: .4rem;
-  border-top: 1px solid #f1f3f5;
+  border-top: 1px solid var(--mx-line-150);
   font-size: .85rem;
 }
 .practice-full-pair {
@@ -786,7 +794,7 @@ body.practice-focus.practice-full .practice-stage-top {
   gap: .35rem;
 }
 .practice-full-dot {
-  color: #ced4da;
+  color: var(--mx-text-400);
 }
 .practice-stat {
   display: inline-flex;
@@ -795,7 +803,7 @@ body.practice-focus.practice-full .practice-stage-top {
   white-space: nowrap;
 }
 .practice-stat-label {
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: .72rem;
 }
 .practice-stat-value {
@@ -809,9 +817,9 @@ body.practice-focus.practice-full .practice-stage-top {
   gap: 1rem;
   align-items: center;
   padding: 1rem;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--mx-line-200);
   border-radius: 1rem;
-  background: #fbfbfc;
+  background: var(--mx-bg-50b);
   animation: practice-in .2s ease-out;
 }
 .practice-result[hidden] {
@@ -852,7 +860,7 @@ body.practice-focus.practice-full .practice-stage-top {
   word-break: break-word;
 }
 .practice-case-scramble {
-  color: #6c757d;
+  color: var(--mx-text-600);
   word-break: break-word;
 }
 /* スクランブルは解法の手順（.practice-case-alg の .85rem）より少しだけ小さく */
@@ -860,11 +868,11 @@ body.practice-focus.practice-full .practice-stage-top {
   font-size: .8rem;
 }
 .practice-case-scramble-label {
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: .78rem;
 }
 .practice-case-stats {
-  color: #6c757d;
+  color: var(--mx-text-600);
   font-size: .78rem;
 }
 .practice-result-actions {
@@ -890,7 +898,7 @@ body.practice-focus.practice-full .practice-stage-top {
 .practice-history li {
   padding: .15rem .6rem;
   border-radius: 50rem;
-  background: #f1f3f5;
+  background: var(--mx-bg-150);
   font-size: .78rem;
   font-variant-numeric: tabular-nums;
 }
@@ -933,9 +941,9 @@ body.practice-focus.practice-full .practice-stage-top {
   gap: .9rem;
   margin-top: .6rem;
   padding: .75rem 2.2rem .75rem .75rem;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--mx-line-200);
   border-radius: .75rem;
-  background: #fff;
+  background: var(--mx-bg);
 }
 .practice-history-detail[hidden] {
   display: none;
@@ -953,17 +961,17 @@ body.practice-focus.practice-full .practice-stage-top {
 .practice-history-status {
   padding: .05rem .5rem;
   border-radius: 50rem;
-  background: #f1f3f5;
-  color: #495057;
+  background: var(--mx-bg-150);
+  color: var(--mx-text-700);
   font-size: .72rem;
 }
 .practice-history-status.learned {
   background: rgba(25, 135, 84, .1);
-  color: #146c43;
+  color: var(--mx-success-text-2);
 }
 .practice-history-status.learning {
   background: rgba(240, 173, 0, .14);
-  color: #7a5a00;
+  color: var(--mx-warn-text-2);
 }
 .practice-history-editor {
   display: inline-block;
@@ -971,11 +979,11 @@ body.practice-focus.practice-full .practice-stage-top {
 }
 .practice-history li.learned {
   background: rgba(25, 135, 84, .1);
-  color: #146c43;
+  color: var(--mx-success-text-2);
 }
 .practice-history li.learning {
   background: rgba(240, 173, 0, .14);
-  color: #7a5a00;
+  color: var(--mx-warn-text-2);
 }
 
 @media (max-width: 575.98px) {
@@ -1040,10 +1048,10 @@ body.practice-focus.practice-full .practice-stage-top {
   width: max-content;
   max-width: calc(100% + 1rem); /* カードの枠まで */
   padding: .6rem 1rem;
-  border: 1px solid #ecd17f;
+  border: 1px solid var(--mx-warn-line);
   border-radius: .75rem;
-  background: #fff8e1;
-  color: #7a5600;
+  background: var(--mx-warn-bg);
+  color: var(--mx-warn-text);
   box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, .15);
   font-size: .9rem;
   font-weight: 600;
@@ -1093,12 +1101,12 @@ body.practice-focus.practice-full .practice-stage-top {
   border: 0;
   border-radius: 50%;
   background: none;
-  color: #a07a1c;
+  color: var(--mx-warn-text-3);
   font-size: 1.1rem;
   line-height: 1;
 }
 .practice-toast-close:hover {
-  background: rgba(0, 0, 0, .06);
+  background: var(--mx-hover);
 }
 /* スマホ（幅 576px 未満）：「称号が上がりました」の次の行に名前（区切りの「：」「、」は出さず、名前を 1 つずつ 1 行に） */
 @media (max-width: 575.98px) {
@@ -1121,15 +1129,15 @@ body.practice-focus.practice-full .practice-stage-top {
   padding: .2rem .8rem;
   border: 1px solid #198754;
   border-radius: 50rem;
-  background: #fff;
-  color: #198754;
+  background: var(--mx-bg);
+  color: var(--mx-success-text);
   font-size: .85rem;
 }
 .practice-toast-action:hover,
 .practice-toast-action:focus-visible {
   border-color: #198754;
-  background: #e8f3ee;
-  color: #146c43;
+  background: var(--mx-success-bg);
+  color: var(--mx-success-text-2);
 }
 .practice-toast-line + .practice-toast-line {
   margin-top: .2rem;
@@ -1144,6 +1152,22 @@ body.practice-focus.practice-full .practice-stage-top {
   color: #5b2b86;
   box-shadow: 0 0 0 4px rgba(199, 125, 255, .18), 0 .75rem 2rem rgba(120, 60, 180, .3);
   animation: secret-shine 3s linear infinite;
+}
+/* ダーク：地を暗い紫に、文字を明るい紫に（虹の枠はそのまま） */
+[data-bs-theme="dark"] .practice-toast.secret {
+  background:
+    linear-gradient(#2a2135, #2a2135) padding-box,
+    linear-gradient(120deg, #ff6b6b, #ffb347, #ffd93d, #6bcb77, #4d96ff, #c77dff, #ff6b6b) border-box;
+  background-size: 100% 100%, 300% 300%;
+  color: #dcc3ff;
+}
+[data-bs-theme="dark"] .practice-toast.secret .practice-toast-close {
+  color: #c9a6ec;
+}
+[data-bs-theme="dark"] .practice-toast-line.secret .practice-toast-head {
+  background: linear-gradient(90deg, #f06595, #9775fa, #4dabf7);
+  -webkit-background-clip: text;
+  background-clip: text;
 }
 .practice-toast.secret.show.pop {
   animation: secret-pop-fixed .7s cubic-bezier(.3, 1.5, .5, 1), secret-shine 3s linear infinite;
