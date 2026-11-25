@@ -31,6 +31,10 @@
  *                                     たまたまの1回で目立たないよう、全体の平均（overall）で prior 回（既定 2）解いたものとして足す
  *   pickWeighted(list, weightOf, random)
  *                                   list から weightOf(item) に比例した確率で1つ選ぶ（重みがすべて 0 以下なら一様。random 既定 Math.random）
+ *   floorShare(list, weightOf, isFavored, minShare)
+ *                                   isFavored のものが選ばれる割合が minShare より小さければ、その重みだけ同じ倍率で大きくして
+ *                                     ちょうど minShare にした重みの関数（もともと以上・片方しか無ければ weightOf のまま）。
+ *                                     練習の苦手優先で、練習中のケースが少なくても 4 回に 1 回は出るようにするため
  *   通しの練習（WCA と同じ扱い）。rec = { at, sec, penalty: '' | '+2' | 'DNF' }
  *   effectiveTime(rec)              ペナルティを含めたタイム（+2 なら sec + 2、DNF なら null）
  *   average(recs, n)                直近 n 回（recs は新しい順）の WCA 式の平均：速い方・遅い方を ceil(n × 5%) 回ずつ除いた平均
@@ -285,6 +289,24 @@
     return list[list.length - 1];
   }
 
+  // list のうち isFavored のものが選ばれる割合（重みの合計の割合）が minShare より小さければ、そのものの重みを
+  // 同じ倍率で大きくして、ちょうど minShare にした重みの関数を返す。もともと minShare 以上なら・片方しか無ければ weightOf のまま
+  function floorShare(list, weightOf, isFavored, minShare) {
+    const w = (x) => {
+      const v = Number(weightOf(x));
+      return v > 0 && isFinite(v) ? v : 0;
+    };
+    let favored = 0;
+    let rest = 0;
+    list.forEach((x) => {
+      if (isFavored(x)) favored += w(x);
+      else rest += w(x);
+    });
+    if (!(favored > 0) || !(rest > 0) || favored / (favored + rest) >= minShare) return weightOf;
+    const k = (minShare * rest) / ((1 - minShare) * favored);
+    return (x) => (isFavored(x) ? w(x) * k : w(x));
+  }
+
   // ---- タイムの表示 ----
   function formatTime(sec, digits) {
     const d = digits == null ? 2 : digits;
@@ -426,6 +448,7 @@
     THRESHOLD_MAX: THRESHOLD_MAX,
     weakScores: weakScores,
     pickWeighted: pickWeighted,
+    floorShare: floorShare,
     wrapAuf: wrapAuf,
     joinMoves: joinMoves,
     isInverseOf: isInverseOf,

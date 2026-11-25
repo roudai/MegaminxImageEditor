@@ -554,16 +554,22 @@
   // 重み＝（度合い ÷ 目安）を 0.5〜3 に収めて 2 乗（0.25〜9）。まだ解いていないケースは解けなかったのと同じ扱い
   // （度合い＝目安の 2 倍 → 重み 4）にして、苦手なケースと同じくらい出るようにする。記録が無ければすべて同じ
   const weighted = () => prefs.weighted !== false; // 出題が「苦手優先」か（保存していなければそう。false ならランダム）
-  function weightFor(set) {
+  // 苦手優先のとき、練習中のケースが選ばれる割合の下限（対象が「すべて」で練習中が少ないと、ほかに埋もれてほとんど出ないため）
+  const LEARNING_MIN_SHARE = 0.25;
+  // list（出題の候補）の重み
+  function weightFor(set, list) {
     if (!weighted()) return () => 1;
     const limit = threshold(set);
     const weak = P.weakScores((S.get('practice') || {}).log, { set: set, n: 10, dnfAs: limit * 2 });
-    if (!(weak.overall > 0)) return () => 1;
-    return (c) => {
-      const score = c.name in weak.scores ? weak.scores[c.name] : limit * 2; // まだ解いていない：解けなかったのと同じ
-      const ratio = Math.min(3, Math.max(0.5, score / limit));
-      return ratio * ratio;
-    };
+    const base =
+      weak.overall > 0
+        ? (c) => {
+            const score = c.name in weak.scores ? weak.scores[c.name] : limit * 2; // まだ解いていない：解けなかったのと同じ
+            const ratio = Math.min(3, Math.max(0.5, score / limit));
+            return ratio * ratio;
+          }
+        : () => 1;
+    return P.floorShare(list, base, (c) => P.statusOf(set, c.name) === 'learning', LEARNING_MIN_SHARE);
   }
 
   // keepTime: 解き終わったとき（PLL・OLL・通し）。タイムを 0.00 に戻さず、次のインスペクション・計測が始まるまで出したままにする
@@ -618,7 +624,7 @@
     const notSame = list.length > 1 ? list.filter((c) => c.name !== lastName) : list;
     const notInverse = last && last.inverse ? notSame.filter((c) => c.name !== last.inverse) : notSame;
     const candidates = notInverse.length ? notInverse : notSame;
-    const c = forced ? forced : P.pickWeighted(candidates, weightFor(prefs.set));
+    const c = forced ? forced : P.pickWeighted(candidates, weightFor(prefs.set, candidates));
     const scrambles = usableScrambles(prefs.set, SCRAMBLES[prefs.set][c.name], c.alg);
     // 前後にランダムな AUF（0〜4 回）を足して、同じスクランブルでも崩れ方（向き）が変わるようにする
     const base = scrambles[Math.floor(Math.random() * scrambles.length)] || '';

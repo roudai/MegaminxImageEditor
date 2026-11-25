@@ -284,6 +284,30 @@ test('weakScores：回数の少ないケースを全体の平均に寄せる。�
   assert.equal(P.weakScores(log, { set: 'pll', dnfAs: 16, prior: 0 }).scores.B, 16);
 });
 
+test('floorShare：好むものの割合が下限より小さいときだけ、その重みを大きくしてちょうど下限にする', () => {
+  const share = (list, weightOf, fav) => {
+    const sum = (xs) => xs.reduce((s, x) => s + weightOf(x), 0);
+    return sum(list.filter(fav)) / sum(list);
+  };
+  const fav = (x) => x.startsWith('L');
+  const weight = (x) => ({ L1: 1.7, A: 0.4, B: 0.4, C: 0.4, D: 0.4, E: 0.4, F: 0.4, G: 0.4, H: 0.4, I: 0.4, J: 0.4 })[x];
+  const list = ['L1', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+  // 1.7 ÷ (1.7 + 4) ≈ 0.30 → 下限 0.25 なら変えない、0.5 なら 0.5 に
+  assert.equal(P.floorShare(list, weight, fav, 0.25), weight);
+  const raised = P.floorShare(list, weight, fav, 0.5);
+  assert.ok(Math.abs(share(list, raised, fav) - 0.5) < 1e-9);
+  assert.equal(raised('A'), 0.4); // ほかの重みは変えない
+  // 好むもの同士の比はそのまま（2.5 ÷ 12.5 = 0.2 → 0.25 に）
+  const two = ['L1', 'L2', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+  const w2 = (x) => (x === 'L2' ? 2.4 : x === 'L1' ? 0.1 : 1);
+  const r2 = P.floorShare(two, w2, fav, 0.25);
+  assert.ok(Math.abs(share(two, r2, fav) - 0.25) < 1e-9);
+  assert.ok(Math.abs(r2('L2') / r2('L1') - 24) < 1e-9);
+  // 片方しか無いときは weightOf のまま
+  assert.equal(P.floorShare(['L1', 'L2'], w2, fav, 0.25), w2);
+  assert.equal(P.floorShare(['A', 'B'], w2, fav, 0.25), w2);
+});
+
 test('pickWeighted：重みに比例して選ぶ。重みがすべて 0 なら一様', () => {
   const seq = (values) => {
     let i = 0;
