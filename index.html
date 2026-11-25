@@ -1,576 +1,293 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-i18n-title-page="title.editor">
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" rel="preload" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" as="style">
-  <title>Megaminx Image Editor</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="img/favicon-192.png">
+  <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.9/dist/css/bootstrap.min.css" integrity="sha384-yEPZ7jP9S0QKiUQ0m3jjsO4ProIW7wvR9gXkI7JOGa2XVsw53Yke2bsdkBbjmmiX" crossorigin="anonymous">
+  <title>Megaminx Image Editor 2.0</title>
+  <script>
+    // JS で中身を作り終えるまで見せない（英語の仮の文字・空の一覧が一瞬出てちらつくのを防ぐ。css/common.css の html.booting）。
+    // body の最後のスクリプトを全部実行したあと（DOMContentLoaded）に見せる。極端に遅いときも 3 秒で見せる
+    document.documentElement.classList.add('booting');
+    (function () {
+      var show = function () { document.documentElement.classList.remove('booting'); };
+      document.addEventListener('DOMContentLoaded', show);
+      setTimeout(show, 3000);
+    })();
+  </script>
+  <meta name="color-scheme" content="light dark">
+  <!-- 画面の明るさ（ライト・ダーク。既定は端末の設定に合わせる）を描く前に決める（js/theme.js） -->
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/common.css">
+  <style>
+    .sticker-swatch {
+      display: block;
+      width: 100%;
+      height: calc(1.5em + .75rem + 2px);
+      padding: 0;
+      border: 1px solid var(--mx-line-400);
+      border-radius: .25rem;
+    }
+    .sticker-swatch:focus {
+      outline: none;
+      box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .25);
+    }
+    .sticker-palette {
+      position: absolute;
+      z-index: 1025; /* 上に残す画像（sticky-top：1020）より上に。画像のクリックで開いたときに隠れないように */
+      display: grid;
+      grid-template-columns: repeat(7, 28px);
+      gap: 6px;
+      padding: 8px;
+      background: var(--mx-bg);
+      border: 1px solid var(--mx-popup-line-15);
+      border-radius: .25rem;
+      box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15);
+    }
+    .sticker-palette[hidden] {
+      display: none;
+    }
+    .sticker-palette-color {
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      border: 1px solid var(--mx-line-500);
+      border-radius: .2rem;
+    }
+    .sticker-palette-color.selected {
+      box-shadow: 0 0 0 2px var(--mx-bg), 0 0 0 4px #0d6efd;
+    }
+    .case-alg-bar {
+      min-height: 31px;
+    }
+    .case-alg-bar .flex-none {
+      flex: none;
+    }
+    #myAlgMessage .flex-none,
+    .case-alg-bar .flex-none {
+      flex: none;
+    }
+    .my-alg-undo {
+      border: 0;
+      font-size: inherit;
+      line-height: inherit;
+      vertical-align: baseline;
+      text-decoration: none;
+    }
+    #myAlgMessage {
+      line-height: 1.5;
+    }
+    .case-alg-bar.is-empty > * {
+      visibility: hidden;
+    }
+    /* 手順の入力のボタン：スマホ（幅 576px 未満）は 6 列の同じ幅の格子（面の 12 個がちょうど 2 行、y ' 2 ( ) が 3 行目）。
+       不ぞろいに折り返さず、押しやすい大きさにする（js/alg-input.js の BUTTONS） */
+    @media (max-width: 575.98px) {
+      #algButtons {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: .3rem;
+      }
+      #algButtons .btn {
+        margin: 0 !important;
+        padding-left: 0;
+        padding-right: 0;
+      }
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <ol class="breadcrumb">
-      <li>Megaminx Image Editor</li>
-    </ol>
-    <div class="float-right">
-      <a href="https://github.com/roudai/MegaminxImageEditor">GitHub</a>
-    </div>
-    <br>
-    <div class="text-center">
-      <canvas id="canvas" width="200" height="200" bcolor="w" ucolor="uuuuuuuuuuu" scolor="pppcccaaaooolll"></canvas>
-    </div>
-    <br>
-    <div class="text-center">
-      <button type="submit" class="btn btn-info" onclick="downloadImage();">download</button>
-    </div>
-
-    <label for="name">File Name</label>
-    <input id="fname" class="form-control" type="text" value="megaminx.png">
-
-    <label for="size">Size of generated image</label>
-    <input onchange="imageChange();" id="imageSize" class="form-control" name="size" type="number" value="200" min="1" max="1024" step="1">
-  
-    <label for="fmt">Image Format</label>
-    <SELECT onchange="formatChange();" id="fmt" class = "form-control">
-      <OPTION value="png" selected>png</OPTION>
-      <OPTION value="gif">gif</OPTION>
-      <OPTION value="jpg">jpg</OPTION>
-    </SELECT>
-
-    <label>Center Color</label>
-    <SELECT id="uface0" class="form-control" onchange="imageChange();">
-      <OPTION value="d">dimgray</OPTION>
-      <OPTION value="u" selected>lightgray</OPTION>
-      <OPTION value="p">pink</OPTION>
-      <OPTION value="c">lemonchiffon</OPTION>
-      <OPTION value="a">aqua</OPTION>
-      <OPTION value="o">orange</OPTION>
-      <OPTION value="l">lawngreen</OPTION>
-      <OPTION value="b">dodgerblue</OPTION>
-      <OPTION value="y">yellow</OPTION>
-      <OPTION value="s">darkviolet</OPTION>
-      <OPTION value="g">seagreen</OPTION>
-      <OPTION value="r">red</OPTION>
-      <OPTION value="w">white</OPTION>
-      <OPTION value="z">black</OPTION>
-    </SELECT>
-
-    <div>U Face Color</div>
-    <div class="row">
-      <div class="col-xs-12 col-md-2">
-      <label>1</label>
-        <SELECT id="uface1" class="form-control" onchange="imageChange();">
-          <OPTION value="d">dimgray</OPTION>
-          <OPTION value="u" selected>lightgray</OPTION>
-          <OPTION value="p">pink</OPTION>
-          <OPTION value="c">lemonchiffon</OPTION>
-          <OPTION value="a">aqua</OPTION>
-          <OPTION value="o">orange</OPTION>
-          <OPTION value="l">lawngreen</OPTION>
-          <OPTION value="b">dodgerblue</OPTION>
-          <OPTION value="y">yellow</OPTION>
-          <OPTION value="s">darkviolet</OPTION>
-          <OPTION value="g">seagreen</OPTION>
-          <OPTION value="r">red</OPTION>
-          <OPTION value="w">white</OPTION>
-          <OPTION value="z">black</OPTION>
-        </SELECT>
-      </div>
-      <div class="col-xs-12 col-md-2">
-      <label>2</label>
-        <SELECT id="uface2" class="form-control" onchange="imageChange();">
-          <OPTION value="d">dimgray</OPTION>
-          <OPTION value="u" selected>lightgray</OPTION>
-          <OPTION value="p">pink</OPTION>
-          <OPTION value="c">lemonchiffon</OPTION>
-          <OPTION value="a">aqua</OPTION>
-          <OPTION value="o">orange</OPTION>
-          <OPTION value="l">lawngreen</OPTION>
-          <OPTION value="b">dodgerblue</OPTION>
-          <OPTION value="y">yellow</OPTION>
-          <OPTION value="s">darkviolet</OPTION>
-          <OPTION value="g">seagreen</OPTION>
-          <OPTION value="r">red</OPTION>
-          <OPTION value="w">white</OPTION>
-          <OPTION value="z">black</OPTION>
-        </SELECT>
-      </div>
-      <div class="col-xs-12 col-md-2">
-      <label>3</label>
-        <SELECT id="uface3" class="form-control" onchange="imageChange();">
-          <OPTION value="d">dimgray</OPTION>
-          <OPTION value="u" selected>lightgray</OPTION>
-          <OPTION value="p">pink</OPTION>
-          <OPTION value="c">lemonchiffon</OPTION>
-          <OPTION value="a">aqua</OPTION>
-          <OPTION value="o">orange</OPTION>
-          <OPTION value="l">lawngreen</OPTION>
-          <OPTION value="b">dodgerblue</OPTION>
-          <OPTION value="y">yellow</OPTION>
-          <OPTION value="s">darkviolet</OPTION>
-          <OPTION value="g">seagreen</OPTION>
-          <OPTION value="r">red</OPTION>
-          <OPTION value="w">white</OPTION>
-          <OPTION value="z">black</OPTION>
-        </SELECT>
-      </div>
-      <div class="col-xs-12 col-md-2">
-      <label>4</label>
-        <SELECT id="uface4" class="form-control" onchange="imageChange();">
-          <OPTION value="d">dimgray</OPTION>
-          <OPTION value="u" selected>lightgray</OPTION>
-          <OPTION value="p">pink</OPTION>
-          <OPTION value="c">lemonchiffon</OPTION>
-          <OPTION value="a">aqua</OPTION>
-          <OPTION value="o">orange</OPTION>
-          <OPTION value="l">lawngreen</OPTION>
-          <OPTION value="b">dodgerblue</OPTION>
-          <OPTION value="y">yellow</OPTION>
-          <OPTION value="s">darkviolet</OPTION>
-          <OPTION value="g">seagreen</OPTION>
-          <OPTION value="r">red</OPTION>
-          <OPTION value="w">white</OPTION>
-          <OPTION value="z">black</OPTION>
-        </SELECT>
-      </div>
-      <div class="col-xs-12 col-md-2">
-      <label>5</label>
-        <SELECT id="uface5" class="form-control" onchange="imageChange();">
-          <OPTION value="d">dimgray</OPTION>
-          <OPTION value="u" selected>lightgray</OPTION>
-          <OPTION value="p">pink</OPTION>
-          <OPTION value="c">lemonchiffon</OPTION>
-          <OPTION value="a">aqua</OPTION>
-          <OPTION value="o">orange</OPTION>
-          <OPTION value="l">lawngreen</OPTION>
-          <OPTION value="b">dodgerblue</OPTION>
-          <OPTION value="y">yellow</OPTION>
-          <OPTION value="s">darkviolet</OPTION>
-          <OPTION value="g">seagreen</OPTION>
-          <OPTION value="r">red</OPTION>
-          <OPTION value="w">white</OPTION>
-          <OPTION value="z">black</OPTION>
-        </SELECT>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col-xs-12 col-md-2">
-      <label>6</label>
-        <SELECT id="uface6" class="form-control" onchange="imageChange();">
-          <OPTION value="d">dimgray</OPTION>
-          <OPTION value="u" selected>lightgray</OPTION>
-          <OPTION value="p">pink</OPTION>
-          <OPTION value="c">lemonchiffon</OPTION>
-          <OPTION value="a">aqua</OPTION>
-          <OPTION value="o">orange</OPTION>
-          <OPTION value="l">lawngreen</OPTION>
-          <OPTION value="b">dodgerblue</OPTION>
-          <OPTION value="y">yellow</OPTION>
-          <OPTION value="s">darkviolet</OPTION>
-          <OPTION value="g">seagreen</OPTION>
-          <OPTION value="r">red</OPTION>
-          <OPTION value="w">white</OPTION>
-          <OPTION value="z">black</OPTION>
-        </SELECT>
-      </div>
-      <div class="col-xs-12 col-md-2">
-      <label>7</label>
-        <SELECT id="uface7" class="form-control" onchange="imageChange();">
-          <OPTION value="d">dimgray</OPTION>
-          <OPTION value="u" selected>lightgray</OPTION>
-          <OPTION value="p">pink</OPTION>
-          <OPTION value="c">lemonchiffon</OPTION>
-          <OPTION value="a">aqua</OPTION>
-          <OPTION value="o">orange</OPTION>
-          <OPTION value="l">lawngreen</OPTION>
-          <OPTION value="b">dodgerblue</OPTION>
-          <OPTION value="y">yellow</OPTION>
-          <OPTION value="s">darkviolet</OPTION>
-          <OPTION value="g">seagreen</OPTION>
-          <OPTION value="r">red</OPTION>
-          <OPTION value="w">white</OPTION>
-          <OPTION value="z">black</OPTION>
-        </SELECT>
-      </div>
-      <div class="col-xs-12 col-md-2">
-      <label>8</label>
-        <SELECT id="uface8" class="form-control" onchange="imageChange();">
-          <OPTION value="d">dimgray</OPTION>
-          <OPTION value="u" selected>lightgray</OPTION>
-          <OPTION value="p">pink</OPTION>
-          <OPTION value="c">lemonchiffon</OPTION>
-          <OPTION value="a">aqua</OPTION>
-          <OPTION value="o">orange</OPTION>
-          <OPTION value="l">lawngreen</OPTION>
-          <OPTION value="b">dodgerblue</OPTION>
-          <OPTION value="y">yellow</OPTION>
-          <OPTION value="s">darkviolet</OPTION>
-          <OPTION value="g">seagreen</OPTION>
-          <OPTION value="r">red</OPTION>
-          <OPTION value="w">white</OPTION>
-          <OPTION value="z">black</OPTION>
-        </SELECT>
-      </div>
-      <div class="col-xs-12 col-md-2">
-      <label>9</label>
-        <SELECT id="uface9" class="form-control" onchange="imageChange();">
-          <OPTION value="d">dimgray</OPTION>
-          <OPTION value="u" selected>lightgray</OPTION>
-          <OPTION value="p">pink</OPTION>
-          <OPTION value="c">lemonchiffon</OPTION>
-          <OPTION value="a">aqua</OPTION>
-          <OPTION value="o">orange</OPTION>
-          <OPTION value="l">lawngreen</OPTION>
-          <OPTION value="b">dodgerblue</OPTION>
-          <OPTION value="y">yellow</OPTION>
-          <OPTION value="s">darkviolet</OPTION>
-          <OPTION value="g">seagreen</OPTION>
-          <OPTION value="r">red</OPTION>
-          <OPTION value="w">white</OPTION>
-          <OPTION value="z">black</OPTION>
-        </SELECT>
-      </div>
-      <div class="col-xs-12 col-md-2">
-      <label>10</label>
-        <SELECT id="uface10" class="form-control" onchange="imageChange();">
-          <OPTION value="d">dimgray</OPTION>
-          <OPTION value="u" selected>lightgray</OPTION>
-          <OPTION value="p">pink</OPTION>
-          <OPTION value="c">lemonchiffon</OPTION>
-          <OPTION value="a">aqua</OPTION>
-          <OPTION value="o">orange</OPTION>
-          <OPTION value="l">lawngreen</OPTION>
-          <OPTION value="b">dodgerblue</OPTION>
-          <OPTION value="y">yellow</OPTION>
-          <OPTION value="s">darkviolet</OPTION>
-          <OPTION value="g">seagreen</OPTION>
-          <OPTION value="r">red</OPTION>
-          <OPTION value="w">white</OPTION>
-          <OPTION value="z">black</OPTION>
-        </SELECT>
-      </div>
-    </div>
-
-    <div>Side Face Color</div>
-    <div class="row">
-      <div class="col-xs-12 col-md-2">
-      <label>1</label>
-        <SELECT id="sface1" class="form-control" onchange="imageChange();">
-          <OPTION value="d">dimgray</OPTION>
-          <OPTION value="u">lightgray</OPTION>
-          <OPTION value="p" selected>pink</OPTION>
-          <OPTION value="c">lemonchiffon</OPTION>
-          <OPTION value="a">aqua</OPTION>
-          <OPTION value="o">orange</OPTION>
-          <OPTION value="l">lawngreen</OPTION>
-          <OPTION value="b">dodgerblue</OPTION>
-          <OPTION value="y">yellow</OPTION>
-          <OPTION value="s">darkviolet</OPTION>
-          <OPTION value="g">seagreen</OPTION>
-          <OPTION value="r">red</OPTION>
-          <OPTION value="w">white</OPTION>
-          <OPTION value="z">black</OPTION>
-        </SELECT>
-      </div>
-      <div class="col-xs-12 col-md-2">
-      <label>2</label>
-        <SELECT id="sface2" class="form-control" onchange="imageChange();">
-          <OPTION value="d">dimgray</OPTION>
-          <OPTION value="u">lightgray</OPTION>
-          <OPTION value="p" selected>pink</OPTION>
-          <OPTION value="c">lemonchiffon</OPTION>
-          <OPTION value="a">aqua</OPTION>
-          <OPTION value="o">orange</OPTION>
-          <OPTION value="l">lawngreen</OPTION>
-          <OPTION value="b">dodgerblue</OPTION>
-          <OPTION value="y">yellow</OPTION>
-          <OPTION value="s">darkviolet</OPTION>
-          <OPTION value="g">seagreen</OPTION>
-          <OPTION value="r">red</OPTION>
-          <OPTION value="w">white</OPTION>
-          <OPTION value="z">black</OPTION>
-        </SELECT>
-      </div>
-      <div class="col-xs-12 col-md-2">
-      <label>3</label>
-        <SELECT id="sface3" class="form-control" onchange="imageChange();">
-          <OPTION value="d">dimgray</OPTION>
-          <OPTION value="u">lightgray</OPTION>
-          <OPTION value="p" selected>pink</OPTION>
-          <OPTION value="c">lemonchiffon</OPTION>
-          <OPTION value="a">aqua</OPTION>
-          <OPTION value="o">orange</OPTION>
-          <OPTION value="l">lawngreen</OPTION>
-          <OPTION value="b">dodgerblue</OPTION>
-          <OPTION value="y">yellow</OPTION>
-          <OPTION value="s">darkviolet</OPTION>
-          <OPTION value="g">seagreen</OPTION>
-          <OPTION value="r">red</OPTION>
-          <OPTION value="w">white</OPTION>
-          <OPTION value="z">black</OPTION>
-        </SELECT>
-      </div>
-      <div class="col-xs-12 col-md-2">
-      <label>4</label>
-        <SELECT id="sface4" class="form-control" onchange="imageChange();">
-          <OPTION value="d">dimgray</OPTION>
-          <OPTION value="u">lightgray</OPTION>
-          <OPTION value="p">pink</OPTION>
-          <OPTION value="c" selected>lemonchiffon</OPTION>
-          <OPTION value="a">aqua</OPTION>
-          <OPTION value="o">orange</OPTION>
-          <OPTION value="l">lawngreen</OPTION>
-          <OPTION value="b">dodgerblue</OPTION>
-          <OPTION value="y">yellow</OPTION>
-          <OPTION value="s">darkviolet</OPTION>
-          <OPTION value="g">seagreen</OPTION>
-          <OPTION value="r">red</OPTION>
-          <OPTION value="w">white</OPTION>
-          <OPTION value="z">black</OPTION>
-        </SELECT>
-      </div>
-      <div class="col-xs-12 col-md-2">
-      <label>5</label>
-        <SELECT id="sface5" class="form-control" onchange="imageChange();">
-          <OPTION value="d">dimgray</OPTION>
-          <OPTION value="u">lightgray</OPTION>
-          <OPTION value="p">pink</OPTION>
-          <OPTION value="c" selected>lemonchiffon</OPTION>
-          <OPTION value="a">aqua</OPTION>
-          <OPTION value="o">orange</OPTION>
-          <OPTION value="l">lawngreen</OPTION>
-          <OPTION value="b">dodgerblue</OPTION>
-          <OPTION value="y">yellow</OPTION>
-          <OPTION value="s">darkviolet</OPTION>
-          <OPTION value="g">seagreen</OPTION>
-          <OPTION value="r">red</OPTION>
-          <OPTION value="w">white</OPTION>
-          <OPTION value="z">black</OPTION>
-        </SELECT>
-      </div>
-      <div class="col-xs-12 col-md-2">
-        <label>6</label>
-          <SELECT id="sface6" class="form-control" onchange="imageChange();">
-            <OPTION value="d">dimgray</OPTION>
-            <OPTION value="u">lightgray</OPTION>
-            <OPTION value="p">pink</OPTION>
-            <OPTION value="c" selected>lemonchiffon</OPTION>
-            <OPTION value="a">aqua</OPTION>
-            <OPTION value="o">orange</OPTION>
-            <OPTION value="l">lawngreen</OPTION>
-            <OPTION value="b">dodgerblue</OPTION>
-            <OPTION value="y">yellow</OPTION>
-            <OPTION value="s">darkviolet</OPTION>
-            <OPTION value="g">seagreen</OPTION>
-            <OPTION value="r">red</OPTION>
-            <OPTION value="w">white</OPTION>
-            <OPTION value="z">black</OPTION>
-          </SELECT>
+  <div class="container pb-5">
+    <nav class="navbar bg-body-tertiary site-nav">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="./">Megaminx Image Editor 2.0</a>
+        <!-- 右側：広い画面では 言語・アカウント・ページへのリンク・GitHub を1行に並べる。
+             スマホではアカウントとメニューのボタンだけを出し、言語とリンクはメニューの中に入れる（js/navbar.js） -->
+        <div class="nav-right">
+          <span id="accountBox"></span>
+          <button type="button" class="nav-toggle" id="navToggle" aria-controls="navMenu" aria-expanded="false" data-i18n-aria-label="nav.menu" aria-label="Menu">
+            <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M3 5.5h14M3 10h14M3 14.5h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+          <div class="nav-menu" id="navMenu">
+            <span class="nav-switches"><span id="langSwitch"></span><span id="themeSwitch"></span></span>
+            <a href="./" class="nav-link-item" data-i18n="nav.editor" aria-current="page">Editor</a>
+            <a href="pll" class="nav-link-item" data-i18n="nav.pllList">PLL</a>
+            <a href="oll" class="nav-link-item" data-i18n="nav.ollList">OLL</a>
+            <a href="practice" class="nav-link-item" data-i18n="nav.practice">Practice</a>
+            <a href="stats" class="nav-link-item" data-i18n="nav.stats">Stats</a>
+            <a href="https://github.com/roudai/MegaminxImageEditor" class="nav-link-item nav-github" aria-label="GitHub">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-github" viewBox="0 0 16 16">
+                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+              </svg>
+            </a>
+          </div>
         </div>
+      </div>
+    </nav>
+    <div class="d-flex justify-content-end text-muted small">presented by&nbsp;<a href="https://roudai.net" style="text-decoration: none">roudai.net</a></div>
+    <!-- 画像：下にスクロールしても画面の上に残す（設定を変えながら見られるように。css/common.css の .editor-preview） -->
+    <div id="editorPreview" class="editor-preview sticky-top text-center mt-3">
+      <canvas id="canvas" width="200" height="200" ucolor="uuuuuuuuuuu" scolor="pppcccaaaooolll"></canvas>
     </div>
+    <!-- ファイル名の横にダウンロード（設定を決めてから押す並び）。広い画面ではファイル名と画像サイズを横に並べる -->
+    <div class="row g-2 mt-2">
+      <div class="col-12 col-md-6">
+        <label class="form-label" for="fname" data-i18n="editor.fileName">File name</label>
+        <div class="input-group">
+          <input id="fname" class="form-control" type="text" value="megaminx.png">
+          <button type="button" class="btn btn-outline-secondary" onclick="downloadImage();" data-i18n="editor.download">Download</button>
+        </div>
+      </div>
+      <div class="col-12 col-md-6">
+        <label class="form-label" for="imageSize" data-i18n="editor.imageSize">Image size (px)</label>
+        <div class="input-group">
+          <input onchange="imageChange();" id="imageSize" class="form-control" name="size" type="number" value="200" min="100" max="1000" step="1"><!-- max は js/megaminx.js が画面の幅で決め直す -->
+          <button id="imageSizeReset" class="btn btn-outline-secondary" type="button" data-i18n="common.reset">Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <hr>
+    <label class="form-label" for="alg" data-i18n="editor.algorithm">Algorithm</label>
+    <!-- 手順の扱い：広い画面はラジオボタン、スマホ（幅 576px 未満）はプルダウン（3 つ目だけ 2 行目に落ちて崩れるため）。
+         値を持つのはラジオボタン。プルダウンはそれを切り替える（js/alg-input.js）。
+         初期値は先頭の「この手順で揃う状態」（PLL・OLL のケースを選ぶとこれになり、ケースの画像はこの形で作るため） -->
+    <div class="d-none d-sm-block">
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="algType" id="algTypeCase" value="case" checked>
+        <label class="form-check-label" for="algTypeCase" data-i18n="editor.typeCase">Solve with algorithm</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="algType" id="algTypeAlg" value="alg">
+        <label class="form-check-label" for="algTypeAlg" data-i18n="editor.typeAlg">Apply algorithm</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="algType" id="algTypeState" value="state">
+        <label class="form-check-label" for="algTypeState" data-i18n="editor.typeState">Set colors</label>
+      </div>
+    </div>
+    <select id="algTypeSelect" class="form-select d-sm-none" aria-label="How to use the algorithm" data-i18n-aria-label="editor.typeAria">
+      <option value="case" data-i18n="editor.typeCase" selected>Solve with algorithm</option>
+      <option value="alg" data-i18n="editor.typeAlg">Apply algorithm</option>
+      <option value="state" data-i18n="editor.typeState">Set colors</option>
+    </select>
+
+    <!-- PLL・OLL の選択。[PLL | OLL] の切り替えで種類を選び、その種類のグループとケースだけを出す（js/alg-input.js の showSet）。
+         広い画面は 1 行、スマホは「切り替え・グループ」「ケース・前へ・次へ」の 2 行。
+         グループのプルダウンの初期表示「-- PLL --」「-- OLL --」がラベルを兼ねる（読み上げの名前は aria-label「PLL group」など） -->
+    <div id="algEditor">
+      <div class="row g-2 mt-1 align-items-center">
+        <div class="col-auto">
+          <div class="btn-group" role="group" aria-label="Case type" data-i18n-aria-label="editor.setAria">
+            <input type="radio" class="btn-check" name="caseSet" id="caseSetPll" value="pll" autocomplete="off" checked>
+            <label class="btn btn-outline-secondary" for="caseSetPll">PLL</label>
+            <input type="radio" class="btn-check" name="caseSet" id="caseSetOll" value="oll" autocomplete="off">
+            <label class="btn btn-outline-secondary" for="caseSetOll">OLL</label>
+          </div>
+        </div>
+        <div class="col col-md-4">
+          <select id="pllGroup" class="form-select" data-set="pll" aria-label="PLL group" data-i18n-aria-label="editor.groupAria" data-i18n-params='{"set":"PLL"}'></select>
+          <select id="ollGroup" class="form-select" data-set="oll" aria-label="OLL group" data-i18n-aria-label="editor.groupAria" data-i18n-params='{"set":"OLL"}' hidden></select>
+        </div>
+        <div class="w-100 d-md-none"></div>
+        <div class="col col-md-3">
+          <select id="pllCase" class="form-select" data-set="pll" aria-label="PLL case" data-i18n-aria-label="editor.caseAria" data-i18n-params='{"set":"PLL"}' disabled></select>
+          <select id="ollCase" class="form-select" data-set="oll" aria-label="OLL case" data-i18n-aria-label="editor.caseAria" data-i18n-params='{"set":"OLL"}' disabled hidden></select>
+        </div>
+        <div class="col-auto">
+          <div class="btn-group" role="group" data-set="pll" aria-label="PLL navigation" data-i18n-aria-label="editor.navAria" data-i18n-params='{"set":"PLL"}'>
+            <button id="pllPrev" class="btn btn-outline-secondary" type="button" data-i18n="common.prev">&lsaquo; Prev</button>
+            <button id="pllNext" class="btn btn-outline-secondary" type="button" data-i18n="common.next">Next &rsaquo;</button>
+          </div>
+          <div class="btn-group" role="group" data-set="oll" aria-label="OLL navigation" data-i18n-aria-label="editor.navAria" data-i18n-params='{"set":"OLL"}' hidden>
+            <button id="ollPrev" class="btn btn-outline-secondary" type="button" data-i18n="common.prev">&lsaquo; Prev</button>
+            <button id="ollNext" class="btn btn-outline-secondary" type="button" data-i18n="common.next">Next &rsaquo;</button>
+          </div>
+        </div>
+      </div>
+      <div id="algButtons" class="mt-2"></div>
+      <div class="input-group mt-2">
+        <input id="alg" class="form-control" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <button id="algClear" class="btn btn-outline-secondary" type="button" data-i18n="editor.clear">Clear</button>
+      </div>
+      <!-- 選んでいるケースの手順の状態と、自分の手順の保存（ケースを選んでいるときだけ中身を出す。高さはいつも確保） -->
+      <div id="caseAlgBar" class="case-alg-bar d-flex align-items-center justify-content-between gap-2 mt-1">
+        <div class="d-flex align-items-center gap-2 small text-truncate">
+          <span id="caseAlgName" class="fw-semibold"></span>
+          <span id="caseAlgBadge" class="badge rounded-pill fw-normal"></span>
+          <span id="caseAlgEdited" class="text-warning-emphasis" data-i18n="myAlg.edited" hidden>edited</span>
+        </div>
+        <div class="d-flex gap-1 flex-none">
+          <button id="myAlgSave" class="btn btn-sm btn-outline-primary" type="button" data-i18n="myAlg.save">Save</button>
+          <button id="myAlgReset" class="btn btn-sm btn-outline-secondary" type="button" data-i18n="myAlg.resetToDefault">Reset to default</button>
+        </div>
+      </div>
+      <div id="myAlgMessage" class="small text-truncate" style="min-height: 1.5em" aria-live="polite"></div>
+
+      <label class="form-label mt-2" for="algPreset" data-i18n="editor.colorPreset">Color preset</label>
+      <SELECT id="algPreset" class="form-select">
+        <OPTION value="standard" selected data-i18n="editor.presetStandard">Standard</OPTION>
+        <OPTION value="oll" data-i18n="editor.presetOll">OLL (U color only)</OPTION>
+        <OPTION value="custom" data-i18n="editor.presetCustom">Custom</OPTION>
+      </SELECT>
+
+      <div class="mt-2">
+        <label class="form-label" data-i18n="editor.faceColors">Face colors</label>
+        <button id="faceColorsReset" class="btn btn-outline-secondary btn-sm ms-2" type="button" data-i18n="common.reset">Reset</button>
+        <button id="faceColorsRotate" class="btn btn-outline-secondary btn-sm ms-1" type="button" title="Rotate face colors like U (y)" data-i18n-title="editor.rotateTitle">U &#8635;</button>
+        <button id="faceColorsFlip" class="btn btn-outline-secondary btn-sm ms-1" type="button" title="Flip the puzzle upside down (U and D swap places)" data-i18n-title="editor.flipTitle" data-i18n="editor.flip">Flip</button>
+      </div>
+      <div id="faceColors" class="row"></div>
+    </div>
+
+    <div id="stateEditor" class="mt-2" hidden></div>
+
+    <hr>
 
     <div class="row">
-      <div class="col-xs-12 col-md-2">
-      <label>7</label>
-        <SELECT id="sface7" class="form-control" onchange="imageChange();">
-          <OPTION value="d">dimgray</OPTION>
-          <OPTION value="u">lightgray</OPTION>
-          <OPTION value="p">pink</OPTION>
-          <OPTION value="c">lemonchiffon</OPTION>
-          <OPTION value="a" selected>aqua</OPTION>
-          <OPTION value="o">orange</OPTION>
-          <OPTION value="l">lawngreen</OPTION>
-          <OPTION value="b">dodgerblue</OPTION>
-          <OPTION value="y">yellow</OPTION>
-          <OPTION value="s">darkviolet</OPTION>
-          <OPTION value="g">seagreen</OPTION>
-          <OPTION value="r">red</OPTION>
-          <OPTION value="w">white</OPTION>
-          <OPTION value="z">black</OPTION>
-        </SELECT>
+      <div class="col-12 col-md-6">
+        <label class="form-label" for="border" data-i18n="editor.bodyColor">Body color</label>
+        <div class="input-group">
+          <input id="border" class="form-control" type="color" value="#000000" oninput="imageChange();">
+          <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('border').value = '#000000'; imageChange();" data-i18n="common.reset">Reset</button>
+        </div>
       </div>
-      <div class="col-xs-12 col-md-2">
-      <label>8</label>
-        <SELECT id="sface8" class="form-control" onchange="imageChange();">
-          <OPTION value="d">dimgray</OPTION>
-          <OPTION value="u">lightgray</OPTION>
-          <OPTION value="p">pink</OPTION>
-          <OPTION value="c">lemonchiffon</OPTION>
-          <OPTION value="a" selected>aqua</OPTION>
-          <OPTION value="o">orange</OPTION>
-          <OPTION value="l">lawngreen</OPTION>
-          <OPTION value="b">dodgerblue</OPTION>
-          <OPTION value="y">yellow</OPTION>
-          <OPTION value="s">darkviolet</OPTION>
-          <OPTION value="g">seagreen</OPTION>
-          <OPTION value="r">red</OPTION>
-          <OPTION value="w">white</OPTION>
-          <OPTION value="z">black</OPTION>
-        </SELECT>
-      </div>
-      <div class="col-xs-12 col-md-2">
-      <label>9</label>
-        <SELECT id="sface9" class="form-control" onchange="imageChange();">
-          <OPTION value="d">dimgray</OPTION>
-          <OPTION value="u">lightgray</OPTION>
-          <OPTION value="p">pink</OPTION>
-          <OPTION value="c">lemonchiffon</OPTION>
-          <OPTION value="a" selected>aqua</OPTION>
-          <OPTION value="o">orange</OPTION>
-          <OPTION value="l">lawngreen</OPTION>
-          <OPTION value="b">dodgerblue</OPTION>
-          <OPTION value="y">yellow</OPTION>
-          <OPTION value="s">darkviolet</OPTION>
-          <OPTION value="g">seagreen</OPTION>
-          <OPTION value="r">red</OPTION>
-          <OPTION value="w">white</OPTION>
-          <OPTION value="z">black</OPTION>
-        </SELECT>
-      </div>
-      <div class="col-xs-12 col-md-2">
-      <label>10</label>
-        <SELECT id="sface10" class="form-control" onchange="imageChange();">
-          <OPTION value="d">dimgray</OPTION>
-          <OPTION value="u">lightgray</OPTION>
-          <OPTION value="p">pink</OPTION>
-          <OPTION value="c">lemonchiffon</OPTION>
-          <OPTION value="a">aqua</OPTION>
-          <OPTION value="o" selected>orange</OPTION>
-          <OPTION value="l">lawngreen</OPTION>
-          <OPTION value="b">dodgerblue</OPTION>
-          <OPTION value="y">yellow</OPTION>
-          <OPTION value="s">darkviolet</OPTION>
-          <OPTION value="g">seagreen</OPTION>
-          <OPTION value="r">red</OPTION>
-          <OPTION value="w">white</OPTION>
-          <OPTION value="z">black</OPTION>
-        </SELECT>
-      </div>
-      <div class="col-xs-12 col-md-2">
-      <label>11</label>
-        <SELECT id="sface11" class="form-control" onchange="imageChange();">
-          <OPTION value="d">dimgray</OPTION>
-          <OPTION value="u">lightgray</OPTION>
-          <OPTION value="p">pink</OPTION>
-          <OPTION value="c">lemonchiffon</OPTION>
-          <OPTION value="a">aqua</OPTION>
-          <OPTION value="o" selected>orange</OPTION>
-          <OPTION value="l">lawngreen</OPTION>
-          <OPTION value="b">dodgerblue</OPTION>
-          <OPTION value="y">yellow</OPTION>
-          <OPTION value="s">darkviolet</OPTION>
-          <OPTION value="g">seagreen</OPTION>
-          <OPTION value="r">red</OPTION>
-          <OPTION value="w">white</OPTION>
-          <OPTION value="z">black</OPTION>
-        </SELECT>
-      </div>
-      <div class="col-xs-12 col-md-2">
-      <label>12</label>
-        <SELECT id="sface12" class="form-control" onchange="imageChange();">
-          <OPTION value="d">dimgray</OPTION>
-          <OPTION value="u">lightgray</OPTION>
-          <OPTION value="p">pink</OPTION>
-          <OPTION value="c">lemonchiffon</OPTION>
-          <OPTION value="a">aqua</OPTION>
-          <OPTION value="o" selected>orange</OPTION>
-          <OPTION value="l">lawngreen</OPTION>
-          <OPTION value="b">dodgerblue</OPTION>
-          <OPTION value="y">yellow</OPTION>
-          <OPTION value="s">darkviolet</OPTION>
-          <OPTION value="g">seagreen</OPTION>
-          <OPTION value="r">red</OPTION>
-          <OPTION value="w">white</OPTION>
-          <OPTION value="z">black</OPTION>
-        </SELECT>
+      <!-- 背景：透明 / 色を指定 の 1 つにまとめ、色を指定のときだけ色とリセットを出す（js/megaminx.js の render）。
+           保存の形は今までどおり bg（y：透明 / n：色）と bgColor -->
+      <div class="col-12 col-md-6">
+        <label class="form-label" for="bg" data-i18n="editor.background">Background</label>
+        <div class="d-flex gap-2">
+          <select id="bg" class="form-select w-auto" onchange="imageChange();">
+            <option value="y" selected data-i18n="editor.transparent">Transparent</option>
+            <option value="n" data-i18n="editor.opaque">Color</option>
+          </select>
+          <div id="bgColorBox" class="input-group" hidden>
+            <input id="bgColor" class="form-control" type="color" value="#ffffff" oninput="imageChange();" data-i18n-aria-label="editor.bgColor" aria-label="Background color">
+            <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('bgColor').value = '#ffffff'; imageChange();" data-i18n="common.reset">Reset</button>
+          </div>
+        </div>
       </div>
     </div>
-
-    <div class="row">
-      <div class="col-xs-12 col-md-2">
-      <label>13</label>
-        <SELECT id="sface13" class="form-control" onchange="imageChange();">
-          <OPTION value="d">dimgray</OPTION>
-          <OPTION value="u">lightgray</OPTION>
-          <OPTION value="p">pink</OPTION>
-          <OPTION value="c">lemonchiffon</OPTION>
-          <OPTION value="a">aqua</OPTION>
-          <OPTION value="o">orange</OPTION>
-          <OPTION value="l" selected>lawngreen</OPTION>
-          <OPTION value="b">dodgerblue</OPTION>
-          <OPTION value="y">yellow</OPTION>
-          <OPTION value="s">darkviolet</OPTION>
-          <OPTION value="g">seagreen</OPTION>
-          <OPTION value="r">red</OPTION>
-          <OPTION value="w">white</OPTION>
-          <OPTION value="z">black</OPTION>
-        </SELECT>
-      </div>
-      <div class="col-xs-12 col-md-2">
-      <label>14</label>
-        <SELECT id="sface14" class="form-control" onchange="imageChange();">
-          <OPTION value="d">dimgray</OPTION>
-          <OPTION value="u">lightgray</OPTION>
-          <OPTION value="p">pink</OPTION>
-          <OPTION value="c">lemonchiffon</OPTION>
-          <OPTION value="a">aqua</OPTION>
-          <OPTION value="o">orange</OPTION>
-          <OPTION value="l" selected>lawngreen</OPTION>
-          <OPTION value="b">dodgerblue</OPTION>
-          <OPTION value="y">yellow</OPTION>
-          <OPTION value="s">darkviolet</OPTION>
-          <OPTION value="g">seagreen</OPTION>
-          <OPTION value="r">red</OPTION>
-          <OPTION value="w">white</OPTION>
-          <OPTION value="z">black</OPTION>
-        </SELECT>
-      </div>
-      <div class="col-xs-12 col-md-2">
-      <label>15</label>
-        <SELECT id="sface15" class="form-control" onchange="imageChange();">
-          <OPTION value="d">dimgray</OPTION>
-          <OPTION value="u">lightgray</OPTION>
-          <OPTION value="p">pink</OPTION>
-          <OPTION value="c">lemonchiffon</OPTION>
-          <OPTION value="a">aqua</OPTION>
-          <OPTION value="o">orange</OPTION>
-          <OPTION value="l" selected>lawngreen</OPTION>
-          <OPTION value="b">dodgerblue</OPTION>
-          <OPTION value="y">yellow</OPTION>
-          <OPTION value="s">darkviolet</OPTION>
-          <OPTION value="g">seagreen</OPTION>
-          <OPTION value="r">red</OPTION>
-          <OPTION value="w">white</OPTION>
-          <OPTION value="z">black</OPTION>
-        </SELECT>
-      </div>
-    </div>
-
-    <label>Border Color</label>
-    <SELECT id="border" class="form-control" onchange="imageChange();">
-      <OPTION value="d">dimgray</OPTION>
-      <OPTION value="u">lightgray</OPTION>
-      <OPTION value="p">pink</OPTION>
-      <OPTION value="c">lemonchiffon</OPTION>
-      <OPTION value="a">aqua</OPTION>
-      <OPTION value="o">orange</OPTION>
-      <OPTION value="l">lawngreen</OPTION>
-      <OPTION value="b">dodgerblue</OPTION>
-      <OPTION value="y">yellow</OPTION>
-      <OPTION value="s">darkviolet</OPTION>
-      <OPTION value="g">seagreen</OPTION>
-      <OPTION value="r">red</OPTION>
-      <OPTION value="w">white</OPTION>
-      <OPTION value="x" selected>black</OPTION>
-    </SELECT>
-
-    <label>Background(PNG,GIF)</label>
-    <SELECT id="bg" class="form-control">
-      <OPTION value="y" selected>transparent</OPTION>
-      <OPTION value="n">non-transparent</OPTION>
-    </SELECT>
   </div>
-  <script type="text/javascript" src="megaminx.js"></script>
+  <script type="text/javascript" src="js/store.js"></script>
+  <script type="text/javascript" src="js/i18n.js"></script>
+  <script type="text/javascript" src="js/navbar.js"></script>
+  <script type="text/javascript" src="js/megaminx-state.js"></script>
+  <script type="text/javascript" src="js/megaminx-draw.js"></script>
+  <script type="text/javascript" src="js/megaminx.js"></script>
+  <script type="text/javascript" src="js/state-editor.js"></script>
+  <script type="text/javascript" src="js/pll-data.js"></script>
+  <script type="text/javascript" src="js/oll-data.js"></script>
+  <script type="text/javascript" src="js/case-groups.js"></script>
+  <script type="text/javascript" src="js/case-check.js"></script>
+  <script type="text/javascript" src="js/custom-algs.js"></script>
+  <script type="text/javascript" src="js/alg-input.js"></script>
+  <script type="text/javascript" src="js/titles.js"></script>
+  <script type="text/javascript" src="js/firebase-config.js"></script>
+  <script type="module" src="js/cloud-sync.js"></script>
 </body>
 </html>

@@ -1,0 +1,587 @@
+// 実行: node --test test/*.test.js
+// js/titles.js（称号の段位とバッジ）と、store.js でのバッジの合わせ方
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const T = require('../js/titles.js');
+const Store = require('../js/store.js');
+
+function withStorage(initial, fn) {
+  // 称号とバッジはログイン中だけなので、既定はログインしている扱い（session: 'in'）
+  const map = new Map(Object.entries(Object.assign({ 'megaminx-image-editor:session': 'in' }, initial)));
+  global.localStorage = {
+    getItem: (k) => (map.has(k) ? map.get(k) : null),
+    setItem: (k, v) => map.set(k, String(v)),
+    removeItem: (k) => map.delete(k),
+  };
+  try {
+    return fn();
+  } finally {
+    delete global.localStorage;
+  }
+}
+
+// ふつうのバッジの判定（隠しバッジは、作り物の記録が偶然条件を満たすことがあるので除く。隠しバッジは下の専用のテスト）
+const SECRET_IDS = new Set(T.BADGES.filter((b) => b.secret).map((b) => b.id));
+const evaluate = (data, earned) => T.evaluate(data, earned).filter((id) => !SECRET_IDS.has(id));
+
+// PLL を p ケース、OLL を o ケース習得した progress（ほかに練習中のケースも混ぜる）
+function progressOf(p, o) {
+  const pll = {};
+  const oll = {};
+  for (let i = 0; i < p; i++) pll['P' + i] = 'learned';
+  for (let i = 0; i < o; i++) oll['O' + i] = 'learned';
+  pll.X = 'learning';
+  oll.Y = 'learning';
+  return { pll, oll };
+}
+
+test('TOTALS はケースのデータの数と同じ', () => {
+  assert.equal(T.TOTALS.pll, require('../js/pll-data.js').length);
+  assert.equal(T.TOTALS.oll, require('../js/oll-data.js').length);
+  assert.equal(T.TOTALS.all, T.TOTALS.pll + T.TOTALS.oll);
+});
+
+test('段位の境目：PLL と OLL を合わせた習得済みの数で決まる（ちょうどで上がり、1 つ手前では上がらない）', () => {
+  const expected = {
+    eye: 1,
+    sheet: 20,
+    hooked: 40,
+    faces: 76,
+    autopilot: 114,
+    done: 151,
+    hums: 180,
+    names: 205,
+    bag: 246,
+    family: 287,
+    dreams: 328,
+    pentagon: 369,
+    whisperer: 390,
+    reborn: 410,
+  };
+  assert.deepEqual(
+    T.RANKS.slice(1).map((r) => [r.id, r.need]),
+    Object.entries(expected)
+  );
+  const ids = T.RANKS.map((r) => r.id);
+  Object.entries(expected).forEach(([id, n]) => {
+    const p = Math.min(n, T.TOTALS.pll);
+    assert.equal(T.rankOf(progressOf(p, n - p)).id, id, `${n} ケースで ${id}`);
+    const before = T.rankOf(progressOf(Math.min(n - 1, T.TOTALS.pll), n - 1 - Math.min(n - 1, T.TOTALS.pll)));
+    assert.equal(before.id, ids[ids.indexOf(id) - 1], `${n - 1} ケースではその手前`);
+  });
+});
+
+test('rankOf：数え方・次の段位までの数・何も無いとき', () => {
+  const r = T.rankOf(progressOf(76, 130));
+  assert.equal(r.id, 'names');
+  assert.deepEqual(r.learned, { pll: 76, oll: 130, all: 206 });
+  assert.deepEqual(r.next, { id: 'bag', need: 40 });
+  assert.equal(T.rankOf(null).id, 'none');
+  assert.deepEqual(T.rankOf(null).next, { id: 'eye', need: 1 });
+  assert.equal(T.rankOf(progressOf(151, 259)).next, null);
+});
+
+test('tierOf：銅・銀・金・虹', () => {
+  assert.equal(T.tierOf('none'), null);
+  assert.equal(T.tierOf('eye'), 'bronze');
+  assert.equal(T.tierOf('autopilot'), 'bronze');
+  assert.equal(T.tierOf('done'), 'silver');
+  assert.equal(T.tierOf('hums'), 'silver');
+  assert.equal(T.tierOf('family'), 'silver');
+  assert.equal(T.tierOf('dreams'), 'gold');
+  assert.equal(T.tierOf('whisperer'), 'gold');
+  assert.equal(T.tierOf('reborn'), 'rainbow');
+});
+
+// その日の d 日目（端末の時刻）の正午
+// 2 月 1 日から数える（元日の「回し初め」にならないように）
+const dayAt = (d, h) => new Date(2026, 1, 1 + d, h == null ? 12 : h).getTime();
+// 既定は目安より遅い回（練習中）。続けて目安以内のバッジにならないように
+const caseEntry = (at, extra) => Object.assign({ at, set: 'pll', name: 'A1+', sec: 9, status: 'learning' }, extra);
+const caseEntries = (n, at) => Array.from({ length: n }, (_, i) => caseEntry(at(i)));
+// 記録は新しい順に並ぶ
+const newestFirst = (list) => list.slice().sort((a, b) => b.at - a.at);
+// 1 分（「集中タイム」＝30 分のうちに 50 回、にならないよう、記録の間をあける）
+const MIN = 60000;
+
+test('バッジは 40 個（習得 5・練習 10・継続 5・速さ 5・通し 15）と隠しバッジ 10 個で、id は重ならない', () => {
+  assert.equal(T.BADGES.length, 50);
+  assert.equal(new Set(T.BADGES.map((b) => b.id)).size, 50);
+  const count = {};
+  T.BADGES.forEach((b) => {
+    assert.ok(T.GROUPS.includes(b.group), b.id);
+    count[b.group] = (count[b.group] || 0) + 1;
+  });
+  assert.deepEqual(count, { learn: 5, reps: 10, streak: 5, speed: 5, full: 15, secret: 10 });
+});
+
+test('バッジ：習得', () => {
+  assert.deepEqual(evaluate({ progress: null, practice: null }, {}), []);
+  assert.deepEqual(evaluate({ progress: progressOf(1, 0) }, {}), ['first']);
+  assert.deepEqual(evaluate({ progress: progressOf(75, 129) }, {}), ['first']);
+  assert.deepEqual(evaluate({ progress: progressOf(76, 130) }, {}), ['first', 'pllHalf', 'ollHalf']);
+  assert.deepEqual(evaluate({ progress: progressOf(151, 259) }, {}), ['first', 'pllHalf', 'pllAll', 'ollHalf', 'ollAll']);
+  // 取ったものは返さない
+  assert.deepEqual(evaluate({ progress: progressOf(151, 0) }, { first: 1, pllHalf: 1 }), ['pllAll']);
+});
+
+test('バッジ：練習の回数（記録の数と累計の大きい方）・1 日の回数', () => {
+  const ids = (practice, stats) => evaluate({ practice, stats }, {});
+  assert.deepEqual(ids({ log: caseEntries(99, (i) => dayAt(i % 4) + i * MIN) }), []);
+  assert.deepEqual(ids({ log: caseEntries(100, (i) => dayAt(i % 4) + i * MIN) }), ['reps300']); // 百本ノック（id は reps300 のまま）
+  assert.deepEqual(ids({ log: caseEntries(299, (i) => dayAt(0, 9) + i * MIN / 2) }), ['reps300']); // 1 日に 299 回では「指が温まってきた」は無し
+  assert.deepEqual(ids({ log: caseEntries(300, (i) => dayAt(0, 9) + i * MIN) }), ['reps300', 'day100']); // 1 日に 300 回 // PLL・OLL は 300 回でも「気づけば朝」にならない
+  // 通しの記録も 1 日の回数に数える
+  const full = { log: Array.from({ length: 150 }, () => ({ at: dayAt(0, 9), sec: 200, penalty: '' })) };
+  assert.ok(ids({ log: caseEntries(150, (i) => dayAt(0, 10) + i * MIN), full }).includes('day100'));
+  // 記録（最新 2000 件まで）を超える回数は累計で
+  assert.deepEqual(ids({}, { reps: 4999 }), ['reps300', 'reps1000']);
+  assert.deepEqual(ids({}, { reps: 10000 }), ['reps300', 'reps1000', 'reps5000', 'reps10000']);
+});
+
+test('バッジ：7 日間で 1000 回（暦の 7 日。8 日にまたがると数えない）', () => {
+  const ids = (days) => evaluate({ practice: { log: caseEntries(1000, (i) => dayAt(days[i % days.length])) } }, {});
+  assert.ok(ids([0, 6]).includes('week1000'));
+  assert.ok(!ids([0, 7]).includes('week1000'));
+  assert.ok(!ids([0, 2, 4, 6, 8, 10, 12, 14]).includes('week1000'));
+});
+
+test('バッジ：気づけば朝・通し漬けの一日（通しだけを数え、どの時点からでも 24 時間のうちに 300 回・50 回。日付の区切りは使わない）', () => {
+  const HOUR = 3600000;
+  // start から step ごとに n 回（新しい順に並べる）
+  const solves = (n, start, step) => ({ full: { log: newestFirst(Array.from({ length: n }, (_, i) => ({ at: start + i * step, sec: 200, penalty: '' }))) } });
+  const has = (practice) => evaluate({ practice }, {}).includes('day300');
+  // 夜 20 時から 4 分ごとに 300 回（日付をまたいで 19.9 時間）
+  assert.equal(has(solves(300, dayAt(0, 20), 4 * 60000)), true);
+  assert.equal(has(solves(299, dayAt(0, 20), 4 * 60000)), false);
+  // 300 回目が 24 時間ちょうど以降になれば数えない
+  assert.equal(has(solves(300, dayAt(0), (24 * HOUR) / 299)), false);
+  assert.equal(has(solves(300, dayAt(0), (24 * HOUR - 1) / 299)), true);
+  // DNF も 1 回に数える
+  const dnf = solves(300, dayAt(0), 60000);
+  dnf.full.log = dnf.full.log.map((r) => Object.assign({}, r, { penalty: 'DNF' }));
+  assert.equal(has(dnf), true);
+  // ソルブ漬けの一日：同じ数え方で 100 回（id は day50 のまま）
+  const has50 = (practice) => evaluate({ practice }, {}).includes('day50');
+  assert.equal(has50(solves(100, dayAt(0, 22), 3 * 60000)), true); // 夜 22 時から 5 時間ほど（日付をまたぐ）
+  assert.equal(has50(solves(99, dayAt(0, 22), 3 * 60000)), false);
+  assert.equal(has50(solves(100, dayAt(0), (24 * HOUR) / 99)), false);
+  // PLL・OLL は数えない
+  assert.equal(evaluate({ practice: { log: Array.from({ length: 60 }, (_, i) => caseEntry(dayAt(0, 9) + i * MIN)) } }, {}).includes('day50'), false);
+});
+
+test('バッジ：週末キューバー（同じ週末の土曜と日曜に、どちらも 20 回以上）・PLL 総当たり', () => {
+  // 日（その日の 10 時から 1 分おき）と回数の組から記録を作る
+  const ids = (plan) =>
+    evaluate({ practice: { log: plan.flatMap(([d, n]) => Array.from({ length: n }, (_, i) => caseEntry(new Date(2026, 1, d, 10).getTime() + i * MIN))) } }, {});
+  // 2026-02-07 は土曜、02-08 は日曜
+  assert.deepEqual(ids([[7, 20], [8, 20]]), ['weekend']);
+  assert.deepEqual(ids([[7, 20], [8, 19]]), []);
+  assert.deepEqual(ids([[7, 19], [8, 40]]), []);
+  assert.deepEqual(ids([[8, 20], [14, 20]]), []); // 日曜と次の土曜は別の週末
+  assert.deepEqual(ids([[6, 20], [7, 20]]), []); // 金曜と土曜
+  // 練習した PLL の種類（OLL は数えない）
+  const cases = (n, set) => Array.from({ length: n }, (_, i) => caseEntry(dayAt(0) + i, { set, name: 'C' + i }));
+  const pll = (log) => evaluate({ practice: { log } }, {}).includes('pllRoundRobin');
+  assert.equal(pll(cases(150, 'pll')), false);
+  assert.equal(pll(cases(151, 'pll')), true);
+  assert.equal(pll(cases(150, 'pll').concat(cases(150, 'pll'))), false); // 同じケースは 1 回
+  assert.equal(pll(cases(259, 'oll')), false);
+});
+
+test('バッジ：朝練（同じ日の 5〜7 時に 10 回）・一期一会（「すべて」で 410 ケースに出会う）', () => {
+  const morning = (n, h, day = 0) => Array.from({ length: n }, (_, i) => caseEntry(dayAt(day, h) + i * 1000));
+  const early = (log, full) => evaluate({ practice: { log, full: { log: full || [] } } }, {}).includes('earlyBird');
+  assert.equal(early(morning(9, 5)), false);
+  assert.equal(early(morning(10, 5)), true);
+  assert.equal(early(morning(5, 5).concat(morning(5, 6))), true);
+  assert.equal(early(morning(5, 6).concat(morning(5, 6, 1))), false); // 別の日
+  assert.equal(early(morning(10, 7)), false);
+  assert.equal(early(morning(10, 4)), false);
+  assert.equal(early(morning(9, 6), [{ at: dayAt(0, 6) + 50000, sec: 200, penalty: '' }]), true); // 通しも数える
+  // 一期一会：stats.met（track の meet）で数える
+  const names = (n) => Array.from({ length: n }, (_, i) => 'C' + i);
+  const met = (pll, oll) => evaluate({ stats: { met: { pll, oll } } }, {}).includes('allMet');
+  assert.equal(met(names(151), names(258)), false);
+  assert.equal(met(names(151), names(259)), true);
+  assert.equal(met(names(151).concat(names(151)), names(258)), false); // 重なりは 1 回
+  let s = T.track(null, 'case', dayAt(0), { set: 'pll', name: 'Aa' });
+  s = T.track(s, 'case', dayAt(0), { set: 'pll', name: 'Aa' });
+  s = T.track(s, 'case', dayAt(0), { set: 'oll', name: 'OLL 1' });
+  s = T.track(s, 'case', dayAt(0), null);
+  assert.deepEqual(s.met, { pll: ['Aa'], oll: ['OLL 1'] });
+  assert.equal(s.reps, 4);
+});
+
+test('バッジ：続けて練習した日数（記録から・累計から）・通算の日数', () => {
+  const ids = (days) => evaluate({ practice: { log: days.map((d) => caseEntry(dayAt(d))) } }, {});
+  assert.deepEqual(ids([0, 1, 2, 3, 4, 5]), []);
+  assert.deepEqual(ids([0, 1, 2, 3, 4, 5, 6]), ['streak7']);
+  assert.deepEqual(ids([0, 1, 2, 4, 5, 6, 7]), []); // 2/7（土）・2/8（日）を含むが、1 回ずつなので週末キューバーにはならない
+  assert.deepEqual(ids([0, 0, 1, 2, 3, 4, 5]), []); // 同じ日に何回あっても 1 日
+  assert.deepEqual(ids(Array.from({ length: 30 }, (_, i) => i)), ['streak7', 'streak30']);
+  const byStats = (stats) => evaluate({ stats }, {});
+  assert.deepEqual(byStats({ bestRun: 100 }), ['streak7', 'streak30', 'streak100']);
+  assert.deepEqual(byStats({ bestRun: 365 }), ['streak7', 'streak30', 'streak100', 'streak365']);
+  assert.deepEqual(byStats({ days: 99 }), []);
+  assert.deepEqual(byStats({ days: 100 }), ['days100']);
+  assert.deepEqual(ids(Array.from({ length: 100 }, (_, i) => i * 2)), ['reps300', 'days100']); // 記録が 100 回あるので百本ノックも
+});
+
+test('track：回数・日数・続けた日数を数える（同じ日は 1 日、1 日空くと 1 から、時計が戻ったら日数は数えない）', () => {
+  let s = T.track(null, 'case', dayAt(0));
+  assert.deepEqual(s, { reps: 1, days: 1, lastDay: '2026-02-01', run: 1, bestRun: 1, met: { pll: [], oll: [] } });
+  s = T.track(s, 'case', dayAt(0, 20));
+  s = T.track(s, 'full', dayAt(0, 21)); // 通しは回数に入れないが、練習した日には入れる
+  assert.deepEqual(s, { reps: 2, days: 1, lastDay: '2026-02-01', run: 1, bestRun: 1, met: { pll: [], oll: [] } });
+  s = T.track(s, 'full', dayAt(1));
+  s = T.track(s, 'case', dayAt(2));
+  assert.deepEqual(s, { reps: 3, days: 3, lastDay: '2026-02-03', run: 3, bestRun: 3, met: { pll: [], oll: [] } });
+  s = T.track(s, 'case', dayAt(4));
+  assert.deepEqual(s, { reps: 4, days: 4, lastDay: '2026-02-05', run: 1, bestRun: 3, met: { pll: [], oll: [] } });
+  const back = T.track(s, 'case', dayAt(1));
+  assert.deepEqual(back, Object.assign({}, s, { reps: 5 }));
+});
+
+test('バッジ：PLL・OLL の速さ（ヒントを見た回は数えない）・集中タイム・続けて目安以内', () => {
+  const ids = (log) => evaluate({ practice: { log } }, {});
+  assert.deepEqual(ids([caseEntry(dayAt(0), { sec: 1.51 })]), []);
+  assert.deepEqual(ids([caseEntry(dayAt(0), { sec: 1.5 })]), ['sub2']);
+  assert.deepEqual(ids([caseEntry(dayAt(0), { sec: 1, hint: true, status: 'learning' })]), []);
+  assert.deepEqual(ids([caseEntry(dayAt(0), { sec: 0.98 })]), ['sub2']);
+  // 集中タイム：どの時点からでも 30 分のうちに 100 回（タイム・判定は問わない。日付の区切りは使わない）
+  const every = (n, gap, from) => Array.from({ length: n }, (_, i) => caseEntry((from == null ? dayAt(0) : from) + i * gap));
+  assert.deepEqual(ids(newestFirst(every(99, 1000))), []);
+  // 100 回の記録では百本ノック（reps300）も取れる
+  assert.deepEqual(ids(newestFirst(every(100, 18000))), ['reps300', 'focus']); // 99 × 18 秒 ＝ 29 分 42 秒
+  assert.deepEqual(ids(newestFirst(every(100, 18300))), ['reps300']); // 99 × 18.3 秒 ＝ 30 分 12 秒
+  assert.deepEqual(ids(newestFirst(every(100, 18000, dayAt(1, 0) - 15 * MIN))), ['reps300', 'focus']); // 夜中の 0 時をまたいでもよい（1 日 100 回にはならない）
+  assert.deepEqual(ids(newestFirst(every(50, 1000).concat(every(50, 1000, dayAt(0) + 31 * MIN)))), ['reps300']); // 30 分のうちには 50 回まで
+  const run = (n) => Array.from({ length: n }, (_, i) => caseEntry(dayAt(0, 9) + i * MIN, { sec: 5, status: 'learned' }));
+  assert.deepEqual(ids(newestFirst(run(9))), []);
+  assert.deepEqual(ids(newestFirst(run(10))), ['perfect10']);
+  // 途中に練習中（目安より遅い・解けなかった）やヒントがあれば数え直す
+  const broken = run(10);
+  broken[4] = caseEntry(broken[4].at, { sec: null, status: 'learning' });
+  assert.deepEqual(ids(newestFirst(broken)), []);
+  const hinted = run(10);
+  hinted[9] = caseEntry(hinted[9].at, { sec: 3, status: 'learned', hint: true });
+  assert.deepEqual(ids(newestFirst(hinted)), []);
+  assert.deepEqual(ids(newestFirst(run(50))), ['perfect10', 'perfect50']);
+  assert.deepEqual(ids(newestFirst(run(99))), ['perfect10', 'perfect50']);
+  assert.deepEqual(ids(newestFirst(run(100))), ['reps300', 'perfect10', 'perfect50', 'perfect100']);
+});
+
+test('バッジ：通しのタイム（未満。+2 を含める）と ao（DNF が除く回数より多ければ出たことにしない）', () => {
+  let k = 0;
+  // 1 日の回数・続けた日数のバッジにならないよう、日をあけて散らす
+  const rec = (penalty, sec) => ({ at: dayAt(2 * (k++ % 10)), sec: sec == null ? 200 : sec, penalty });
+  // Array(n).fill(rec(…)) は同じ記録が並ぶので、並びの順に日と時刻を振り直す（10 日に散らし、同じ日は 1 分おき）。
+  // 100 回なら 1 日 10 回で「通し漬けの一日」（24 時間に 50 回）にならない
+  const ids = (log) =>
+    evaluate({ practice: { full: { log: log.map((r, i) => Object.assign({}, r, { at: dayAt(2 * (i % 10)) + Math.floor(i / 10) * MIN })) } } }, {});
+  assert.deepEqual(ids([]), []);
+  assert.deepEqual(ids([rec('')]), ['fullFirst']);
+  assert.deepEqual(ids([rec('', 180)]), ['fullFirst']);
+  assert.deepEqual(ids([rec('', 89.99)]), ['fullFirst']); // 90 秒の壁は ao12 で数える（単発では取れない）
+  assert.deepEqual(ids([rec('', 59.99)]), ['fullFirst', 'fullSub60']);
+  assert.deepEqual(ids([rec('DNF', 30)]), ['fullFirst']);
+  assert.deepEqual(ids([rec('', 44)]), ['fullFirst', 'fullSub60', 'fullSub45']);
+  assert.deepEqual(ids([rec('', 29.99)]), ['fullFirst', 'fullSub60', 'fullSub45', 'fullSub30']);
+  assert.ok(!ids(Array(99).fill(rec(''))).includes('full100'));
+  assert.ok(ids(Array(100).fill(rec('DNF'))).includes('full100')); // DNF も 1 回に数える
+  assert.deepEqual(ids(Array(11).fill(rec(''))), ['fullFirst']);
+  assert.deepEqual(ids(Array(12).fill(rec('+2'))), ['fullFirst', 'fullAo12']);
+  assert.deepEqual(ids([rec('DNF'), rec('DNF')].concat(Array(10).fill(rec('')))), ['fullFirst']);
+  assert.deepEqual(ids([rec('DNF')].concat(Array(11).fill(rec('')))), ['fullFirst', 'fullAo12']);
+  assert.deepEqual(ids(Array(3).fill(rec('DNF')).concat(Array(12).fill(rec('')))), ['fullFirst', 'fullAo12']);
+  assert.deepEqual(ids(Array(5).fill(rec('DNF')).concat(Array(95).fill(rec('')))), ['fullFirst', 'fullAo12', 'clean50', 'full100']);
+  assert.deepEqual(ids(Array(6).fill(rec('DNF')).concat(Array(94).fill(rec('')))), ['fullFirst', 'fullAo12', 'clean50', 'full100']);
+  // 1000 回・自己ベストの更新・DNF なしで続けた回数
+  assert.ok(ids(Array(1000).fill(rec('DNF'))).includes('full1000'));
+  assert.ok(!ids(Array(999).fill(rec('DNF'))).includes('full1000'));
+  const pb = (secs) => ids(newestFirst(secs.map((t, i) => (t === 'DNF' ? { at: i, sec: 1, penalty: 'DNF' } : { at: i, sec: t, penalty: '' })))).includes('pb10');
+  const falling = (n) => Array.from({ length: n }, (_, i) => 300 - i); // 古い方から速くなる
+  assert.equal(pb(falling(10)), false); // 最初の 1 回は更新に数えない
+  assert.equal(pb(falling(11)), true);
+  assert.equal(pb([300, 'DNF', 310].concat(falling(10).map((t) => t - 10))), true);
+  assert.equal(pb(falling(10).concat([295, 'DNF', 291, 400])), false); // 遅い回・同じタイム・DNF は更新しない
+  const clean50 = (log) => ids(log).includes('clean50');
+  assert.equal(clean50(Array(50).fill(rec('+2'))), true);
+  assert.equal(clean50(Array(49).fill(rec('')).concat([rec('DNF')], Array(49).fill(rec('')))), false);
+  const clean = (log) => ids(log).includes('clean100');
+  assert.equal(clean(Array(100).fill(rec(''))), true);
+  assert.equal(clean(Array(100).fill(rec('+2'))), true);
+  assert.equal(clean(Array(50).fill(rec('')).concat([rec('DNF')], Array(60).fill(rec('')))), false);
+  // 90 秒の壁：ao12 が 1:30 未満（+2 を含める）
+  const ao12Sub90 = (log) => ids(log).includes('fullSub120');
+  assert.equal(ao12Sub90(Array(12).fill(rec('', 89.99))), true);
+  assert.equal(ao12Sub90(Array(12).fill(rec('', 90))), false); // ちょうど 1:30 は切っていない
+  assert.equal(ao12Sub90(Array(12).fill(rec('+2', 88.5))), false); // +2 を含めて 90.5 秒
+  assert.equal(ao12Sub90(Array(11).fill(rec('', 60))), false); // 12 回に足りない
+  // ao12：速い方・遅い方を 1 回ずつ除いた 10 回の平均が 1:00 未満（DNF 1 回までは除ける）
+  const ao12 = (secs) => ids(secs.map((t) => (t === 'DNF' ? rec('DNF') : rec('', t)))).includes('ao12Sub60');
+  assert.equal(ao12(Array(10).fill(59).concat([30, 'DNF'])), true);
+  assert.equal(ao12(Array(11).fill(60).concat([30])), false);
+  assert.equal(ao12(Array(10).fill(59).concat(['DNF', 'DNF'])), false);
+  assert.equal(ao12(Array(5).fill(59).concat([30, 'DNF'])), false); // 12 回に足りない
+  // ao100：速い方・遅い方を 5 回ずつ除いた 90 回の平均が 1:00 未満（DNF 5 回までは除ける）
+  const ao100 = (secs) => ids(secs.map((t) => (t === 'DNF' ? rec('DNF') : rec('', t)))).includes('ao100Sub60');
+  assert.equal(ao100(Array(95).fill(59.9).concat(Array(5).fill('DNF'))), true);
+  assert.equal(ao100(Array(94).fill(59.9).concat(Array(6).fill('DNF'))), false);
+  assert.equal(ao100(Array(100).fill(60)), false); // ちょうど 1:00 は切っていない
+  assert.equal(ao100(Array(99).fill(59.9)), false); // 100 回に足りない
+
+});
+
+test('update / record / setShown / read：取ったバッジと累計を保存し、表示するバッジを選べる', () => {
+  withStorage({}, () => {
+    Store.set('progress', progressOf(1, 0));
+    assert.deepEqual(T.update(5), ['first']);
+    assert.deepEqual(T.read().earned, { first: 5 });
+    assert.equal(T.read().shown, null);
+    assert.deepEqual(T.update(6), []); // もう一度は付けない
+    // 習得を戻してもバッジは残る
+    Store.set('progress', {});
+    assert.deepEqual(T.update(7), []);
+    assert.deepEqual(T.read().earned, { first: 5 });
+    T.setShown('first');
+    assert.equal(T.read().shown, 'first');
+    T.setShown('pllAll'); // 取っていないものは選べない
+    assert.equal(T.read().shown, null);
+    // 累計
+    T.record('case', dayAt(0));
+    T.record('full', dayAt(1));
+    assert.deepEqual(T.read().stats, { reps: 1, days: 2, lastDay: '2026-02-02', run: 2, bestRun: 2, met: { pll: [], oll: [] } });
+    assert.deepEqual(T.read().earned, { first: 5 }); // 累計を書いてもバッジは消えない
+    // 知らない id・壊れた値は読み飛ばす
+    Store.set('titles', { earned: { first: 1, nope: 2, pllAll: 'x' }, shown: 'nope', stats: { reps: 'x', lastDay: 'bad' } });
+    assert.deepEqual(T.read(), { earned: { first: 1 }, shown: null, stats: { reps: 0, days: 0, lastDay: null, run: 0, bestRun: 0, met: { pll: [], oll: [] } }, seenAt: 0, revoked: {} });
+  });
+});
+
+test('markSeen / unseenCount：一覧で見たことにしたより後に取ったバッジが NEW。新しいものが無ければ書かない', () => {
+  withStorage({}, () => {
+    Store.set('titles', { earned: { first: 10, reps300: 30 } });
+    assert.equal(T.unseenCount(), 2); // まだ一度も見ていなければすべて
+    T.markSeen();
+    assert.equal(T.read().seenAt, 30); // 今の時刻ではなく、いちばん新しく取った日時
+    assert.equal(T.unseenCount(), 0);
+    // もう一度呼んでも書かない（store-change が出ない。別のタブとのあいだで書き合いにならない）
+    let writes = 0;
+    const setItem = localStorage.setItem;
+    localStorage.setItem = (k, v) => {
+      writes++;
+      setItem(k, v);
+    };
+    T.markSeen();
+    T.markSeen();
+    assert.equal(writes, 0);
+    localStorage.setItem = setItem;
+    // 新しく取ったものだけ NEW
+    Store.set('titles', Object.assign(T.read(), { earned: { first: 10, reps300: 30, streak7: 50 } }));
+    assert.equal(T.unseenCount(), 1);
+    T.markSeen();
+    assert.equal(T.read().seenAt, 50);
+    T.setShown('first'); // ほかの保存で seenAt は消えない
+    assert.equal(T.read().seenAt, 50);
+  });
+});
+
+test('Store.merge：取ったバッジは両方を合わせ（日時は早い方、shown は新しい方）、累計は大きい方・新しい日の方、met は和集合', () => {
+  const local = {
+    data: { titles: { earned: { first: 10, reps100: 30 }, shown: 'first', stats: { reps: 500, days: 20, lastDay: '2026-01-10', run: 3, bestRun: 9, met: { pll: ['Aa'], oll: ['OLL 1'] } } } },
+    updated: { titles: 200 },
+  };
+  const remote = {
+    data: { titles: { earned: { first: 5, streak7: 20 }, shown: 'streak7', stats: { reps: 800, days: 15, lastDay: '2026-01-12', run: 5, bestRun: 7, met: { pll: ['Aa', 'Ab'] } } } },
+    updated: { titles: 100 },
+  };
+  const out = Store.merge(local, remote);
+  assert.deepEqual(out.data.titles, {
+    earned: { first: 5, streak7: 20, reps100: 30 },
+    shown: 'first',
+    stats: { reps: 800, days: 20, lastDay: '2026-01-12', run: 5, bestRun: 9, met: { pll: ['Aa', 'Ab'], oll: ['OLL 1'] } },
+  });
+  assert.equal(out.updated.titles, 200);
+  assert.deepEqual(Store.merge(remote, local).data.titles.shown, 'first');
+  // 一覧を見た日時（NEW の印）は遅い方
+  const seen = (a, b) => Store.merge({ data: { titles: { earned: {}, seenAt: a } }, updated: { titles: 2 } }, { data: { titles: { earned: {}, seenAt: b } }, updated: { titles: 1 } }).data.titles.seenAt;
+  assert.equal(seen(10, 30), 30);
+  assert.equal(seen(30, 10), 30);
+  // 片方にしか無ければそのまま
+  assert.deepEqual(Store.merge(local, { data: {}, updated: {} }).data.titles, local.data.titles);
+});
+
+test('streakOf：今続けている日数（今日か昨日まで）といちばん長い日数', () => {
+  const log = (days) => days.map((d) => caseEntry(dayAt(d)));
+  const now = dayAt(10, 20);
+  assert.deepEqual(T.streakOf({ practice: { log: log([8, 9, 10]) } }, now), { current: 3, best: 3 });
+  assert.deepEqual(T.streakOf({ practice: { log: log([7, 8, 9]) } }, now), { current: 3, best: 3 }); // 今日まだでも昨日まで続いていれば数える
+  assert.deepEqual(T.streakOf({ practice: { log: log([1, 2, 3, 4, 7, 8]) } }, now), { current: 0, best: 4 }); // 途切れた
+  assert.deepEqual(T.streakOf({ practice: { log: [], full: { log: [{ at: dayAt(10), sec: 200, penalty: '' }] } } }, now), { current: 1, best: 1 }); // 通しも
+  assert.deepEqual(T.streakOf({}, now), { current: 0, best: 0 });
+  // 累計（stats）の方が長ければそちら（記録が 2000 件を超えて古い日が消えたとき）
+  const stats = { reps: 0, days: 40, lastDay: '2026-02-10', run: 40, bestRun: 50 };
+  assert.deepEqual(T.streakOf({ practice: { log: log([9, 10]) }, stats }, now), { current: 40, best: 50 });
+  assert.deepEqual(T.streakOf({ practice: { log: log([9, 10]) }, stats }, dayAt(12)), { current: 0, best: 50 }); // 2 日空いた
+});
+
+test('badgeProgress：数えられるバッジだけ、今の数と目標（目標で頭打ち）', () => {
+  const MINUTE = 60000;
+  const log = Array.from({ length: 320 }, (_, i) => caseEntry(Date.UTC(2026, 0, 5, 9) + i * MINUTE));
+  const p = T.badgeProgress({
+    progress: progressOf(10, 3),
+    practice: { log },
+    stats: { met: { pll: ['A1+', 'A2+'], oll: ['1'] } },
+  });
+  assert.deepEqual(p.pllHalf, { value: 10, goal: 76 });
+  assert.deepEqual(p.ollAll, { value: 3, goal: 259 });
+  assert.deepEqual(p.reps300, { value: 100, goal: 100 }); // 320 回でも目標で頭打ち
+  assert.deepEqual(p.reps1000, { value: 320, goal: 1000 });
+  assert.deepEqual(p.allMet, { value: 3, goal: 410 });
+  assert.deepEqual(p.focus, { value: 30, goal: 100 }); // 1 分おき：30 分未満に 30 回
+  assert.deepEqual(p.full100, { value: 0, goal: 100 });
+  // タイム・はじめての・週末のバッジには数を出さない
+  ['first', 'weekend', 'sub2', 'fullFirst', 'fullAo12', 'fullSub120', 'fullSub30', 'ao100Sub60'].forEach((id) =>
+    assert.equal(p[id], undefined, id)
+  );
+  // 判定と同じ目標：数が目標に届いたバッジだけを取る
+  const got = evaluate({ progress: progressOf(10, 3), practice: { log }, stats: { met: { pll: ['A1+', 'A2+'], oll: ['1'] } } }, {});
+  Object.keys(p).forEach((id) => assert.equal(got.includes(id), p[id].value >= p[id].goal, id));
+});
+
+test('recheck：記録だけで決まるバッジを判定し直し、満たさなくなったものを外す（回数のバッジ・取り直しは別）', () => {
+  withStorage({}, () => {
+    const fast = { at: 1000, sec: 20, penalty: '' };
+    const slow = { at: 900, sec: 90, penalty: '' };
+    Store.set('practice', { full: { log: [fast, slow] } });
+    const got = T.update(10);
+    assert.ok(got.includes('fullSub30') && got.includes('fullFirst'));
+    T.setShown('fullSub30');
+    // 20 秒の記録を消す：30 秒未満・45 秒未満・1:00 未満は外し、はじめてのソルブは残す
+    Store.set('practice', { full: { log: [slow] } });
+    assert.deepEqual(T.recheck(20).sort(), ['fullSub30', 'fullSub45', 'fullSub60']);
+    const t = T.read();
+    assert.equal(t.shown, null); // 表示していたバッジを外したら段位に戻す
+    assert.ok(t.earned.fullFirst && !t.earned.fullSub30);
+    assert.deepEqual(t.revoked, { fullSub30: 20, fullSub45: 20, fullSub60: 20 });
+    assert.deepEqual(T.recheck(21), []); // もう外すものは無い
+    // 取り直したら、外した日時より後の日時で付く
+    Store.set('practice', { full: { log: [{ at: 2000, sec: 25, penalty: '' }, slow] } });
+    assert.ok(T.update(15).includes('fullSub30'));
+    assert.equal(T.read().earned.fullSub30, 21);
+    // 回数のバッジ（累計でも数える）は記録を消しても外さない
+    Store.set('titles', { earned: { full100: 5 } });
+    Store.set('practice', { full: { log: [] } });
+    assert.deepEqual(T.recheck(30), []);
+    assert.deepEqual(Object.keys(T.read().earned), ['full100']);
+  });
+});
+
+test('15 秒未満のソルブ（DNF 以外）はバッジの判定に数えない（押し間違いとみなす）', () => {
+  const full = (log) => ({ practice: { full: { log } } });
+  assert.deepEqual(evaluate(full([{ at: 1, sec: 5, penalty: '' }]), {}), []);
+  assert.deepEqual(evaluate(full([{ at: 1, sec: 14.99, penalty: '+2' }]), {}), []);
+  assert.ok(evaluate(full([{ at: 1, sec: 15, penalty: '' }]), {}).includes('fullSub30'));
+  // DNF は短くても DNF として数える（はじめてのソルブ）
+  assert.deepEqual(evaluate(full([{ at: 1, sec: 3, penalty: 'DNF' }]), {}), ['fullFirst']);
+});
+
+test('signedIn：ログインしていなければ（session が無い・out・kept）バッジを付けも外しもしない。累計は数える', () => {
+  [null, 'out', 'kept'].forEach((session) => {
+    withStorage({ 'megaminx-image-editor:session': session }, () => {
+      if (session === null) localStorage.removeItem('megaminx-image-editor:session');
+      assert.equal(T.signedIn(), false);
+      Store.set('progress', progressOf(1, 0));
+      assert.deepEqual(T.update(5), []);
+      assert.deepEqual(T.recheck(6), []);
+      assert.deepEqual(T.read().earned, {});
+      T.record('case', 10, null);
+      assert.equal(T.read().stats.reps, 1);
+      // ログインすると、その時点の記録で付く
+      localStorage.setItem('megaminx-image-editor:session', 'in');
+      assert.equal(T.signedIn(), true);
+      assert.deepEqual(T.update(20), ['first']);
+    });
+  });
+});
+
+// ---- 隠しバッジ（条件はテストにも書かない。仕組みと中身がそろっていることだけ確かめる）----
+test('隠しバッジ：名前・説明が日本語・英語にそろい、空の記録では取れない。「バッジ n / 40」には数えない', () => {
+  const secrets = T.BADGES.filter((b) => b.secret);
+  assert.equal(secrets.length, 10);
+  const I = (lang) => ({ lang: lang, t: (k) => k });
+  secrets.forEach((b) => {
+    ['ja', 'en'].forEach((lang) => {
+      assert.ok(T.badgeName(I(lang), b.id).length > 0, b.id);
+      assert.ok(T.badgeDesc(I(lang), b.id).length > 0, b.id);
+    });
+    assert.equal(b.test({ progress: {}, practice: {}, stats: {}, customAlgs: {} }), false, b.id);
+  });
+  // ふつうのバッジの名前は i18n.js のキー
+  assert.equal(T.badgeName(I('ja'), 'first'), 'titles.badge.first');
+  assert.equal(T.badgeDesc(I('ja'), 'first'), 'titles.badge.first.desc');
+  const all = {};
+  T.BADGES.forEach((b) => (all[b.id] = 1));
+  assert.deepEqual(T.countOf(all), { n: 40, total: 40, secret: 10 });
+  assert.deepEqual(T.countOf({ [secrets[0].id]: 1, first: 1 }), { n: 1, total: 40, secret: 1 });
+  assert.deepEqual(T.countOf({ first: 1 }), { n: 1, total: 40, secret: 0 });
+});
+
+test('隠しバッジの符号化：戻すと元の値になる。壊れた文字列は空', () => {
+  const v = [{ id: 'y', r: { s: 'c', a: 'n', n: 1 }, ja: ['名前', '説明'], en: ['Name', 'Desc'] }];
+  assert.deepEqual(T.decodeSecret(T.encodeSecret(v)), v);
+  assert.doesNotMatch(T.encodeSecret(v), /名前|Name/);
+  assert.deepEqual(T.decodeSecret('!!!'), []);
+  assert.deepEqual(T.decodeSecret(''), []);
+});
+
+test('judgeRule：作り物の条件の表で、数え方ごとに数える', () => {
+  const at = (h, m) => new Date(2026, 0, 5, h, m || 0).getTime();
+  // 保存の形（新しい順）
+  const log = [
+    { at: at(12, 5), set: 'pll', name: 'B', sec: 4, status: 'learned', hint: false },
+    { at: at(12, 4), set: 'pll', name: 'A', sec: 4, status: 'learned', hint: false },
+    { at: at(12, 3), set: 'pll', name: 'A', sec: 9, status: 'learning', hint: true },
+    { at: at(12, 2), set: 'pll', name: 'A', sec: 8, status: 'learning', hint: true },
+    { at: at(12, 1), set: 'oll', name: 'A', sec: null, status: 'learning', hint: false },
+  ];
+  const full = [
+    { at: at(13, 2), sec: 33.33, penalty: '+2' },
+    { at: at(13, 1), sec: 40, penalty: 'DNF' },
+  ];
+  const ll = [{ at: at(12, 30), sec: 20, o: '1', p: 'A1+' }];
+  const d = { practice: { log: log, full: { log: full }, ll: { log: ll } }, customAlgs: { pll: { A: {} }, oll: { B: {}, C: {} } } };
+  const J = (r) => T.judgeRule(r, d);
+  assert.equal(J({ s: 'c', v: 'r', p: ['r', 5, 10], a: 'n' }), 2);
+  assert.equal(J({ s: 'c', v: 'i', p: ['e', 1], a: 'run' }), 2);
+  assert.equal(J({ s: 'a', v: 'h', p: ['e', 12], a: 'day' }), 6); // PLL・OLL の 5 件と LL の 1 件
+  assert.equal(J({ s: 'c', a: 'dc' }), 3); // 同じ日の pll A
+  assert.equal(J({ s: 'c', v: 't', a: 'same' }), 1); // 4 → 4
+  assert.equal(J({ s: 'c', v: 'l', a: 'seq', m: [0, 0, 1] }), 1);
+  assert.equal(J({ s: 'f', v: 'r', p: ['z'], a: 'n' }), 1); // 計った秒（+2 を含まない）
+  assert.equal(J({ s: 'f', v: 't', p: ['r', 35, 36], a: 'n' }), 1); // +2 込み
+  assert.equal(J({ s: 'f', v: 'd', p: ['e', 1], a: 'n' }), 1);
+  assert.equal(J({ s: 'g', a: 'n' }), 3);
+  assert.equal(T.judgeRule(null, d), 0);
+});
+
+test('LL：練習の回数（1 回）・一期一会（「すべて」で出た OLL・PLL）に数える。PLL 総当たりには数えない', () => {
+  const ll = [];
+  for (let i = 0; i < 60; i++) ll.push({ at: 1000 + i, sec: 10, o: '1A', p: i % 2 ? 'A1+' : 'J1+/J2-' });
+  const log = [];
+  for (let i = 0; i < 40; i++) log.push({ at: 5000 + i, set: 'pll', name: 'H1+', sec: 3, status: 'learned', hint: false });
+  const d = { practice: { log: log, ll: { log: ll } }, stats: null };
+  assert.ok(evaluate(d, {}).includes('reps300')); // PLL 40 回 + LL 60 回 = 100 回
+  assert.ok(!evaluate({ practice: { log: log, ll: { log: ll.slice(1) } }, stats: null }, {}).includes('reps300'));
+  assert.equal(T.badgeProgress(d).pllRoundRobin.value, 1); // PLL の練習の H1+ だけ（LL で出た A1+・J1+・J2- は数えない）
+  // track：LL も回数に数え、出会ったケースを配列で受ける
+  let s = T.track(null, 'll', Date.UTC(2026, 0, 1, 12), [
+    { set: 'oll', name: '1A' },
+    { set: 'pll', name: 'J1+' },
+  ]);
+  s = T.track(s, 'll', Date.UTC(2026, 0, 1, 13), { set: 'oll', name: '1A' });
+  assert.equal(s.reps, 2);
+  assert.deepEqual(s.met, { pll: ['J1+'], oll: ['1A'] });
+});
